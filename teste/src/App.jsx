@@ -19,9 +19,9 @@ export default function App() {
       <div
         className="absolute inset-0 
                    bg-gradient-to-b
-                   from-[#132440]/95
-                   via-[#132440]/60
-                   via-40%
+                   from-[#132439]
+                   via-[#132439]/40
+                   via-35%
                    to-transparent"
       />
 
@@ -29,14 +29,13 @@ export default function App() {
       <div className="relative z-10 min-h-screen">
         <Header />
 
-        <main className="px-6 md:px-12 pt-32 max-w-4xl">
-          <h2 className="text-5xl md:text-6xl font-bold text-white leading-tight drop-shadow-lg">
-            Viaja com conforto e segurança.
+        <main className="absolute inset-0 flex flex-col justify-center items-center px-6 md:px-11 text-center max-w-4xl mx-auto">
+          <h2 className="text-5xl md:text-6xl font-light text-white/95 leading-[1.1] tracking-tight drop-shadow-2xl">
+            Viaje com conforto e segurança
           </h2>
 
-          <p className="mt-6 text-lg text-white/80 max-w-xl">
-            A plataforma moderna para pedires transporte de forma rápida e
-            segura.
+          <p className="mt-8 text-xl md:text-xl text-white/60 max-w-2xl leading-relaxed font-light">
+            A plataforma moderna para pedires transporte de forma rápida e segura.
           </p>
         </main>
       </div>
