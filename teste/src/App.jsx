@@ -31,11 +31,11 @@ export default function App() {
 
         <main className="absolute inset-0 flex flex-col justify-center items-center px-6 md:px-11 text-center max-w-4xl mx-auto">
           <h2 className="text-5xl md:text-6xl font-light text-white/95 leading-[1.1] tracking-tight drop-shadow-2xl">
-            Viaje com conforto e segurança
+            Travel with comfort and safety
           </h2>
 
           <p className="mt-8 text-xl md:text-xl text-white/60 max-w-2xl leading-relaxed font-light">
-            A plataforma moderna para pedires transporte de forma rápida e segura.
+            The modern platform to request transportation quickly and safely.
           </p>
         </main>
       </div>

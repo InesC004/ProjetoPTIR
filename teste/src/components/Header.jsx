@@ -17,7 +17,7 @@ export default function Header() {
     <>
       <header className="fixed top-0 left-0 w-full z-50 px-6 md:px-10 py-5 flex items-center justify-between bg-transparent">
         <h1 className="text-white text-xl md:text-2xl font-semibold tracking-wide">
-          <img src={logo} alt="Logo" className="h-32 w-auto" />
+          <img src={logo} alt="Logo" className="h-22 w-auto" />
         </h1>
 
         <button
@@ -45,7 +45,7 @@ export default function Header() {
         </button>
       </header>
 
-      {/* Sidebar separado */}
+      {/* Sidebar  */}
       <Sidebar isOpen={isMenuOpen} onClose={closeMenu} />
     </>
   );
