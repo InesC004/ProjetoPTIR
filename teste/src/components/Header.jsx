@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Sidebar from "./Sidebar";
+import logo from "../Pictures/logo1.jpeg";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,7 +17,7 @@ export default function Header() {
     <>
       <header className="fixed top-0 left-0 w-full z-50 px-6 md:px-10 py-5 flex items-center justify-between bg-transparent">
         <h1 className="text-white text-xl md:text-2xl font-semibold tracking-wide">
-          TakeCab
+          <img src={logo} alt="Logo" className="h-32 w-auto" />
         </h1>
 
         <button
