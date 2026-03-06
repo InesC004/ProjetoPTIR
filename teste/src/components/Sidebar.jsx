@@ -140,7 +140,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   <div>
                     <h3 className="font-semibold text-white">Start Now !</h3>
                     <p className="text-xs text-white/50">
-                      Fast, Safe and confortable
+                     Fast, safe and comfortable rides.
                     </p>
                   </div>
                 </div>
