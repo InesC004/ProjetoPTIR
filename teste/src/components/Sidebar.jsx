@@ -121,7 +121,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
               <nav className="mt-3 space-y-2">
                 <MenuItem
-                  label="Whant to be a Driver?"
+                  label="Want to be a Driver?"
                   icon="info"
                   onClick={onClose}
                 />
