@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
-// import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import RegisterModal from "./RegisterModal";
 
 /* Objecto com as icons usadas no Sidebar */
 const ICONS = {
@@ -45,9 +46,11 @@ const ICONS = {
  * - onClose: função para fechar
  */
 export default function Sidebar({ isOpen, onClose }) {
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+
   return (
     <>
-      {/* 1) FUNDO ESCURO  */}
+      {/* FUNDO ESCURO */}
       <div
         onClick={onClose}
         className={`fixed inset-0 z-40 bg-black/60 transition-opacity duration-300 ${
@@ -79,12 +82,11 @@ export default function Sidebar({ isOpen, onClose }) {
               </button>
             </div>
 
-            {/* linha separadora */}
             <div className="mt-5 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
           </header>
 
           <main className="px-6 pb-6 flex-1 overflow-auto">
-            {/* CARD  do login e register*/}
+            {/* CARD do login e register */}
             <section className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-sm text-white/70">
                 Request rides in seconds — fast, safe, and comfortable.
@@ -98,7 +100,10 @@ export default function Sidebar({ isOpen, onClose }) {
                   </span>
                 </button>
 
-                <button className="w-full py-3 rounded-xl font-semibold relative overflow-hidden transition">
+                <button
+                  onClick={() => setIsRegisterOpen(true)}
+                  className="w-full py-3 rounded-xl font-semibold relative overflow-hidden transition"
+                >
                   <span className="absolute inset-0 bg-gradient-to-r from-[#1E5AA8] via-[#1B62B8] to-[#2A74D6] opacity-90" />
                   <span className="relative inline-flex items-center justify-center gap-2 text-white">
                     <Icon name="spark" className="w-4 h-4" />
@@ -115,7 +120,11 @@ export default function Sidebar({ isOpen, onClose }) {
               </p>
 
               <nav className="mt-3 space-y-2">
-                <MenuItem label="About" icon="info" onClick={onClose} />
+                <MenuItem
+                  label="Whant to be a Driver?"
+                  icon="info"
+                  onClick={onClose}
+                />
                 <MenuItem label="Contact" icon="mail" onClick={onClose} />
               </nav>
             </section>
@@ -130,6 +139,11 @@ export default function Sidebar({ isOpen, onClose }) {
           </footer>
         </div>
       </aside>
+
+      <RegisterModal
+        isOpen={isRegisterOpen}
+        onClose={() => setIsRegisterOpen(false)}
+      />
     </>
   );
 }
