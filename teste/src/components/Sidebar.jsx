@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import RegisterModal from "./RegisterModal";
+import LoginModal from "./LoginModal";
 
 const ICONS = {
   cab: (
@@ -57,6 +58,7 @@ const ICONS = {
 
 export default function Sidebar({ isOpen, onClose }) {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -146,7 +148,9 @@ export default function Sidebar({ isOpen, onClose }) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <button className="group relative py-3.5 rounded-xl font-semibold transition-all duration-300 overflow-hidden border border-white/10 hover:border-white/20">
+                  <button 
+                    onClick={() => setIsLoginOpen(true)}
+                    className="group relative py-3.5 rounded-xl font-semibold transition-all duration-300 overflow-hidden border border-white/10 hover:border-white/20">
                     <span className="absolute inset-0 bg-white/5 group-hover:bg-white/10 transition-colors" />
                     <span className="relative flex items-center justify-center gap-2 text-white/90 group-hover:text-white">
                       <Icon name="key" className="w-4 h-4" />
@@ -225,6 +229,10 @@ export default function Sidebar({ isOpen, onClose }) {
       <RegisterModal
         isOpen={isRegisterOpen}
         onClose={() => setIsRegisterOpen(false)}
+      />
+      <LoginModal
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
       />
     </>
   );
