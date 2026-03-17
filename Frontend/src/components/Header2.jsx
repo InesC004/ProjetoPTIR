@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";

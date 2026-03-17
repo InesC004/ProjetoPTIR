@@ -4,8 +4,69 @@ import image from "../pictures/carroREgistro.jpg";
 
 export default function RegisterModal({ isOpen, onClose }) {
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    nif: "",
+    gender: "",
+    birth_day: "",
+    birth_month: "",
+    birth_year: "",
+    address: "",
+    postal_code: "",
+    access_password: "",
+  });
 
   if (!isOpen) return null;
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("http://localhost:5000/api/passengers/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Erro ao registar.");
+      } else {
+        setSuccess(true);
+        setTimeout(() => {
+          setSuccess(false);
+          setStep(1);
+          setFormData({
+            name: "",
+            nif: "",
+            gender: "",
+            birth_day: "",
+            birth_month: "",
+            birth_year: "",
+            address: "",
+            postal_code: "",
+            access_password: "",
+          });
+          onClose();
+        }, 2000);
+      }
+    } catch {
+      setError("Não foi possível conectar ao servidor.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -26,7 +87,6 @@ export default function RegisterModal({ isOpen, onClose }) {
               className="h-full w-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-[#0a1628]/80 to-transparent" />
-
             <div className="absolute inset-0 flex flex-col justify-end p-8">
               <h2 className="text-2xl font-light mb-2">
                 Join{" "}
@@ -65,8 +125,6 @@ export default function RegisterModal({ isOpen, onClose }) {
             <div className="mb-6">
               <h2 className="text-xl font-semibold">Create Account</h2>
               <p className="text-sm text-white/50 mt-1">Step {step} of 2</p>
-
-              {/* Progress Bar */}
               <div className="h-1 bg-white/10 rounded-full overflow-hidden mt-4">
                 <div
                   className="h-full bg-gradient-to-r from-[#1d5eff] to-[#3b82f6] rounded-full transition-all duration-300"
@@ -75,7 +133,21 @@ export default function RegisterModal({ isOpen, onClose }) {
               </div>
             </div>
 
-            <form className="space-y-4">
+            {/* Success Message */}
+            {success && (
+              <div className="mb-4 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm text-center">
+                ✓ Account created successfully! Welcome to TakeCab.
+              </div>
+            )}
+
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
               {step === 1 ? (
                 <>
                   {/* Full Name */}
@@ -85,7 +157,10 @@ export default function RegisterModal({ isOpen, onClose }) {
                     </label>
                     <input
                       name="name"
+                      value={formData.name}
+                      onChange={handleChange}
                       placeholder="Enter your full name"
+                      required
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white 
                                  placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                     />
@@ -99,7 +174,10 @@ export default function RegisterModal({ isOpen, onClose }) {
                       </label>
                       <input
                         name="nif"
+                        value={formData.nif}
+                        onChange={handleChange}
                         placeholder="Enter your NIF"
+                        required
                         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white 
                                    placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                       />
@@ -110,6 +188,9 @@ export default function RegisterModal({ isOpen, onClose }) {
                       </label>
                       <select
                         name="gender"
+                        value={formData.gender}
+                        onChange={handleChange}
+                        required
                         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white 
                                    focus:border-[#3b82f6]/50 focus:outline-none"
                       >
@@ -138,27 +219,36 @@ export default function RegisterModal({ isOpen, onClose }) {
                       <input
                         type="number"
                         name="birth_day"
+                        value={formData.birth_day}
+                        onChange={handleChange}
                         placeholder="Day"
                         min="1"
                         max="31"
+                        required
                         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white 
                                    placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                       />
                       <input
                         type="number"
                         name="birth_month"
+                        value={formData.birth_month}
+                        onChange={handleChange}
                         placeholder="Month"
                         min="1"
                         max="12"
+                        required
                         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white 
                                    placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                       />
                       <input
                         type="number"
                         name="birth_year"
+                        value={formData.birth_year}
+                        onChange={handleChange}
                         placeholder="Year"
                         min="1926"
                         max="2008"
+                        required
                         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white 
                                    placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                       />
@@ -196,7 +286,10 @@ export default function RegisterModal({ isOpen, onClose }) {
                     </label>
                     <input
                       name="address"
+                      value={formData.address}
+                      onChange={handleChange}
                       placeholder="Enter your address"
+                      required
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white 
                                  placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                     />
@@ -209,7 +302,10 @@ export default function RegisterModal({ isOpen, onClose }) {
                     </label>
                     <input
                       name="postal_code"
+                      value={formData.postal_code}
+                      onChange={handleChange}
                       placeholder="e.g. 1000-200"
+                      required
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white 
                                  placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                     />
@@ -223,7 +319,10 @@ export default function RegisterModal({ isOpen, onClose }) {
                     <input
                       type="password"
                       name="access_password"
+                      value={formData.access_password}
+                      onChange={handleChange}
                       placeholder="Create a secure password"
+                      required
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white 
                                  placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                     />
@@ -255,23 +354,51 @@ export default function RegisterModal({ isOpen, onClose }) {
 
                     <button
                       type="submit"
+                      disabled={loading}
                       className="flex-[2] py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-[#1d5eff] to-[#3b82f6] 
-                                 hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                                 hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      Register
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
+                      {loading ? (
+                        <>
+                          <svg
+                            className="w-4 h-4 animate-spin"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8v8z"
+                            />
+                          </svg>
+                          Registering...
+                        </>
+                      ) : (
+                        <>
+                          Register
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        </>
+                      )}
                     </button>
                   </div>
                 </>
