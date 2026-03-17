@@ -1,7 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "./Sidebar";
 import logo from "../Pictures/logo1.jpeg";
 
 // ── Inject Header styles once ─────────────────────────────────────────────────
@@ -340,11 +339,6 @@ export default function Header({ isDashboard = false }) {
           </button>
         )}
       </header>
-
-      {/* Sidebar for non-dashboard pages */}
-      {!isDashboard && (
-        <Sidebar isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
-      )}
     </>
   );
 }

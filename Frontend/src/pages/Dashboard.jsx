@@ -1226,58 +1226,15 @@ export default function Dashboard() {
           <div style={{ position: "relative" }}>
             <h2 className="cta-titulo">Pronto para partir?</h2>
             <p className="cta-desc">
-              A sua próxima viagem está a um toque de distância. Junte-se a
-              milhares de passageiros satisfeitos.
+              A sua próxima viagem está a um toque de distância. Peça uma
+              viagem!
             </p>
             <div className="cta-botoes">
-              <button className="btn-branco">Reservar Agora</button>
-              <button className="btn-fantasma">Descarregar App</button>
+              <button className="btn-branco">Pedir Viagem</button>
             </div>
           </div>
         </div>
       </div>
-
-      {/* ════════ RODAPÉ ════════ */}
-      <footer className="rodape">
-        <div className="rodape-grelha">
-          <div>
-            <div className="rodape-marca">
-              Take<span>Cab</span>
-            </div>
-            <p className="rodape-tagline">
-              A forma moderna de se mover pela cidade. Rápido, seguro e fiável.
-            </p>
-          </div>
-          <div>
-            <div className="rodape-titulo">Empresa</div>
-            <a href="#">Sobre Nós</a>
-            <a href="#">Carreiras</a>
-            <a href="#">Imprensa</a>
-          </div>
-          <div>
-            <div className="rodape-titulo">Suporte</div>
-            <a href="#">Centro de Ajuda</a>
-            <a href="#">Segurança</a>
-            <a href="#">Contacto</a>
-          </div>
-          <div>
-            <div className="rodape-titulo">Legal</div>
-            <a href="#">Política de Privacidade</a>
-            <a href="#">Termos de Serviço</a>
-            <a href="#">Cookies</a>
-          </div>
-        </div>
-        <div className="rodape-base">
-          <span className="rodape-copy">
-            © 2025 TakeCab. Todos os direitos reservados.
-          </span>
-          <div className="rodape-sociais">
-            <a href="#">Twitter</a>
-            <a href="#">Instagram</a>
-            <a href="#">LinkedIn</a>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
