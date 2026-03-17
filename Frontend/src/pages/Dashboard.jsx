@@ -35,7 +35,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0a1628]">
+    <div className="relative min-h-screen w-full overflow-hidden bg-[#0a1628]">
       {/* GRID PATTERN */}
       <div
         className="absolute inset-0 opacity-[0.03]"
@@ -76,11 +76,11 @@ export default function Dashboard() {
       <div className="relative z-10 min-h-screen flex flex-col">
         <Header />
 
-        <main
-          className={`flex-1 px-8 py-8 flex gap-6 max-w-[1200px] w-full mx-auto transform transition-all duration-700 ${
-            loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-          }`}
-        >
+      <main
+        className={`flex-1 px-4 sm:px-6 lg:px-8 pt-24 pb-8 flex flex-col lg:flex-row gap-6 max-w-[1200px] w-full mx-auto transform transition-all duration-700 ${
+          loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+        }`}
+      >
           {/* LEFT COLUMN */}
           <div className="flex-1 flex flex-col gap-5">
 
