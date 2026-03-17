@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Homepage from "./pages/Homepage";  // Homepage.jsx esta no ficheiro pages/
+import Homepage from "./pages/Homepage"; // Homepage.jsx esta no ficheiro pages/
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 
