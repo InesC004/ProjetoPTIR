@@ -32,7 +32,7 @@ export default function RegisterModal({ isOpen, onClose }) {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/passengers/register", {
+      const res = await fetch("http://localhost:8080/api/clientes/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
