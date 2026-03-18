@@ -3,6 +3,7 @@ import Homepage from "./pages/Homepage"; // Homepage.jsx esta no ficheiro pages/
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
+import CompletarPerfil from "./pages/CompletarPerfil";
 export default function App() {
   return (
     <BrowserRouter>
@@ -11,6 +12,7 @@ export default function App() {
         <Route path="/about" element={<About />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/Profile" element={<Profile />} />
+        <Route path="/completar-perfil" element={<CompletarPerfil />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
 const clienteSchema = new mongoose.Schema({
   nome: { type: String, required: true },
@@ -6,7 +6,7 @@ const clienteSchema = new mongoose.Schema({
   genero: { type: String },
   data_nascimento: { type: Date },
   morada: { type: String },
-  codigo_postal: { type: String }
-})
+  codigo_postal: { type: String },
+});
 
-module.exports = mongoose.model('cliente', clienteSchema)
+module.exports = mongoose.model("cliente", clienteSchema);

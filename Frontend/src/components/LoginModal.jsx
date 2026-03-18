@@ -1,11 +1,9 @@
 /* eslint-disable react/prop-types */
 import { useAuth0 } from "@auth0/auth0-react";
 import image from "../pictures/carroREgistro.jpg";
-import { useNavigate } from "react-router-dom";
 
 export default function LoginModal({ isOpen, onClose }) {
   const { loginWithPopup, isLoading } = useAuth0();
-  const navigate = useNavigate(); // 👈 adicionar
 
   if (!isOpen) return null;
 
@@ -13,7 +11,6 @@ export default function LoginModal({ isOpen, onClose }) {
     try {
       await loginWithPopup();
       onClose();
-      navigate("/dashboard"); // 👈 adicionar
     } catch (err) {
       console.error("Erro ao fazer login:", err);
     }
