@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../Pictures/logo1.jpeg";
 import { useAuth0 } from "@auth0/auth0-react";
+
 // ── Inject Header styles once ─────────────────────────────────────────────────
 const HEADER_STYLES = `
   /* ── HEADER ── */

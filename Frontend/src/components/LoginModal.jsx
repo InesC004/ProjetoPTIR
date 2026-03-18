@@ -1,21 +1,28 @@
 /* eslint-disable react/prop-types */
 import { useAuth0 } from "@auth0/auth0-react";
 import image from "../pictures/carroREgistro.jpg";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginModal({ isOpen, onClose }) {
-  const { loginWithPopup, isLoading } = useAuth0();
+  const { loginWithPopup, isLoading, isAuthenticated } = useAuth0();
+  const navigate = useNavigate();
 
   if (!isOpen) return null;
 
+  // Se já está logado, vai direto para o dashboard
+  if (isAuthenticated) {
+    navigate("/dashboard");
+    return null;
+  }
   async function handleLogin() {
     try {
-      await loginWithPopup();
+      await loginWithPopup({ prompt: "login" }); // 👈 força o popup sempre
       onClose();
+      navigate("/dashboard");
     } catch (err) {
       console.error("Erro ao fazer login:", err);
     }
   }
-
   return (
     <>
       <div
