@@ -7,14 +7,14 @@ import "./index.css";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Auth0Provider
-      domain="dev-wgz277zrovymotmr.us.auth0.com"
-      clientId="Ug8lxW0wDqeofYLblhBrMeUpSA949aSS"
+      domain={import.meta.env.VITE_AUTH0_DOMAIN}
+      clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
       authorizationParams={{
         redirect_uri: window.location.origin,
-        audience: "https://takeacab-api"
+        audience: import.meta.env.VITE_AUTH0_AUDIENCE,
       }}
     >
       <App />
     </Auth0Provider>
-  </StrictMode>
+  </StrictMode>,
 );
