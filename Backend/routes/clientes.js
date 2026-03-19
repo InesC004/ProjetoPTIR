@@ -1,14 +1,11 @@
-const express = require("express");
-const router = express.Router();
-const clientesController = require("../controllers/clientes");
-const auth = require("../middleware/auth");
+const express = require('express')
+const router = express.Router()
+const clientesController = require('../controllers/clientes')
 
-// criar cliente (registo)
-router.post("/register", clientesController.register);
+router.post('/register', clientesController.register)
+router.post('/login', clientesController.login)
+router.get('/perfil', clientesController.getPerfil)
+router.delete('/:id', clientesController.delete)
+router.get('/todos', clientesController.getTodos)
 
-// obter perfil do cliente (requer autenticação)
-router.get("/perfil", auth, clientesController.getPerfil);
-
-router.get("/todos", clientesController.getTodos);
-
-module.exports = router;
+module.exports = router

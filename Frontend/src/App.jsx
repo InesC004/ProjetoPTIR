@@ -4,6 +4,7 @@ import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import CompletarPerfil from "./pages/CompletarPerfil";
+import PaginaGestores from "./pages/PaginaGestores";
 export default function App() {
   return (
     <BrowserRouter>
@@ -13,6 +14,7 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/Profile" element={<Profile />} />
         <Route path="/completar-perfil" element={<CompletarPerfil />} />
+        <Route path="/PaginaGestores" element={<PaginaGestores />} />
       </Routes>
     </BrowserRouter>
   );
