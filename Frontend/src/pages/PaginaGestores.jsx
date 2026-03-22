@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import logo from "../Pictures/logo1.jpeg";
 import RegistarTaxi from "../components/RegistarTaxi";
+import RegistarMotorista from "../components/RegistarMotorista";
 
 /* ═══════════════════════════════════════════════
    NAV
@@ -42,6 +43,7 @@ export default function PaginaGestores() {
   const navigate = useNavigate();
   const [active, setActive] = useState("dados");
   const [modalTaxi, setModalTaxi] = useState(false);
+  const [modalMotorista, setModalMotorista] = useState(false);
   const current = NAV.find((n) => n.id === active);
 
   return (
@@ -165,7 +167,10 @@ export default function PaginaGestores() {
 
           <div className="animate-[fadeUp_0.5s_0.08s_ease_both]">
             {active === "dados" && (
-              <SecDados onRegistarTaxi={() => setModalTaxi(true)} />
+              <SecDados
+                onRegistarTaxi={() => setModalTaxi(true)}
+                onRegistarMotorista={() => setModalMotorista(true)}
+              />
             )}
             {active === "config" && <SecConfig />}
             {active === "relatorios" && <SecRelatorios />}
@@ -174,8 +179,12 @@ export default function PaginaGestores() {
         </main>
       </div>
 
-      {/* ── MODAL REGISTAR TÁXI ── */}
+      {/* ── MODAIS ── */}
       <RegistarTaxi aberto={modalTaxi} onFechar={() => setModalTaxi(false)} />
+      <RegistarMotorista
+        aberto={modalMotorista}
+        onFechar={() => setModalMotorista(false)}
+      />
 
       <style>{`
         @keyframes fadeUp {
@@ -201,7 +210,7 @@ function PageHead({ t, s }) {
 /* ═══════════════════════════════════════════════
    SECÇÕES
    ═══════════════════════════════════════════════ */
-function SecDados({ onRegistarTaxi }) {
+function SecDados({ onRegistarTaxi, onRegistarMotorista }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       <Card
@@ -223,7 +232,12 @@ function SecDados({ onRegistarTaxi }) {
         bg="linear-gradient(135deg, #00c873, #00a85e)"
         title="Motoristas"
       >
-        <Action Icon={Plus} label="Registar motorista" accent />
+        <Action
+          Icon={Plus}
+          label="Registar motorista"
+          accent
+          onClick={onRegistarMotorista}
+        />
         <Action Icon={Pencil} label="Editar motorista" />
         <Action Icon={Trash2} label="Remover motorista" danger />
       </Card>

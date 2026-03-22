@@ -3,7 +3,7 @@ import Homepage from "./pages/Homepage"; // Homepage.jsx esta no ficheiro pages/
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
-import CompletarPerfil from "./pages/CompletarPerfil";
+import CompletarPerfil from "./pages/Completar-perfil";
 import PaginaGestores from "./pages/PaginaGestores";
 export default function App() {
   return (
