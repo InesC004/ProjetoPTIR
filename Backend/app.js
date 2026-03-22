@@ -6,6 +6,9 @@ const cors = require('cors')
 // Importar rotas
 const clientesRoutes = require('./routes/clientes')
 const gestoresRoutes = require('./routes/gestores')
+const taxisRoutes = require('./routes/taxis')
+
+
 
 const app = express()
 const PORT = process.env.PORT || 8080
@@ -14,7 +17,11 @@ const MONGO_URI = process.env.MONGO_URI
 // ===========================
 // Conectar ao MongoDB
 // ===========================
-mongoose.connect(MONGO_URI)
+console.log(`Tentando conectar a: ${MONGO_URI}`)
+mongoose.set('debug', true)
+mongoose.connect(MONGO_URI, {
+  serverSelectionTimeoutMS: 5000,
+})
   .then(() => console.log(`MongoDB conectado: ${mongoose.connection.host}`))
   .catch(err => console.error('Erro ao conectar MongoDB:', err.message))
 
@@ -29,6 +36,7 @@ app.use(express.json())
 // ===========================
 app.use('/api/clientes', clientesRoutes)
 app.use('/api/gestores', gestoresRoutes)
+app.use('/taxis', taxisRoutes)
 
 // Rota de teste
 app.get('/', (req, res) => {
