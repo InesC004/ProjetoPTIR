@@ -7,7 +7,7 @@ const cors = require('cors')
 const clientesRoutes = require('./routes/clientes')
 const gestoresRoutes = require('./routes/gestores')
 const taxisRoutes = require('./routes/taxis')
-
+const turnosRoutes = require('./routes/turnos');
 
 
 const app = express()
@@ -37,7 +37,7 @@ app.use(express.json())
 app.use('/api/clientes', clientesRoutes)
 app.use('/api/gestores', gestoresRoutes)
 app.use('/taxis', taxisRoutes)
-
+app.use('/turnos', turnosRoutes);
 // Rota de teste
 app.get('/', (req, res) => {
   res.send('Servidor a correr e MongoDB conectado!')
