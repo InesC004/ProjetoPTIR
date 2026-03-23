@@ -1,625 +1,314 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  CarFront,
+  Route,
+  Users,
+  Receipt,
+  Fuel,
+  Clock,
+  Square,
+  MapPin,
+  ChevronRight,
+  Calendar,
+  Navigation,
+  Timer,
+  CheckCircle2,
+  ListOrdered,
+  PlusCircle,
+} from "lucide-react";
+import logo from "../Pictures/logo1.jpeg";
 
-const MOCK_TURNOS = [
-  {
-    id: 1,
-    data: "22/03/2026",
-    taxi: "Táxi #12",
-    inicio: "06:00",
-    fim: "14:00",
-    estado: "Ativo",
-  },
-  {
-    id: 2,
-    data: "21/03/2026",
-    taxi: "Táxi #07",
-    inicio: "14:00",
-    fim: "22:00",
-    estado: "Concluído",
-  },
+/* ═══════════════════════════════════════════════
+   NAV
+   ═══════════════════════════════════════════════ */
+const NAV = [
+  { id: "turno", label: "Requisitar Táxi", Icon: CarFront, tag: "Turno" },
+  { id: "pedidos", label: "Pedidos de Táxi", Icon: Navigation, tag: "Pedidos" },
+  { id: "viagem", label: "Viagens", Icon: Route, tag: "Viagem" },
+  { id: "fatura", label: "Faturas", Icon: Receipt, tag: "Faturação" },
+  { id: "reabastecimento", label: "Reabastecimento", Icon: Fuel, tag: "Táxi" },
 ];
 
-const MOCK_PEDIDOS = [
-  {
-    id: 101,
-    cliente: "Ana R.",
-    origem: "Rossio",
-    destino: "Aeroporto",
-    hora: "10:32",
-  },
-  {
-    id: 102,
-    cliente: "João M.",
-    origem: "Belém",
-    destino: "Parque das Nações",
-    hora: "10:45",
-  },
-  {
-    id: 103,
-    cliente: "Maria S.",
-    origem: "Saldanha",
-    destino: "Cascais",
-    hora: "11:02",
-  },
-];
-
-const TAXIS_DISPONIVEIS = ["Táxi #03", "Táxi #08", "Táxi #12", "Táxi #15"];
-
+/* ═══════════════════════════════════════════════
+   COMPONENTE PRINCIPAL
+   ═══════════════════════════════════════════════ */
 export default function PaginaMotorista() {
-  const [secaoAtiva, setSecaoAtiva] = useState("painel");
-  const [viagemAtiva, setViagemAtiva] = useState(null);
-  const [mostrarNovoTurno, setMostrarNovoTurno] = useState(false);
-  const [mostrarReabastecimento, setMostrarReabastecimento] = useState(false);
-  const [mostrarFatura, setMostrarFatura] = useState(false);
-
-  const secoes = [
-    { id: "painel", nome: "Painel", icon: "⊞" },
-    { id: "turnos", nome: "Turnos", icon: "⏱" },
-    { id: "pedidos", nome: "Pedidos", icon: "📲" },
-    { id: "viagens", nome: "Viagens", icon: "🧭" },
-    { id: "pagamentos", nome: "Pagamentos", icon: "🧾" },
-    { id: "veiculo", nome: "Veículo", icon: "⛽" },
-  ];
+  const navigate = useNavigate();
+  const [active, setActive] = useState("turno");
+  const current = NAV.find((n) => n.id === active);
 
   return (
-    <div
-      style={{ fontFamily: "'DM Sans', 'Segoe UI', sans-serif" }}
-      className="min-h-screen bg-stone-50 text-stone-900"
-    >
-      <link
-        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&display=swap"
-        rel="stylesheet"
+    <div className="relative min-h-screen bg-[#060e1e] font-['DM_Sans',sans-serif] text-[#eaf0ff]">
+      {/* ── Fundo decorativo ── */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute -top-[180px] left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full bg-[radial-gradient(circle,rgba(0,232,135,0.06)_0%,transparent_70%)]" />
+        <div className="absolute -bottom-[100px] -right-[100px] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(26,110,255,0.05)_0%,transparent_70%)]" />
+      </div>
+      <div
+        className="fixed inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(0,232,135,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,232,135,0.02) 1px, transparent 1px)",
+          backgroundSize: "70px 70px",
+          maskImage:
+            "radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 100%)",
+        }}
       />
 
-      {/* Top bar */}
-      <header className="border-b border-stone-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-lg font-bold text-white shadow-sm">
-              T
-            </div>
-            <div>
-              <p className="text-[13px] text-stone-400 leading-none">
-                Motorista
-              </p>
-              <p className="text-[15px] font-bold leading-tight">
-                Carlos Mendes
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Em serviço
+      {/* ── HEADER ── */}
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-5 bg-[#060e1e]/80 backdrop-blur-xl border-b border-white/[0.06]">
+        <div
+          className="flex items-center gap-3 cursor-pointer group"
+          onClick={() => navigate("/")}
+        >
+          <img
+            src={logo}
+            alt="TakeCab"
+            className="h-10 w-auto rounded-[10px] border border-white/[0.08] transition-transform duration-300 group-hover:scale-105"
+          />
+          <div className="flex flex-col">
+            <span className="font-semibold text-white text-[16px] tracking-tight">
+              Take<span className="text-[#3d8bff]">Cab</span>
             </span>
-            <button className="ml-2 rounded-lg border border-stone-200 px-3 py-1.5 text-xs text-stone-500 hover:bg-stone-50 transition">
-              Sair
-            </button>
+            <span className="text-[10px] tracking-[0.16em] uppercase text-white/30">
+              Premium Rides
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#00e887]/10 border border-[#00e887]/20 text-[12px] font-semibold text-[#00e887]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00e887] shadow-[0_0_6px_#00e887]" />
+            Motorista
           </div>
         </div>
       </header>
 
-      <div className="mx-auto flex max-w-6xl gap-0 lg:gap-6 px-5 py-6">
-        {/* Sidebar nav */}
-        <nav className="hidden lg:flex flex-col gap-1 w-52 shrink-0 pt-1">
-          {secoes.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setSecaoAtiva(s.id)}
-              className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all ${
-                secaoAtiva === s.id
-                  ? "bg-amber-500 text-white shadow-md shadow-amber-200"
-                  : "text-stone-500 hover:bg-stone-100 hover:text-stone-800"
-              }`}
-            >
-              <span className="text-base">{s.icon}</span>
-              {s.nome}
-            </button>
-          ))}
-        </nav>
+      {/* ── LAYOUT ── */}
+      <div className="flex pt-16 relative z-[1] min-h-screen">
+        {/* ── SIDEBAR ── */}
+        <aside className="hidden lg:flex flex-col w-[250px] min-h-[calc(100vh-64px)] bg-[#081226]/85 backdrop-blur-xl border-r border-[#00e887]/[0.08] p-[28px_14px_24px] sticky top-16 self-start shrink-0">
+          <p className="text-[10px] font-bold tracking-[0.14em] uppercase text-[#4e6a8a] px-3 mb-[18px]">
+            Painel do Motorista
+          </p>
 
-        {/* Mobile tabs */}
-        <div className="lg:hidden flex gap-1 overflow-x-auto pb-4 w-full -mx-5 px-5 scrollbar-hide">
-          {secoes.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setSecaoAtiva(s.id)}
-              className={`flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
-                secaoAtiva === s.id
-                  ? "bg-amber-500 text-white shadow"
-                  : "bg-white border border-stone-200 text-stone-500"
-              }`}
-            >
-              <span>{s.icon}</span>
-              {s.nome}
-            </button>
-          ))}
-        </div>
-
-        {/* Content */}
-        <main className="flex-1 min-w-0">
-          {/* ─── PAINEL ─── */}
-          {secaoAtiva === "painel" && (
-            <div className="space-y-5">
-              <SectionHeader
-                titulo="Painel do Motorista"
-                subtitulo="Resumo do dia e ações rápidas"
-              />
-
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <StatCard
-                  label="Turno atual"
-                  valor="06:00–14:00"
-                  detalhe="Táxi #12"
-                  cor="amber"
-                />
-                <StatCard
-                  label="Viagens hoje"
-                  valor="7"
-                  detalhe="3 em espera"
-                  cor="sky"
-                />
-                <StatCard
-                  label="Faturado hoje"
-                  valor="€142"
-                  detalhe="+€38 vs ontem"
-                  cor="emerald"
-                />
-                <StatCard
-                  label="Km percorridos"
-                  valor="96"
-                  detalhe="Táxi #12"
-                  cor="violet"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                <QuickBtn
-                  label="Iniciar viagem"
-                  sub="Nova corrida"
-                  onClick={() => setSecaoAtiva("viagens")}
-                />
-                <QuickBtn
-                  label="Ver pedidos"
-                  sub="Clientes à espera"
-                  onClick={() => setSecaoAtiva("pedidos")}
-                />
-                <QuickBtn
-                  label="Reabastecimento"
-                  sub="Registar combustível"
-                  onClick={() => setSecaoAtiva("veiculo")}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* ─── TURNOS ─── */}
-          {secaoAtiva === "turnos" && (
-            <div className="space-y-5">
-              <div className="flex items-start justify-between flex-wrap gap-3">
-                <SectionHeader
-                  titulo="Turnos"
-                  subtitulo="Gerir e requisitar turnos"
-                />
+          <nav className="flex flex-col gap-[3px]">
+            {NAV.map((item) => {
+              const Ic = item.Icon;
+              const isActive = active === item.id;
+              return (
                 <button
-                  onClick={() => setMostrarNovoTurno(!mostrarNovoTurno)}
-                  className="rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-medium text-white shadow hover:bg-amber-600 transition"
+                  key={item.id}
+                  onClick={() => setActive(item.id)}
+                  className={`relative flex items-center gap-[11px] w-full py-[11px] px-[14px] rounded-xl border-none text-[13.5px] font-medium text-left transition-all duration-200 cursor-pointer
+                    ${
+                      isActive
+                        ? "bg-[#00e887]/10 text-[#00e887] font-semibold"
+                        : "bg-transparent text-[#8ba3c7] hover:bg-[#00e887]/[0.04] hover:text-[#eaf0ff]"
+                    }`}
                 >
-                  + Novo turno
+                  <span
+                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-[3px] bg-[#00e887] transition-transform duration-200 origin-center ${isActive ? "scale-y-100" : "scale-y-0"}`}
+                  />
+                  <Ic
+                    size={18}
+                    strokeWidth={isActive ? 2.2 : 1.6}
+                    className={`transition-opacity ${isActive ? "opacity-100" : "opacity-50"}`}
+                  />
+                  {item.label}
                 </button>
-              </div>
+              );
+            })}
+          </nav>
 
-              {mostrarNovoTurno && (
-                <Card>
-                  <p className="font-semibold mb-4">Requisitar turno</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <InputField label="Data" type="date" />
-                    <InputField label="Hora início" type="time" />
-                    <InputField label="Hora fim" type="time" />
-                  </div>
-                  <div className="mt-4">
-                    <label className="block text-xs text-stone-500 mb-1.5">
-                      Táxi disponível
-                    </label>
-                    <select className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300">
-                      {TAXIS_DISPONIVEIS.map((t) => (
-                        <option key={t}>{t}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <button className="mt-5 rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-stone-800 transition">
-                    Confirmar turno
-                  </button>
-                </Card>
-              )}
-
-              <Card>
-                <p className="font-semibold mb-3">Os meus turnos</p>
-                <div className="space-y-2">
-                  {MOCK_TURNOS.map((t) => (
-                    <div
-                      key={t.id}
-                      className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-stone-50 px-4 py-3"
-                    >
-                      <div>
-                        <p className="text-sm font-medium">
-                          {t.data} — {t.inicio} a {t.fim}
-                        </p>
-                        <p className="text-xs text-stone-400">{t.taxi}</p>
-                      </div>
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          t.estado === "Ativo"
-                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
-                            : "bg-stone-100 text-stone-500"
-                        }`}
-                      >
-                        {t.estado}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
+          {/* Turno ativo (mock) */}
+          <div className="mt-auto p-4 rounded-2xl bg-gradient-to-br from-[#00e887]/[0.08] to-[#1a6eff]/[0.05] border border-[#00e887]/[0.12]">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-[#00e887] shadow-[0_0_8px_#00e887] animate-pulse" />
+              <span className="text-[11px] font-semibold text-[#00e887] uppercase tracking-wider">
+                Turno Ativo
+              </span>
             </div>
-          )}
+            <p className="text-[13px] font-semibold text-[#eaf0ff]">
+              Mercedes Classe E
+            </p>
+            <p className="text-[11px] text-[#4e6a8a] mt-0.5">
+              AA-23-BB · Luxuoso
+            </p>
+            <div className="flex items-center gap-1.5 mt-3 text-[11px] text-[#8ba3c7]">
+              <Clock size={12} /> 14:00 — 22:00
+            </div>
+          </div>
+        </aside>
 
-          {/* ─── PEDIDOS ─── */}
-          {secaoAtiva === "pedidos" && (
-            <div className="space-y-5">
-              <SectionHeader
-                titulo="Pedidos de Clientes"
-                subtitulo="Aceitar ou recusar corridas disponíveis"
+        {/* ── MAIN ── */}
+        <main className="flex-1 p-[36px_44px] max-w-[1020px]" key={active}>
+          <div className="mb-8 animate-[fadeUp_0.5s_ease_both]">
+            <div className="inline-flex items-center gap-[7px] text-[11px] font-semibold tracking-[0.1em] uppercase text-[#00e887] mb-2.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00e887] shadow-[0_0_8px_#00e887] animate-pulse" />
+              {current?.tag}
+            </div>
+            {active === "turno" && (
+              <PageHead
+                t="Requisitar Táxi"
+                s="Registe um turno e escolha um táxi disponível para conduzir."
               />
-              <div className="space-y-3">
-                {MOCK_PEDIDOS.map((p) => (
-                  <Card key={p.id}>
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold">{p.cliente}</p>
-                        <p className="text-xs text-stone-500 mt-0.5">
-                          {p.origem} → {p.destino}
-                        </p>
-                        <p className="text-xs text-stone-400 mt-0.5">
-                          Pedido às {p.hora}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button className="rounded-lg bg-emerald-500 px-4 py-2 text-xs font-medium text-white hover:bg-emerald-600 transition">
-                          Aceitar
-                        </button>
-                        <button className="rounded-lg border border-stone-200 px-4 py-2 text-xs text-stone-500 hover:bg-stone-50 transition">
-                          Recusar
-                        </button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ─── VIAGENS ─── */}
-          {secaoAtiva === "viagens" && (
-            <div className="space-y-5">
-              <SectionHeader
-                titulo="Viagens"
-                subtitulo="Iniciar, gerir e terminar viagens"
+            )}
+            {active === "pedidos" && (
+              <PageHead
+                t="Pedidos de Táxi"
+                s="Visualize e aceite pedidos de clientes que aguardam motorista."
               />
+            )}
+            {active === "viagem" && <PageHead t="Viagens" s="viagens page" />}
+            {active === "fatura" && <PageHead t="Faturas" s=" faturas page." />}
+            {active === "reabastecimento" && (
+              <PageHead t="Reabastecimento" s=" reabastecimentos page" />
+            )}
+          </div>
 
-              {!viagemAtiva ? (
-                <Card>
-                  <p className="text-sm text-stone-500 mb-4">
-                    Nenhuma viagem em curso.
-                  </p>
-                  <button
-                    onClick={() => setViagemAtiva(true)}
-                    className="rounded-xl bg-amber-500 px-5 py-3 text-sm font-medium text-white shadow hover:bg-amber-600 transition"
-                  >
-                    🚕 Iniciar nova viagem
-                  </button>
-                </Card>
-              ) : (
-                <Card>
-                  <div className="flex items-center gap-2 mb-5">
-                    <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
-                    <p className="text-sm font-semibold text-red-600">
-                      Viagem em curso
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <InputField
-                      label="Morada de origem"
-                      placeholder="Ex: Rossio, Lisboa"
-                    />
-                    <InputField
-                      label="Morada de destino"
-                      placeholder="Ex: Aeroporto de Lisboa"
-                    />
-                    <InputField
-                      label="Nº de passageiros"
-                      type="number"
-                      placeholder="1"
-                    />
-                    <InputField label="Hora de início" type="time" />
-                  </div>
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <button
-                      onClick={() => {
-                        setViagemAtiva(false);
-                        setMostrarFatura(true);
-                      }}
-                      className="rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-stone-800 transition"
-                    >
-                      Terminar viagem
-                    </button>
-                    <button
-                      onClick={() => setViagemAtiva(false)}
-                      className="rounded-xl border border-stone-200 px-5 py-2.5 text-sm text-stone-500 hover:bg-stone-50 transition"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </Card>
-              )}
-
-              {mostrarFatura && (
-                <Card>
-                  <p className="font-semibold mb-1">Viagem concluída</p>
-                  <p className="text-xs text-stone-400 mb-4">
-                    Preço calculado automaticamente
-                  </p>
-                  <div className="flex items-end gap-6 flex-wrap">
-                    <div>
-                      <p className="text-xs text-stone-400">Distância</p>
-                      <p className="text-lg font-bold">12.4 km</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-stone-400">Duração</p>
-                      <p className="text-lg font-bold">18 min</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-stone-400">Preço</p>
-                      <p className="text-2xl font-bold text-amber-600">
-                        €14,80
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-5 flex gap-3 flex-wrap">
-                    <button className="rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-600 transition">
-                      Confirmar pagamento
-                    </button>
-                    <button className="rounded-xl border border-stone-200 px-5 py-2.5 text-sm text-stone-500 hover:bg-stone-50 transition">
-                      Emitir fatura
-                    </button>
-                    <button
-                      onClick={() => setMostrarFatura(false)}
-                      className="rounded-xl border border-stone-200 px-5 py-2.5 text-xs text-stone-400 hover:bg-stone-50 transition"
-                    >
-                      Fechar
-                    </button>
-                  </div>
-                </Card>
-              )}
-            </div>
-          )}
-
-          {/* ─── PAGAMENTOS ─── */}
-          {secaoAtiva === "pagamentos" && (
-            <div className="space-y-5">
-              <SectionHeader
-                titulo="Pagamentos e Faturação"
-                subtitulo="Confirmar pagamentos e emitir faturas"
-              />
-              {[
-                {
-                  viagem: "Rossio → Aeroporto",
-                  valor: "€14,80",
-                  estado: "Pago",
-                },
-                {
-                  viagem: "Belém → Parque Nações",
-                  valor: "€9,20",
-                  estado: "Pendente",
-                },
-                {
-                  viagem: "Saldanha → Cascais",
-                  valor: "€28,50",
-                  estado: "Pendente",
-                },
-              ].map((p, i) => (
-                <Card key={i}>
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-medium">{p.viagem}</p>
-                      <p className="text-lg font-bold mt-0.5">{p.valor}</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          p.estado === "Pago"
-                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
-                            : "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
-                        }`}
-                      >
-                        {p.estado}
-                      </span>
-                      {p.estado === "Pendente" && (
-                        <button className="rounded-lg bg-stone-900 px-3 py-2 text-xs font-medium text-white hover:bg-stone-800 transition">
-                          Confirmar
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-
-          {/* ─── VEÍCULO ─── */}
-          {secaoAtiva === "veiculo" && (
-            <div className="space-y-5">
-              <div className="flex items-start justify-between flex-wrap gap-3">
-                <SectionHeader
-                  titulo="Operações do Veículo"
-                  subtitulo="Reabastecimentos e manutenção"
-                />
-                <button
-                  onClick={() =>
-                    setMostrarReabastecimento(!mostrarReabastecimento)
-                  }
-                  className="rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-medium text-white shadow hover:bg-amber-600 transition"
-                >
-                  + Registar reabastecimento
-                </button>
-              </div>
-
-              {mostrarReabastecimento && (
-                <Card>
-                  <p className="font-semibold mb-4">Novo reabastecimento</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-stone-500 mb-1.5">
-                        Tipo
-                      </label>
-                      <select className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300">
-                        <option>Gasóleo</option>
-                        <option>Gasolina</option>
-                        <option>Elétrico</option>
-                        <option>GPL</option>
-                      </select>
-                    </div>
-                    <InputField
-                      label="Litros / kWh"
-                      type="number"
-                      placeholder="Ex: 45"
-                    />
-                    <InputField
-                      label="Custo (€)"
-                      type="number"
-                      placeholder="Ex: 72.50"
-                    />
-                    <InputField
-                      label="Km do táxi"
-                      type="number"
-                      placeholder="Ex: 134520"
-                    />
-                  </div>
-                  <button className="mt-5 rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-stone-800 transition">
-                    Guardar
-                  </button>
-                </Card>
-              )}
-
-              <Card>
-                <p className="font-semibold mb-3">Últimos reabastecimentos</p>
-                <div className="space-y-2">
-                  {[
-                    {
-                      data: "22/03",
-                      tipo: "Gasóleo",
-                      litros: "42L",
-                      custo: "€68,40",
-                      km: "134 520 km",
-                    },
-                    {
-                      data: "18/03",
-                      tipo: "Gasóleo",
-                      litros: "38L",
-                      custo: "€61,20",
-                      km: "133 870 km",
-                    },
-                    {
-                      data: "14/03",
-                      tipo: "Gasóleo",
-                      litros: "44L",
-                      custo: "€71,10",
-                      km: "133 200 km",
-                    },
-                  ].map((r, i) => (
-                    <div
-                      key={i}
-                      className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-stone-50 px-4 py-3"
-                    >
-                      <div>
-                        <p className="text-sm font-medium">
-                          {r.data} — {r.tipo} · {r.litros}
-                        </p>
-                        <p className="text-xs text-stone-400">{r.km}</p>
-                      </div>
-                      <p className="text-sm font-bold">{r.custo}</p>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </div>
-          )}
+          <div className="animate-[fadeUp_0.5s_0.08s_ease_both]">
+            {active === "turno" && <SecTurno />}
+            {active === "pedidos" && <SecPedidos />}
+          </div>
         </main>
       </div>
+
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
 
-/* ── Small reusable pieces ── */
-
-function SectionHeader({ titulo, subtitulo }) {
+function PageHead({ t, s }) {
   return (
-    <div>
-      <h2 className="text-2xl font-bold tracking-tight">{titulo}</h2>
-      <p className="mt-1 text-sm text-stone-400">{subtitulo}</p>
-    </div>
+    <>
+      <h2 className="font-['Syne',sans-serif] text-[28px] font-extrabold tracking-tight text-[#eaf0ff] mb-1.5">
+        {t}
+      </h2>
+      <p className="text-[14px] text-[#8ba3c7] leading-relaxed">{s}</p>
+    </>
   );
 }
 
-function Card({ children }) {
+/* ═══════════════════════════════════════════════
+   US5 — REQUISITAR TÁXI PARA TURNO
+   ═══════════════════════════════════════════════ */
+function SecTurno() {
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-      {children}
-    </div>
-  );
-}
-
-function StatCard({ label, valor, detalhe, cor }) {
-  const cores = {
-    amber: "bg-amber-50 text-amber-700 ring-amber-200",
-    sky: "bg-sky-50 text-sky-700 ring-sky-200",
-    emerald: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-    violet: "bg-violet-50 text-violet-700 ring-violet-200",
-  };
-  return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
-      <p className="text-xs text-stone-400">{label}</p>
-      <p className="mt-1 text-xl font-bold">{valor}</p>
-      <span
-        className={`mt-2 inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ${cores[cor]}`}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <Card
+        CardIcon={Calendar}
+        bg="linear-gradient(135deg, #00e887, #00a85e)"
+        title="Novo Turno"
       >
-        {detalhe}
+        <Action Icon={PlusCircle} label="Definir período do turno" accent />
+        <Action Icon={Clock} label="Verificar disponibilidade" />
+        <Action Icon={CarFront} label="Escolher táxi disponível" accent />
+      </Card>
+      <Card
+        CardIcon={ListOrdered}
+        bg="linear-gradient(135deg, #1a6eff, #3d8bff)"
+        title="Os Meus Turnos"
+      >
+        <Action Icon={Clock} label="Ver turnos ativos" />
+        <Action Icon={Calendar} label="Histórico de turnos" />
+        <Action Icon={CarFront} label="Táxis utilizados" />
+      </Card>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   US7 — VER / ACEITAR PEDIDOS DE TÁXI
+   ═══════════════════════════════════════════════ */
+function SecPedidos() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <Card
+        CardIcon={Navigation}
+        bg="linear-gradient(135deg, #00d4ff, #1a6eff)"
+        title="Pedidos Pendentes"
+      >
+        <Action Icon={MapPin} label="Ver pedidos por proximidade" accent />
+        <Action Icon={Users} label="Detalhes do cliente e destino" />
+        <Action Icon={CheckCircle2} label="Aceitar pedido" accent />
+      </Card>
+      <Card
+        CardIcon={Timer}
+        bg="linear-gradient(135deg, #c64dff, #7c3aed)"
+        title="Aguardar Confirmação"
+      >
+        <Action Icon={Clock} label="Pedidos aceites a aguardar cliente" />
+        <Action Icon={Square} label="Cancelar aceitação" danger />
+      </Card>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   COMPONENTES BASE
+   ═══════════════════════════════════════════════ */
+function Card({ CardIcon, bg, title, children }) {
+  return (
+    <div className="relative overflow-hidden rounded-[20px] border border-[#00e887]/[0.08] bg-[rgba(12,28,56,0.55)] backdrop-blur-xl p-6 transition-all duration-300 hover:border-[#00e887]/20 hover:bg-[rgba(18,38,72,0.7)] hover:-translate-y-0.5 hover:shadow-[0_16px_48px_rgba(0,0,0,0.3)]">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+      <div className="flex items-center gap-3 mb-5 pb-4 border-b border-white/[0.04]">
+        <div
+          className="w-10 h-10 rounded-[13px] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)]"
+          style={{ background: bg }}
+        >
+          <CardIcon size={18} strokeWidth={1.8} />
+        </div>
+        <h3 className="font-['Syne',sans-serif] text-[16px] font-bold tracking-tight">
+          {title}
+        </h3>
+      </div>
+      <div className="flex flex-col gap-2">{children}</div>
+    </div>
+  );
+}
+
+function Action({ Icon, label, accent, danger, onClick }) {
+  const base =
+    "group flex items-center justify-between w-full py-3 px-3.5 rounded-xl border text-[13.5px] font-medium cursor-pointer transition-all duration-200 text-left";
+
+  let variant;
+  if (accent) {
+    variant =
+      "border-[#00e887]/[0.15] bg-[#00e887]/[0.05] text-[#eaf0ff] hover:bg-[#00e887]/[0.12] hover:border-[#00e887]/[0.3] hover:shadow-[0_0_20px_rgba(0,232,135,0.08)] hover:translate-x-[3px]";
+  } else if (danger) {
+    variant =
+      "border-white/[0.03] bg-white/[0.02] text-[#8ba3c7] hover:bg-[#ef4444]/[0.08] hover:border-[#ef4444]/25 hover:text-[#ff6b6b] hover:translate-x-[3px]";
+  } else {
+    variant =
+      "border-white/[0.04] bg-white/[0.02] text-[#eaf0ff] hover:bg-[#00e887]/[0.06] hover:border-[#00e887]/15 hover:translate-x-[3px]";
+  }
+
+  return (
+    <button className={`${base} ${variant}`} onClick={onClick}>
+      <span className="flex items-center gap-2.5">
+        <span
+          className={`w-[30px] h-[30px] rounded-[9px] flex items-center justify-center border transition-all duration-200 ${
+            danger
+              ? "bg-white/[0.03] border-white/[0.05] group-hover:bg-[#ef4444]/[0.12] group-hover:border-[#ef4444]/20"
+              : "bg-white/[0.03] border-white/[0.05] group-hover:bg-[#00e887]/[0.1] group-hover:border-[#00e887]/20"
+          }`}
+        >
+          <Icon size={15} strokeWidth={1.8} />
+        </span>
+        {label}
       </span>
-    </div>
-  );
-}
-
-function QuickBtn({ label, sub, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="rounded-2xl border border-stone-200 bg-white p-4 text-left shadow-sm transition hover:border-amber-300 hover:shadow-md"
-    >
-      <p className="text-sm font-semibold">{label}</p>
-      <p className="mt-0.5 text-xs text-stone-400">{sub}</p>
-    </button>
-  );
-}
-
-function InputField({ label, type = "text", placeholder }) {
-  return (
-    <div>
-      <label className="block text-xs text-stone-500 mb-1.5">{label}</label>
-      <input
-        type={type}
-        placeholder={placeholder}
-        className="w-full rounded-lg border border-stone-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300"
+      <ChevronRight
+        size={14}
+        strokeWidth={2}
+        className="text-[#4e6a8a] transition-all duration-200 group-hover:text-[#00e887] group-hover:translate-x-0.5"
       />
-    </div>
+    </button>
   );
 }
