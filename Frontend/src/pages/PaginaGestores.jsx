@@ -25,6 +25,7 @@ import {
 import logo from "../Pictures/logo1.jpeg";
 import RegistarTaxi from "../components/RegistarTaxi";
 import RegistarMotorista from "../components/RegistarMotorista";
+import EditarTaxi from "../components/EditarTaxi";
 
 /* ═══════════════════════════════════════════════
    NAV
@@ -44,6 +45,7 @@ export default function PaginaGestores() {
   const [active, setActive] = useState("dados");
   const [modalTaxi, setModalTaxi] = useState(false);
   const [modalMotorista, setModalMotorista] = useState(false);
+  const [modalEditTaxi, setModalEditTaxi] = useState(false);
   const current = NAV.find((n) => n.id === active);
 
   return (
@@ -170,6 +172,7 @@ export default function PaginaGestores() {
               <SecDados
                 onRegistarTaxi={() => setModalTaxi(true)}
                 onRegistarMotorista={() => setModalMotorista(true)}
+                onEditarTaxi={() => setModalEditTaxi(true)}
               />
             )}
             {active === "config" && <SecConfig />}
@@ -184,6 +187,10 @@ export default function PaginaGestores() {
       <RegistarMotorista
         aberto={modalMotorista}
         onFechar={() => setModalMotorista(false)}
+      />
+      <EditarTaxi
+        aberto={modalEditTaxi}
+        onFechar={() => setModalEditTaxi(false)}
       />
 
       <style>{`
@@ -210,7 +217,7 @@ function PageHead({ t, s }) {
 /* ═══════════════════════════════════════════════
    SECÇÕES
    ═══════════════════════════════════════════════ */
-function SecDados({ onRegistarTaxi, onRegistarMotorista }) {
+function SecDados({ onRegistarTaxi, onRegistarMotorista, onEditarTaxi }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       <Card
@@ -224,7 +231,7 @@ function SecDados({ onRegistarTaxi, onRegistarMotorista }) {
           accent
           onClick={onRegistarTaxi}
         />
-        <Action Icon={Pencil} label="Editar táxi" />
+        <Action Icon={Pencil} label="Editar táxi" onClick={onEditarTaxi} />
         <Action Icon={Trash2} label="Remover táxi" danger />
       </Card>
       <Card

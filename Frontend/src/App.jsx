@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import CompletarPerfil from "./pages/Completar-perfil";
 import PaginaGestores from "./pages/PaginaGestores";
+import PaginaMotorista from "./pages/PaginaMotorista";
 export default function App() {
   return (
     <BrowserRouter>
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/Profile" element={<Profile />} />
         <Route path="/completar-perfil" element={<CompletarPerfil />} />
         <Route path="/PaginaGestores" element={<PaginaGestores />} />
+        <Route path="/PaginaMotorista" element={<PaginaMotorista />} />
       </Routes>
     </BrowserRouter>
   );
