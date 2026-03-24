@@ -538,62 +538,100 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
   // ── Expõe métodos ao componente pai (Dashboard) via apiRef ──────────────────
   useEffect(() => {
     if (!apiRef) return;
-    apiRef.current = {
-      // Limpa tudo e volta ao estado inicial
-      reiniciar() {
-        estadoRef.current = "partida";
-        if (marcadorPartida.current) {
-          marcadorPartida.current.remove();
-          marcadorPartida.current = null;
-        }
-        if (marcadorDestino.current) {
-          marcadorDestino.current.remove();
-          marcadorDestino.current = null;
-        }
-        if (camadaRotaRef.current) {
-          camadaRotaRef.current.remove();
-          camadaRotaRef.current = null;
-        }
-        aoDefinirPartida(null, "");
-        aoDefinirDestino(null, "");
-      },
+      apiRef.current = {
+        reiniciar() {
+          estadoRef.current = "partida";
 
-      // Coloca o marcador de partida na posição GPS do utilizador
-      // (chamado pelo botão "Usar a minha localização atual")
-      async colocarPartidaNaLocalizacao(lat, lng) {
-        const L = leafletRef.current;
-        const mapa = mapRef.current;
-        if (!L || !mapa) return;
+          if (marcadorPartida.current) {
+            marcadorPartida.current.remove();
+            marcadorPartida.current = null;
+          }
+          if (marcadorDestino.current) {
+            marcadorDestino.current.remove();
+            marcadorDestino.current = null;
+          }
+          if (camadaRotaRef.current) {
+            camadaRotaRef.current.remove();
+            camadaRotaRef.current = null;
+          }
 
-        // Remove marcador de partida anterior, se existir
-        if (marcadorPartida.current) {
-          marcadorPartida.current.remove();
-          marcadorPartida.current = null;
-        }
-        if (camadaRotaRef.current) {
-          camadaRotaRef.current.remove();
-          camadaRotaRef.current = null;
-        }
+          aoDefinirPartida(null, "");
+          aoDefinirDestino(null, "");
+        },
 
-        const mk = L.marker([lat, lng], {
-          icon: criarIcone(L, "#00e887", "📍"),
-          draggable: true, // o utilizador pode arrastar para ajustar
-        }).addTo(mapa);
+        limparPartida() {
+          if (marcadorPartida.current) {
+            marcadorPartida.current.remove();
+            marcadorPartida.current = null;
+          }
 
-        // Ao arrastar, atualiza a morada
-        mk.on("dragend", async () => {
-          const pos = mk.getLatLng();
-          const morada = await coordenadasParaMorada(pos.lat, pos.lng);
-          aoDefinirPartida([pos.lat, pos.lng], morada);
-          if (marcadorDestino.current)
-            desenharRota(refs, pos, marcadorDestino.current.getLatLng());
-        });
+          if (camadaRotaRef.current) {
+            camadaRotaRef.current.remove();
+            camadaRotaRef.current = null;
+          }
 
-        marcadorPartida.current = mk;
-        estadoRef.current = "destino"; // próximo clique será o destino
-        mapa.setView([lat, lng], 15);
-      },
-    };
+          // mantém o destino
+          estadoRef.current = "partida";
+          aoDefinirPartida(null, "");
+        },
+
+        limparDestino() {
+          if (marcadorDestino.current) {
+            marcadorDestino.current.remove();
+            marcadorDestino.current = null;
+          }
+
+          if (camadaRotaRef.current) {
+            camadaRotaRef.current.remove();
+            camadaRotaRef.current = null;
+          }
+
+          // mantém a partida
+          estadoRef.current = marcadorPartida.current ? "destino" : "partida";
+          aoDefinirDestino(null, "");
+        },
+
+        async colocarPartidaNaLocalizacao(lat, lng) {
+          const L = leafletRef.current;
+          const mapa = mapRef.current;
+          if (!L || !mapa) return;
+
+          if (marcadorPartida.current) {
+            marcadorPartida.current.remove();
+            marcadorPartida.current = null;
+          }
+          if (camadaRotaRef.current) {
+            camadaRotaRef.current.remove();
+            camadaRotaRef.current = null;
+          }
+
+          const mk = L.marker([lat, lng], {
+            icon: criarIcone(L, "#00e887", "📍"),
+            draggable: true,
+          }).addTo(mapa);
+
+          mk.on("dragend", async () => {
+            const pos = mk.getLatLng();
+            const morada = await coordenadasParaMorada(pos.lat, pos.lng);
+            aoDefinirPartida([pos.lat, pos.lng], morada);
+
+            if (marcadorDestino.current) {
+              desenharRota(refs, pos, marcadorDestino.current.getLatLng());
+            }
+          });
+
+          marcadorPartida.current = mk;
+
+          if (marcadorDestino.current) {
+            desenharRota(refs, mk.getLatLng(), marcadorDestino.current.getLatLng());
+            estadoRef.current = "concluido";
+          } else {
+            estadoRef.current = "destino";
+          }
+
+          mapa.setView([lat, lng], 15);
+        },
+      };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -957,10 +995,10 @@ export default function Dashboard() {
               {moradaPartida && (
                 <button
                   className="btn-limpar"
+                  type="button"
                   onClick={() => {
-                    setPartida(null);
-                    setMoradaPartida("");
                     setDadosRota(null);
+                    apiMapa.current?.limparPartida();
                   }}
                 >
                   ✕
@@ -986,10 +1024,10 @@ export default function Dashboard() {
               {moradaDestino && (
                 <button
                   className="btn-limpar"
+                  type="button"
                   onClick={() => {
-                    setDestino(null);
-                    setMoradaDestino("");
                     setDadosRota(null);
+                    apiMapa.current?.limparDestino();
                   }}
                 >
                   ✕
