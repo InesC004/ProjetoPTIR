@@ -1,12 +1,16 @@
 const mongoose = require('mongoose')
 
-const clienteSchema = new mongoose.Schema({
+const motoristaSchema = new mongoose.Schema({
   nome: { type: String, required: true },
   nif: { type: String, required: true, unique: true },
   genero: { type: String, enum: ['m', 'f', 'other'] },
-  data_nascimento: { type: Date },
+  ano_nascimento: { type: Date },
+  email: { type: String, required: true, unique: true },  
   morada: { type: String },
-  codigo_postal: { type: String }
+  senha_acesso: { type: String, required: true },
+
+  // baseado na diagrama de pgp
+  numero_carta_conducao: { type: String, required: true }
 })
 
-module.exports = mongoose.model('cliente', clienteSchema)
+module.exports = mongoose.model('motorista', motoristaSchema)
