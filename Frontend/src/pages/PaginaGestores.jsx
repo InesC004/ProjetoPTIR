@@ -26,6 +26,9 @@ import logo from "../Pictures/logo1.jpeg";
 import RegistarTaxi from "../components/RegistarTaxi";
 import RegistarMotorista from "../components/RegistarMotorista";
 import EditarTaxi from "../components/EditarTaxi";
+import EditarMotorista from "../components/EditarMotorista";
+import RemoverTaxi from "../components/RemoverTaxi";
+import RemoverMotorista from "../components/RemoverMotorista";
 
 /* ═══════════════════════════════════════════════
    NAV
@@ -46,6 +49,9 @@ export default function PaginaGestores() {
   const [modalTaxi, setModalTaxi] = useState(false);
   const [modalMotorista, setModalMotorista] = useState(false);
   const [modalEditTaxi, setModalEditTaxi] = useState(false);
+  const [modalEditMotorista, setModalEditMotorista] = useState(false);
+  const [modalRemoverTaxi, setModalRemoverTaxi] = useState(false);
+  const [modalRemoverMotorista, setModalRemoverMotorista] = useState(false);
   const current = NAV.find((n) => n.id === active);
 
   return (
@@ -173,6 +179,9 @@ export default function PaginaGestores() {
                 onRegistarTaxi={() => setModalTaxi(true)}
                 onRegistarMotorista={() => setModalMotorista(true)}
                 onEditarTaxi={() => setModalEditTaxi(true)}
+                onEditarMotorista={() => setModalEditMotorista(true)}
+                onRemoverTaxi={() => setModalRemoverTaxi(true)}
+                onRemoverMotorista={() => setModalRemoverMotorista(true)}
               />
             )}
             {active === "config" && <SecConfig />}
@@ -192,7 +201,19 @@ export default function PaginaGestores() {
         aberto={modalEditTaxi}
         onFechar={() => setModalEditTaxi(false)}
       />
+      <EditarMotorista
+        aberto={modalEditMotorista}
+        onFechar={() => setModalEditMotorista(false)}
+      />
+      <RemoverTaxi
+        aberto={modalRemoverTaxi}
+        onFechar={() => setModalRemoverTaxi(false)}
+      />
 
+      <RemoverMotorista
+        aberto={modalRemoverMotorista}
+        onFechar={() => setModalRemoverMotorista(false)}
+      />
       <style>{`
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(12px); }
@@ -217,7 +238,8 @@ function PageHead({ t, s }) {
 /* ═══════════════════════════════════════════════
    SECÇÕES
    ═══════════════════════════════════════════════ */
-function SecDados({ onRegistarTaxi, onRegistarMotorista, onEditarTaxi }) {
+function SecDados({ onRegistarTaxi, onRegistarMotorista, onEditarTaxi, onEditarMotorista,onRemoverTaxi,
+  onRemoverMotorista}) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       <Card
@@ -232,7 +254,7 @@ function SecDados({ onRegistarTaxi, onRegistarMotorista, onEditarTaxi }) {
           onClick={onRegistarTaxi}
         />
         <Action Icon={Pencil} label="Editar táxi" onClick={onEditarTaxi} />
-        <Action Icon={Trash2} label="Remover táxi" danger />
+        <Action Icon={Trash2} label="Remover táxi" onClick={onRemoverTaxi}/>
       </Card>
       <Card
         CardIcon={Users}
@@ -245,8 +267,8 @@ function SecDados({ onRegistarTaxi, onRegistarMotorista, onEditarTaxi }) {
           accent
           onClick={onRegistarMotorista}
         />
-        <Action Icon={Pencil} label="Editar motorista" />
-        <Action Icon={Trash2} label="Remover motorista" danger />
+        <Action Icon={Pencil} label="Editar motorista" onClick={onEditarMotorista}/>
+        <Action Icon={Trash2} label="Remover motorista" onClick={onRemoverMotorista}/>
       </Card>
     </div>
   );
