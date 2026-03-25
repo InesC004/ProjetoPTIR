@@ -8,6 +8,7 @@ const clientesRoutes = require('./routes/clientes')
 const gestoresRoutes = require('./routes/gestores')
 const taxisRoutes = require('./routes/taxis')
 const motoristasRoutes = require('./routes/motoristas')
+const precosRoutes = require('./routes/precos')
 
 
 
@@ -39,6 +40,7 @@ app.use('/api/clientes', clientesRoutes)
 app.use('/api/gestores', gestoresRoutes)
 app.use('/taxis', taxisRoutes)
 app.use('/api/motoristas', motoristasRoutes)
+app.use('/api/precos', precosRoutes)
 
 // Rota de teste
 app.get('/', (req, res) => {
