@@ -17,6 +17,7 @@ export default function RemoverMotorista({ aberto, onFechar }) {
   const [erro, setErro] = useState("");
   const [removendoId, setRemovendoId] = useState(null);
   const [sucesso, setSucesso] = useState("");
+  const [motoristaAConfirmar, setMotoristaAConfirmar] = useState(null);
 
   useEffect(() => {
     if (!aberto) return;
@@ -38,19 +39,22 @@ export default function RemoverMotorista({ aberto, onFechar }) {
     }
   }
 
-  async function removerMotorista(motorista) {
-    const ok = window.confirm(
-      `Tem a certeza que quer remover o motorista ${motorista.nome}?`,
-    );
-    if (!ok) return;
+  function removerMotorista(motorista) {
+    setMotoristaAConfirmar(motorista);
+    setErro("");
+    setSucesso("");
+  }
 
-    setRemovendoId(motorista._id);
+  async function confirmarRemocaoMotorista() {
+    if (!motoristaAConfirmar) return;
+
+    setRemovendoId(motoristaAConfirmar._id);
     setErro("");
     setSucesso("");
 
     try {
       const res = await fetch(
-        `http://localhost:8080/api/motoristas/${motorista._id}`,
+        `http://localhost:8080/api/motoristas/${motoristaAConfirmar._id}`,
         {
           method: "DELETE",
         },
@@ -59,10 +63,13 @@ export default function RemoverMotorista({ aberto, onFechar }) {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setErro(data.error || "Erro ao remover motorista.");
+        setErro(data.error || data.message || "Erro ao remover motorista.");
       } else {
-        setMotoristas((prev) => prev.filter((m) => m._id !== motorista._id));
+        setMotoristas((prev) =>
+          prev.filter((m) => m._id !== motoristaAConfirmar._id),
+        );
         setSucesso("Motorista removido com sucesso.");
+        setMotoristaAConfirmar(null);
       }
     } catch {
       setErro("Não foi possível ligar ao servidor.");
@@ -76,10 +83,12 @@ export default function RemoverMotorista({ aberto, onFechar }) {
   const filtrados = motoristas.filter((m) => {
     const termo = searchTerm.toLowerCase();
     return (
-      (m.nome || "").toLowerCase().includes(termo) ||
+      (m.name || m.nome || "").toLowerCase().includes(termo) ||
       (m.nif || "").toLowerCase().includes(termo) ||
       (m.email || "").toLowerCase().includes(termo) ||
-      (m.numero_carta_conducao || "").toLowerCase().includes(termo)
+      (m.numero_carta || m.numero_carta_conducao || "")
+        .toLowerCase()
+        .includes(termo)
     );
   });
 
@@ -143,6 +152,60 @@ export default function RemoverMotorista({ aberto, onFechar }) {
             </div>
           )}
 
+          {motoristaAConfirmar && (
+            <div className="mb-4 rounded-2xl border border-red-500/20 bg-red-500/[0.05] p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-red-500/10 border border-red-500/20 text-red-300 shrink-0">
+                  <Trash2 size={18} />
+                </div>
+
+                <div className="flex-1">
+                  <h4 className="text-[14px] font-semibold text-[#eaf0ff]">
+                    Confirmar remoção
+                  </h4>
+
+                  <p className="text-[13px] text-[#8ba3c7] mt-1">
+                    Tem a certeza que quer remover o motorista{" "}
+                    <span className="text-[#eaf0ff] font-semibold">
+                      {motoristaAConfirmar.name || motoristaAConfirmar.nome}
+                    </span>
+                    ?
+                  </p>
+
+                  <div className="flex items-center gap-3 mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setMotoristaAConfirmar(null)}
+                      disabled={removendoId === motoristaAConfirmar._id}
+                      className="px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.03] text-[#8ba3c7] hover:bg-white/[0.06] hover:text-[#eaf0ff] transition-all duration-200"
+                    >
+                      Cancelar
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={confirmarRemocaoMotorista}
+                      disabled={removendoId === motoristaAConfirmar._id}
+                      className="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 hover:bg-red-500/15 transition-all duration-200 flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {removendoId === motoristaAConfirmar._id ? (
+                        <>
+                          <Loader2 size={15} className="animate-spin" />
+                          A remover...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 size={15} />
+                          Confirmar remoção
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <div className="flex items-center justify-center gap-3 py-10 text-[#8ba3c7] text-[14px]">
               <Loader2 size={18} className="animate-spin" />
@@ -163,7 +226,7 @@ export default function RemoverMotorista({ aberto, onFechar }) {
                     <div>
                       <div className="font-semibold text-[#eaf0ff] text-[15px] flex items-center gap-2">
                         <User size={15} />
-                        {motorista.nome}
+                        {motorista.name || motorista.nome}
                       </div>
                       <div className="text-[12px] text-[#8ba3c7] mt-1">
                         NIF: {motorista.nif}
@@ -172,7 +235,9 @@ export default function RemoverMotorista({ aberto, onFechar }) {
                         Email: {motorista.email}
                       </div>
                       <div className="text-[12px] text-[#8ba3c7]">
-                        Carta: {motorista.numero_carta_conducao}
+                        Carta:{" "}
+                        {motorista.numero_carta ||
+                          motorista.numero_carta_conducao}
                       </div>
                     </div>
 
@@ -182,17 +247,8 @@ export default function RemoverMotorista({ aberto, onFechar }) {
                       disabled={removendoId === motorista._id}
                       className="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 hover:bg-red-500/15 disabled:opacity-50 flex items-center gap-2"
                     >
-                      {removendoId === motorista._id ? (
-                        <>
-                          <Loader2 size={15} className="animate-spin" />
-                          A remover...
-                        </>
-                      ) : (
-                        <>
-                          <Trash2 size={15} />
-                          Remover
-                        </>
-                      )}
+                      <Trash2 size={15} />
+                      Remover
                     </button>
                   </div>
                 </div>
