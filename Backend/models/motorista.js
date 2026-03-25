@@ -3,14 +3,13 @@ const mongoose = require('mongoose')
 const motoristaSchema = new mongoose.Schema({
   nome: { type: String, required: true },
   nif: { type: String, required: true, unique: true },
-  genero: { type: String, enum: ['m', 'f', 'other'] },
-  ano_nascimento: { type: Date },
-  email: { type: String, required: true, unique: true },  
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  numero_carta: { type: String, required: true, unique: true },
+  genero: { type: String },
+  data_nascimento: { type: Date },
   morada: { type: String },
-  senha_acesso: { type: String, required: true },
-
-  // baseado na diagrama de pgp
-  numero_carta_conducao: { type: String, required: true }
+  codigo_postal: { type: String }
 })
 
 module.exports = mongoose.model('motorista', motoristaSchema)
