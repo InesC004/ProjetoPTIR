@@ -13,26 +13,15 @@ import {
   Mail,
   MapPin,
   CreditCard,
-  KeyRound,
   CalendarDays,
 } from "lucide-react";
 
-/* ═══════════════════════════════════════════════
-   VALIDAÇÕES
-   ═══════════════════════════════════════════════ */
 function validarNIF(valor) {
   return /^\d{9}$/.test(valor);
 }
 
 function validarEmail(valor) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor);
-}
-
-function validarPassword(valor) {
-  if (!valor || valor.length < 6) return false;
-  if (!/[A-Za-z]/.test(valor)) return false;
-  if (!/\d/.test(valor)) return false;
-  return true;
 }
 
 function formatarDataInput(valor) {
@@ -42,9 +31,6 @@ function formatarDataInput(valor) {
   return d.toISOString().split("T")[0];
 }
 
-/* ═══════════════════════════════════════════════
-   DROPDOWN
-   ═══════════════════════════════════════════════ */
 function Dropdown({
   label,
   placeholder,
@@ -70,7 +56,6 @@ function Dropdown({
       <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
         {label}
       </label>
-
       <button
         type="button"
         onClick={() => !disabled && setOpen((v) => !v)}
@@ -92,7 +77,6 @@ function Dropdown({
           className={`text-[#4e6a8a] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
-
       {open && (
         <div className="absolute top-full left-0 right-0 mt-2 z-50 rounded-xl border border-[#1a6eff]/20 bg-[#0c1c38]/98 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden">
           {options.map((opt) => (
@@ -114,9 +98,6 @@ function Dropdown({
   );
 }
 
-/* ═══════════════════════════════════════════════
-   COMPONENTE PRINCIPAL
-   ═══════════════════════════════════════════════ */
 export default function EditarMotorista({ aberto, onFechar }) {
   const [motoristas, setMotoristas] = useState([]);
   const [loadingList, setLoadingList] = useState(false);
@@ -125,14 +106,13 @@ export default function EditarMotorista({ aberto, onFechar }) {
 
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({
-    name: "",
+    nome: "",
     nif: "",
     genero: "",
     data_nascimento: "",
     email: "",
     morada: "",
     codigo_postal: "",
-    password: "",
     numero_carta: "",
   });
 
@@ -150,7 +130,10 @@ export default function EditarMotorista({ aberto, onFechar }) {
     setLoadingList(true);
     setListError("");
     try {
-      const res = await fetch("http://localhost:8080/api/motoristas");
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:8080/api/motoristas/todos", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) throw new Error();
       const data = await res.json();
       setMotoristas(data);
@@ -167,11 +150,11 @@ export default function EditarMotorista({ aberto, onFechar }) {
       nome: motorista.nome || "",
       nif: motorista.nif || "",
       genero: motorista.genero || "",
-      ano_nascimento: formatarDataInput(motorista.ano_nascimento),
+      data_nascimento: formatarDataInput(motorista.data_nascimento),
       email: motorista.email || "",
       morada: motorista.morada || "",
-      senha_acesso: motorista.senha_acesso || "",
-      numero_carta_conducao: motorista.numero_carta_conducao || "",
+      codigo_postal: motorista.codigo_postal || "",
+      numero_carta: motorista.numero_carta || "",
     });
     setErrors({});
     setApiError("");
@@ -183,61 +166,35 @@ export default function EditarMotorista({ aberto, onFechar }) {
     setErrors({});
     setApiError("");
     setSuccess(false);
-    setForm({
-      nome: "",
-      nif: "",
-      genero: "",
-      ano_nascimento: "",
-      email: "",
-      morada: "",
-      senha_acesso: "",
-      numero_carta_conducao: "",
-    });
   }
 
   function handleChange(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: null }));
-    }
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: null }));
     if (apiError) setApiError("");
   }
 
   function validar() {
     const newErrors = {};
-
     if (!form.nome.trim()) newErrors.nome = "Nome obrigatório";
     if (!form.nif.trim()) newErrors.nif = "NIF obrigatório";
     else if (!validarNIF(form.nif)) newErrors.nif = "NIF inválido";
-
     if (!form.genero) newErrors.genero = "Género obrigatório";
-
-    if (!form.ano_nascimento) {
-      newErrors.ano_nascimento = "Data obrigatória";
+    if (!form.data_nascimento) {
+      newErrors.data_nascimento = "Data obrigatória";
     } else {
-      const nasc = new Date(form.ano_nascimento);
+      const nasc = new Date(form.data_nascimento);
       const hoje = new Date();
       let idade = hoje.getFullYear() - nasc.getFullYear();
       const m = hoje.getMonth() - nasc.getMonth();
       if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
-      if (idade < 18) newErrors.ano_nascimento = "Motorista deve ter pelo menos 18 anos";
+      if (idade < 18) newErrors.data_nascimento = "Deve ter pelo menos 18 anos";
     }
-
     if (!form.email.trim()) newErrors.email = "Email obrigatório";
     else if (!validarEmail(form.email)) newErrors.email = "Email inválido";
-
     if (!form.morada.trim()) newErrors.morada = "Morada obrigatória";
-
-    if (!form.senha_acesso.trim()) newErrors.senha_acesso = "Password obrigatória";
-    else if (!validarPassword(form.senha_acesso)) {
-      newErrors.senha_acesso =
-        "Mínimo 6 caracteres, com pelo menos uma letra e um número";
-    }
-
-    if (!form.numero_carta_conducao.trim()) {
-      newErrors.numero_carta_conducao = "Número da carta obrigatório";
-    }
-
+    if (!form.numero_carta.trim())
+      newErrors.numero_carta = "Número da carta obrigatório";
     return newErrors;
   }
 
@@ -252,22 +209,26 @@ export default function EditarMotorista({ aberto, onFechar }) {
     setApiError("");
 
     try {
+      const token = localStorage.getItem("token");
       const payload = {
         nome: form.nome.trim(),
         nif: form.nif.trim(),
         genero: form.genero,
-        ano_nascimento: form.ano_nascimento,
+        data_nascimento: form.data_nascimento,
         email: form.email.trim().toLowerCase(),
         morada: form.morada.trim(),
-        senha_acesso: form.senha_acesso,
-        numero_carta_conducao: form.numero_carta_conducao.trim(),
+        codigo_postal: form.codigo_postal.trim(),
+        numero_carta: form.numero_carta.trim(),
       };
 
       const res = await fetch(
         `http://localhost:8080/api/motoristas/${editing._id}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(payload),
         },
       );
@@ -275,13 +236,12 @@ export default function EditarMotorista({ aberto, onFechar }) {
       const data = await res.json();
 
       if (!res.ok) {
-        setApiError(data.error || "Erro ao atualizar motorista.");
+        setApiError(data.message || "Erro ao atualizar motorista.");
       } else {
         setMotoristas((prev) =>
-          prev.map((m) => (m._id === editing._id ? data : m)),
+          prev.map((m) => (m._id === editing._id ? data.motorista || data : m)),
         );
         setSuccess(true);
-
         setTimeout(() => {
           setSuccess(false);
           cancelEdit();
@@ -302,7 +262,7 @@ export default function EditarMotorista({ aberto, onFechar }) {
       (m.nome || "").toLowerCase().includes(termo) ||
       (m.nif || "").toLowerCase().includes(termo) ||
       (m.email || "").toLowerCase().includes(termo) ||
-      (m.numero_carta_conducao || "").toLowerCase().includes(termo)
+      (m.numero_carta || "").toLowerCase().includes(termo)
     );
   });
 
@@ -326,7 +286,6 @@ export default function EditarMotorista({ aberto, onFechar }) {
                 <ArrowLeft size={16} strokeWidth={2} />
               </button>
             )}
-
             <div
               className="w-10 h-10 rounded-[13px] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)]"
               style={{
@@ -341,7 +300,6 @@ export default function EditarMotorista({ aberto, onFechar }) {
                 <User size={18} strokeWidth={1.8} />
               )}
             </div>
-
             <div>
               <h3 className="font-['Syne',sans-serif] text-[18px] font-bold text-[#eaf0ff]">
                 {editing ? "Editar Motorista" : "Editar Motoristas"}
@@ -353,7 +311,6 @@ export default function EditarMotorista({ aberto, onFechar }) {
               </p>
             </div>
           </div>
-
           <button
             onClick={editing ? cancelEdit : onFechar}
             className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/[0.06] bg-white/[0.03] text-[#8ba3c7] hover:bg-white/[0.06] hover:text-[#eaf0ff] transition-all duration-200 cursor-pointer"
@@ -380,8 +337,8 @@ export default function EditarMotorista({ aberto, onFechar }) {
 
             {loadingList ? (
               <div className="flex items-center justify-center gap-3 py-10 text-[#8ba3c7] text-[14px]">
-                <Loader2 size={18} className="animate-spin" />
-                A carregar motoristas...
+                <Loader2 size={18} className="animate-spin" />A carregar
+                motoristas...
               </div>
             ) : listError ? (
               <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/[0.05] px-4 py-3 text-[13px] text-red-300">
@@ -413,10 +370,9 @@ export default function EditarMotorista({ aberto, onFechar }) {
                           Email: {m.email}
                         </div>
                         <div className="text-[12px] text-[#8ba3c7]">
-                          Carta: {m.numero_carta_conducao}
+                          Carta: {m.numero_carta}
                         </div>
                       </div>
-
                       <div className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-[#1a6eff]/10 border border-[#1a6eff]/20 text-[#3d8bff]">
                         <Pencil size={15} />
                       </div>
@@ -434,7 +390,6 @@ export default function EditarMotorista({ aberto, onFechar }) {
                 {apiError}
               </div>
             )}
-
             {success && (
               <div className="mb-4 flex items-center gap-2 rounded-xl border border-[#00e887]/20 bg-[#00e887]/[0.06] px-4 py-3 text-[13px] text-[#8fffd0]">
                 <CheckCircle2 size={16} />
@@ -451,46 +406,35 @@ export default function EditarMotorista({ aberto, onFechar }) {
                 error={errors.nome}
                 placeholder="Nome completo"
               />
-
               <Field
                 label="NIF"
                 icon={<CreditCard size={15} />}
                 value={form.nif}
-                onChange={(v) => handleChange("nif", v.replace(/\D/g, "").slice(0, 9))}
+                onChange={(v) =>
+                  handleChange("nif", v.replace(/\D/g, "").slice(0, 9))
+                }
                 error={errors.nif}
                 placeholder="9 dígitos"
               />
-
               <Dropdown
                 label="Género"
                 placeholder="Selecionar género"
-                value={
-                  form.genero === "m"
-                    ? "Masculino"
-                    : form.genero === "f"
-                      ? "Feminino"
-                      : form.genero === "other"
-                        ? "Outro"
-                        : ""
-                }
+                value={form.genero}
                 onChange={(v) => handleChange("genero", v)}
                 options={[
-                  { value: "m", label: "Masculino" },
-                  { value: "f", label: "Feminino" },
-                  { value: "other", label: "Outro" },
+                  { value: "Masculino", label: "Masculino" },
+                  { value: "Feminino", label: "Feminino" },
                 ]}
                 error={errors.genero}
               />
-
               <Field
                 label="Data de nascimento"
                 type="date"
                 icon={<CalendarDays size={15} />}
-                value={form.ano_nascimento}
-                onChange={(v) => handleChange("ano_nascimento", v)}
-                error={errors.ano_nascimento}
+                value={form.data_nascimento}
+                onChange={(v) => handleChange("data_nascimento", v)}
+                error={errors.data_nascimento}
               />
-
               <Field
                 label="Email"
                 icon={<Mail size={15} />}
@@ -499,16 +443,14 @@ export default function EditarMotorista({ aberto, onFechar }) {
                 error={errors.email}
                 placeholder="email@exemplo.com"
               />
-
               <Field
                 label="Número da carta"
                 icon={<CreditCard size={15} />}
-                value={form.numero_carta_conducao}
-                onChange={(v) => handleChange("numero_carta_conducao", v)}
-                error={errors.numero_carta_conducao}
+                value={form.numero_carta}
+                onChange={(v) => handleChange("numero_carta", v)}
+                error={errors.numero_carta}
                 placeholder="Número da carta"
               />
-
               <div className="md:col-span-2">
                 <Field
                   label="Morada"
@@ -517,18 +459,6 @@ export default function EditarMotorista({ aberto, onFechar }) {
                   onChange={(v) => handleChange("morada", v)}
                   error={errors.morada}
                   placeholder="Morada completa"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <Field
-                  label="Password"
-                  type="text"
-                  icon={<KeyRound size={15} />}
-                  value={form.senha_acesso}
-                  onChange={(v) => handleChange("senha_acesso", v)}
-                  error={errors.senha_acesso}
-                  placeholder="Mínimo 6 caracteres"
                 />
               </div>
             </div>
@@ -542,7 +472,6 @@ export default function EditarMotorista({ aberto, onFechar }) {
               >
                 Cancelar
               </button>
-
               <button
                 type="button"
                 onClick={handleSave}
@@ -551,8 +480,7 @@ export default function EditarMotorista({ aberto, onFechar }) {
               >
                 {saving ? (
                   <>
-                    <Loader2 size={16} className="animate-spin" />
-                    A guardar...
+                    <Loader2 size={16} className="animate-spin" />A guardar...
                   </>
                 ) : success ? (
                   <>
@@ -574,9 +502,6 @@ export default function EditarMotorista({ aberto, onFechar }) {
   );
 }
 
-/* ═══════════════════════════════════════════════
-   FIELD
-   ═══════════════════════════════════════════════ */
 function Field({
   label,
   icon,
@@ -591,7 +516,6 @@ function Field({
       <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
         {label}
       </label>
-
       <div className="relative">
         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4e6a8a]">
           {icon}
@@ -608,7 +532,6 @@ function Field({
           }`}
         />
       </div>
-
       {error && (
         <div className="mt-2 flex items-center gap-1.5 text-[12px] text-red-300">
           <AlertCircle size={13} />

@@ -72,7 +72,7 @@ export default function Homepage() {
             <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
               <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
               <span className="text-white/70 text-sm font-medium tracking-wide">
-                Available 24/7 and 7 days a week
+                Sempre ao seu lado, dia e noite
               </span>
             </span>
           </div>
@@ -83,13 +83,13 @@ export default function Homepage() {
               loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
             }`}
           >
-            <span className="block">Travel with</span>
+            <span className="block">Viage com</span>
             <span className="block mt-2">
               <span className="relative">
-                <span className="text-[#60a5fa] font-normal ">Confort</span>
+                <span className="text-[#60a5fa] font-normal ">Conforto</span>
                 <span className="absolute -bottom-2 left-0 w-full h-[2px] bg-[#60a5fa]" />
               </span>{" "}
-              and <span className="text-[#FFCC00] font-normal">Safety</span>
+              e <span className="text-[#FFCC00] font-normal">Segurança</span>
             </span>
           </h2>
 
@@ -99,8 +99,8 @@ export default function Homepage() {
               loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
-            The modern platform to request transportation quickly and safely.
-            Wherever you are, we are just a click away.
+            Uma plataforma moderna para pedir transporte rápido e com segurança.
+            Não importa onde estejas, estamos a um click de distância
           </p>
 
           {/* BOTÕES CTA */}
@@ -129,31 +129,7 @@ export default function Homepage() {
                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
-                Request A Trip
-              </span>
-            </button>
-
-            <button className="group px-8 py-4 rounded-2xl font-semibold text-white/90 bg-white/5 border border-white/10 backdrop-blur-sm transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:scale-105">
-              <span className="flex items-center gap-3">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                How It Works
+                Pedir uma Viagem
               </span>
             </button>
           </div>

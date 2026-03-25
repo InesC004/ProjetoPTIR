@@ -218,11 +218,13 @@ export default function RegistarMotorista({ aberto, onFechar }) {
     setApiError("");
 
     const payload = {
-      name: form.name.trim(),
+      nome: form.name.trim(),
       nif: form.nif.trim(),
       email: form.email.trim().toLowerCase(),
       genero: form.genero,
-      data_nascimento: `${form.birth_year}-${form.birth_month.padStart(2, "0")}-${form.birth_day.padStart(2, "0")}`,
+      birth_day: parseInt(form.birth_day, 10),
+      birth_month: parseInt(form.birth_month, 10),
+      birth_year: parseInt(form.birth_year, 10),
       morada: form.localidade
         ? `${form.morada.trim()}, ${form.localidade}`
         : form.morada.trim(),
@@ -232,9 +234,13 @@ export default function RegistarMotorista({ aberto, onFechar }) {
     };
 
     try {
-      const res = await fetch("http://localhost:8080/api/motoristas/register", {
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:8080/api/motoristas/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(payload),
       });
 

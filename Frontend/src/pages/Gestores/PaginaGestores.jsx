@@ -22,13 +22,13 @@ import {
   UserCheck,
   ChevronRight,
 } from "lucide-react";
-import logo from "../Pictures/logo1.jpeg";
-import RegistarTaxi from "../components/RegistarTaxi";
-import RegistarMotorista from "../components/RegistarMotorista";
-import EditarTaxi from "../components/EditarTaxi";
-import EditarMotorista from "../components/EditarMotorista";
-import RemoverTaxi from "../components/RemoverTaxi";
-import RemoverMotorista from "../components/RemoverMotorista";
+import logo from "../../Pictures/logo1.jpeg";
+import RegistarTaxi from "../../components/RegistarTaxi";
+import RegistarMotorista from "../../components/RegistarMotorista";
+import EditarTaxi from "../../components/EditarTaxi";
+import EditarMotorista from "../../components/EditarMotorista";
+import RemoverTaxi from "../../components/RemoverTaxi";
+import RemoverMotorista from "../../components/RemoverMotorista";
 
 /* ═══════════════════════════════════════════════
    NAV
@@ -238,8 +238,14 @@ function PageHead({ t, s }) {
 /* ═══════════════════════════════════════════════
    SECÇÕES
    ═══════════════════════════════════════════════ */
-function SecDados({ onRegistarTaxi, onRegistarMotorista, onEditarTaxi, onEditarMotorista,onRemoverTaxi,
-  onRemoverMotorista}) {
+function SecDados({
+  onRegistarTaxi,
+  onRegistarMotorista,
+  onEditarTaxi,
+  onEditarMotorista,
+  onRemoverTaxi,
+  onRemoverMotorista,
+}) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       <Card
@@ -254,7 +260,7 @@ function SecDados({ onRegistarTaxi, onRegistarMotorista, onEditarTaxi, onEditarM
           onClick={onRegistarTaxi}
         />
         <Action Icon={Pencil} label="Editar táxi" onClick={onEditarTaxi} />
-        <Action Icon={Trash2} label="Remover táxi" onClick={onRemoverTaxi}/>
+        <Action Icon={Trash2} label="Remover táxi" onClick={onRemoverTaxi} />
       </Card>
       <Card
         CardIcon={Users}
@@ -267,8 +273,16 @@ function SecDados({ onRegistarTaxi, onRegistarMotorista, onEditarTaxi, onEditarM
           accent
           onClick={onRegistarMotorista}
         />
-        <Action Icon={Pencil} label="Editar motorista" onClick={onEditarMotorista}/>
-        <Action Icon={Trash2} label="Remover motorista" onClick={onRemoverMotorista}/>
+        <Action
+          Icon={Pencil}
+          label="Editar motorista"
+          onClick={onEditarMotorista}
+        />
+        <Action
+          Icon={Trash2}
+          label="Remover motorista"
+          onClick={onRemoverMotorista}
+        />
       </Card>
     </div>
   );

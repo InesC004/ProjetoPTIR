@@ -28,7 +28,10 @@ export default function RemoverMotorista({ aberto, onFechar }) {
     setLoading(true);
     setErro("");
     try {
-      const res = await fetch("http://localhost:8080/api/motoristas");
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:8080/api/motoristas/todos", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) throw new Error();
       const data = await res.json();
       setMotoristas(data);
@@ -53,17 +56,19 @@ export default function RemoverMotorista({ aberto, onFechar }) {
     setSucesso("");
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(
         `http://localhost:8080/api/motoristas/${motoristaAConfirmar._id}`,
         {
           method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
 
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setErro(data.error || data.message || "Erro ao remover motorista.");
+        setErro(data.message || "Erro ao remover motorista.");
       } else {
         setMotoristas((prev) =>
           prev.filter((m) => m._id !== motoristaAConfirmar._id),
@@ -83,12 +88,10 @@ export default function RemoverMotorista({ aberto, onFechar }) {
   const filtrados = motoristas.filter((m) => {
     const termo = searchTerm.toLowerCase();
     return (
-      (m.name || m.nome || "").toLowerCase().includes(termo) ||
+      (m.nome || "").toLowerCase().includes(termo) ||
       (m.nif || "").toLowerCase().includes(termo) ||
       (m.email || "").toLowerCase().includes(termo) ||
-      (m.numero_carta || m.numero_carta_conducao || "")
-        .toLowerCase()
-        .includes(termo)
+      (m.numero_carta || "").toLowerCase().includes(termo)
     );
   });
 
@@ -167,7 +170,7 @@ export default function RemoverMotorista({ aberto, onFechar }) {
                   <p className="text-[13px] text-[#8ba3c7] mt-1">
                     Tem a certeza que quer remover o motorista{" "}
                     <span className="text-[#eaf0ff] font-semibold">
-                      {motoristaAConfirmar.name || motoristaAConfirmar.nome}
+                      {motoristaAConfirmar.nome}
                     </span>
                     ?
                   </p>
@@ -190,8 +193,8 @@ export default function RemoverMotorista({ aberto, onFechar }) {
                     >
                       {removendoId === motoristaAConfirmar._id ? (
                         <>
-                          <Loader2 size={15} className="animate-spin" />
-                          A remover...
+                          <Loader2 size={15} className="animate-spin" />A
+                          remover...
                         </>
                       ) : (
                         <>
@@ -208,8 +211,8 @@ export default function RemoverMotorista({ aberto, onFechar }) {
 
           {loading ? (
             <div className="flex items-center justify-center gap-3 py-10 text-[#8ba3c7] text-[14px]">
-              <Loader2 size={18} className="animate-spin" />
-              A carregar motoristas...
+              <Loader2 size={18} className="animate-spin" />A carregar
+              motoristas...
             </div>
           ) : filtrados.length === 0 ? (
             <div className="text-center py-10 text-[#8ba3c7] text-[14px]">
@@ -226,7 +229,7 @@ export default function RemoverMotorista({ aberto, onFechar }) {
                     <div>
                       <div className="font-semibold text-[#eaf0ff] text-[15px] flex items-center gap-2">
                         <User size={15} />
-                        {motorista.name || motorista.nome}
+                        {motorista.nome}
                       </div>
                       <div className="text-[12px] text-[#8ba3c7] mt-1">
                         NIF: {motorista.nif}
@@ -235,9 +238,7 @@ export default function RemoverMotorista({ aberto, onFechar }) {
                         Email: {motorista.email}
                       </div>
                       <div className="text-[12px] text-[#8ba3c7]">
-                        Carta:{" "}
-                        {motorista.numero_carta ||
-                          motorista.numero_carta_conducao}
+                        Carta: {motorista.numero_carta}
                       </div>
                     </div>
 

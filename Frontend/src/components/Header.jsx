@@ -84,7 +84,7 @@ export default function Header({ isDashboard = false }) {
                 Take<span className="text-[#60a5fa]">Cab</span>
               </span>
               <div className="text-white/40 text-xs tracking-widest">
-                PREMIUM RIDES
+                VIAGENS PREMIUM
               </div>
             </div>
           </div>

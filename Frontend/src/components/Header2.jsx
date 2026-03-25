@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../Pictures/logo1.jpeg";
-import { useAuth0 } from "@auth0/auth0-react";
 
 // ── Inject Header styles once ─────────────────────────────────────────────────
 const HEADER_STYLES = `
@@ -200,8 +199,10 @@ function injectHeaderStyles() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function Header({ isDashboard = false }) {
-  const { logout } = useAuth0();
   injectHeaderStyles();
+
+  // Lê os dados do cliente guardados no localStorage pelo LoginModal
+  const cliente = JSON.parse(localStorage.getItem("cliente") || "{}");
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -231,11 +232,10 @@ export default function Header({ isDashboard = false }) {
 
   function handleLogout() {
     setProfileOpen(false);
-    logout({
-      logoutParams: {
-        returnTo: window.location.origin,
-      },
-    });
+    localStorage.removeItem("token");
+    localStorage.removeItem("cliente");
+    localStorage.removeItem("role");
+    navigate("/");
   }
 
   const menuItems = [
@@ -284,7 +284,7 @@ export default function Header({ isDashboard = false }) {
               aria-label="Menu de perfil"
             >
               <img
-                src="https://api.dicebear.com/7.x/thumbs/svg?seed=Joao"
+                src={`https://api.dicebear.com/7.x/thumbs/svg?seed=${cliente.nome || "user"}`}
                 alt="Avatar"
               />
               <span className="tc-profile-online" />
@@ -296,13 +296,17 @@ export default function Header({ isDashboard = false }) {
                 <div className="tc-profile-menu-header">
                   <div className="tc-profile-menu-avatar">
                     <img
-                      src="https://api.dicebear.com/7.x/thumbs/svg?seed=Joao"
+                      src={`https://api.dicebear.com/7.x/thumbs/svg?seed=${cliente.nome || "user"}`}
                       alt="Avatar"
                     />
                   </div>
                   <div>
-                    <div className="tc-profile-menu-name">João Silva</div>
-                    <div className="tc-profile-menu-email">joao@takecab.pt</div>
+                    <div className="tc-profile-menu-name">
+                      {cliente.nome || "Utilizador"}
+                    </div>
+                    <div className="tc-profile-menu-email">
+                      {cliente.email || ""}
+                    </div>
                   </div>
                 </div>
 

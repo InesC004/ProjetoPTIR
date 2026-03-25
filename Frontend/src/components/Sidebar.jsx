@@ -140,9 +140,9 @@ export default function Sidebar({ isOpen, onClose }) {
                     <Icon name="spark" className="w-5 h-5 text-[#60a5fa]" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">Start Now !</h3>
+                    <h3 className="font-semibold text-white">Peça Agora!</h3>
                     <p className="text-xs text-white/50">
-                      Fast, Safe and confortable
+                      Rápido, Seguro e Confortável
                     </p>
                   </div>
                 </div>
@@ -155,7 +155,7 @@ export default function Sidebar({ isOpen, onClose }) {
                     <span className="absolute inset-0 bg-white/5 group-hover:bg-white/10 transition-colors" />
                     <span className="relative flex items-center justify-center gap-2 text-white/90 group-hover:text-white">
                       <Icon name="key" className="w-4 h-4" />
-                      Login
+                      Entrar
                     </span>
                   </button>
 
@@ -167,7 +167,7 @@ export default function Sidebar({ isOpen, onClose }) {
                     <span className="absolute inset-0 bg-gradient-to-r from-[#60a5fa] to-[#1d5eff] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <span className="relative flex items-center justify-center gap-2 text-white">
                       <Icon name="spark" className="w-4 h-4" />
-                      Register
+                      Registar
                     </span>
                   </button>
                 </div>
@@ -187,23 +187,23 @@ export default function Sidebar({ isOpen, onClose }) {
 
                 <nav className="space-y-2">
                   <MenuItem
-                    label="Want to be a Driver?"
-                    description="Join our team"
+                    label="Quer ser um Motorista?"
+                    description="Junte-se à Equipa"
                     icon="driver"
                     onClick={onClose}
                     delay={350}
                     mounted={mounted && isOpen}
                   />
                   <MenuItem
-                    label="Contact"
-                    description="Contact us"
+                    label="Contacto"
+                    description="Contacte-nos"
                     icon="mail"
                     onClick={onClose}
                     delay={400}
                     mounted={mounted && isOpen}
                   />
                   <MenuItem
-                    label="Suport 24/7"
+                    label="Suporte 24/7"
                     description="+351 xxx xxx xxx"
                     icon="phone"
                     onClick={onClose}
@@ -252,7 +252,7 @@ function Brand({ mounted }) {
           Take<span className="text-[#60a5fa]">Cab</span>
         </div>
         <div className="text-xs text-white/50 tracking-wider">
-          Premium Rides
+          Viagens premium
         </div>
       </div>
     </div>

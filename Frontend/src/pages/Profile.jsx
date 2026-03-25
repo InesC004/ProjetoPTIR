@@ -231,7 +231,6 @@ const STYLES = `
   .pf-activity-date { font-size: 0.72rem; color: #6b8baa; margin-top: 2px; }
   .pf-activity-amount { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; color: #f0f6ff; }
 
-  /* toast notification */
   .pf-toast {
     position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
     padding: 14px 28px; border-radius: 14px;
@@ -252,7 +251,6 @@ const STYLES = `
     to   { opacity: 1; transform: translateX(-50%) translateY(0); }
   }
 
-  /* loading skeleton */
   .pf-loading {
     display: flex; align-items: center; justify-content: center;
     min-height: 60vh; flex-direction: column; gap: 16px;
@@ -283,7 +281,6 @@ const STYLES = `
   }
 `;
 
-// Formata data ISO para "dd / mm / aaaa"
 function formatDate(isoString) {
   if (!isoString) return "—";
   const d = new Date(isoString);
@@ -294,21 +291,49 @@ function formatDate(isoString) {
   return `${dd} / ${mm} / ${yyyy}`;
 }
 
+// ─────────────────────────────────────────────────────────────
+// Field definido FORA do Profile — não é recriado a cada render
+// ─────────────────────────────────────────────────────────────
+function Field({ label, field, data, editing, draft, setDraft, readOnly }) {
+  const displayValue =
+    field === "data_nascimento"
+      ? formatDate(data?.[field])
+      : data?.[field] || "—";
+
+  return (
+    <div className="pf-field">
+      <div className="pf-field-label">{label}</div>
+      {editing && !readOnly ? (
+        <input
+          className="pf-field-input"
+          value={draft[field] || ""}
+          onChange={(e) =>
+            setDraft((prev) => ({ ...prev, [field]: e.target.value }))
+          }
+        />
+      ) : (
+        <div className="pf-field-value">{displayValue}</div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Componente principal
+// ─────────────────────────────────────────────────────────────
 export default function Profile() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({});
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState(null); // { type, msg }
+  const [toast, setToast] = useState(null);
 
-  // Mostra toast temporário
   function showToast(type, msg) {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 3000);
   }
 
-  // Carrega dados reais do backend ao montar
   useEffect(() => {
     async function fetchPerfil() {
       try {
@@ -316,9 +341,7 @@ export default function Profile() {
         const res = await fetch(`${API_URL}/perfil`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         if (!res.ok) throw new Error("Erro ao carregar perfil");
-
         const cliente = await res.json();
         setData(cliente);
       } catch (err) {
@@ -328,11 +351,9 @@ export default function Profile() {
         setLoading(false);
       }
     }
-
     fetchPerfil();
   }, []);
 
-  // Inicia edição
   function startEdit() {
     setDraft({
       nome: data.nome || "",
@@ -344,7 +365,6 @@ export default function Profile() {
     setEditing(true);
   }
 
-  // Guarda alterações no backend
   async function saveEdit() {
     setSaving(true);
     try {
@@ -357,25 +377,18 @@ export default function Profile() {
         },
         body: JSON.stringify(draft),
       });
-
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.message || "Erro ao guardar.");
       }
-
       const updated = await res.json();
-
-      // Atualiza estado local
       setData(updated.cliente || { ...data, ...draft });
 
-      // Atualiza o localStorage para o Header refletir as mudanças
       const stored = JSON.parse(localStorage.getItem("cliente") || "{}");
-      const newStored = {
-        ...stored,
-        nome: draft.nome,
-        email: draft.email,
-      };
-      localStorage.setItem("cliente", JSON.stringify(newStored));
+      localStorage.setItem(
+        "cliente",
+        JSON.stringify({ ...stored, nome: draft.nome, email: draft.email }),
+      );
 
       setEditing(false);
       showToast("success", "Perfil atualizado com sucesso!");
@@ -391,30 +404,7 @@ export default function Profile() {
     setEditing(false);
   }
 
-  // Componente de campo reutilizável
-  function Field({ label, field, readOnly = false }) {
-    const displayValue =
-      field === "data_nascimento"
-        ? formatDate(data?.[field])
-        : data?.[field] || "—";
-
-    return (
-      <div className="pf-field">
-        <div className="pf-field-label">{label}</div>
-        {editing && !readOnly ? (
-          <input
-            className="pf-field-input"
-            value={draft[field] || ""}
-            onChange={(e) =>
-              setDraft((d) => ({ ...d, [field]: e.target.value }))
-            }
-          />
-        ) : (
-          <div className="pf-field-value">{displayValue}</div>
-        )}
-      </div>
-    );
-  }
+  const fp = { data, editing, draft, setDraft };
 
   const activity = [
     {
@@ -461,7 +451,6 @@ export default function Profile() {
             </div>
           ) : (
             <>
-              {/* ── HERO ── */}
               <div className="pf-hero">
                 <div className="pf-avatar-wrap">
                   <div className="pf-avatar-ring">
@@ -520,19 +509,18 @@ export default function Profile() {
                 </div>
               </div>
 
-              {/* ── GRID ── */}
               <div className="pf-grid">
-                {/* Dados Pessoais */}
                 <div className="pf-card">
                   <div className="pf-card-title">
                     <span className="pf-card-title-icon">👤</span>
                     Dados Pessoais
                   </div>
-                  <Field label="Nome completo" field="nome" />
-                  <Field label="NIF" field="nif" readOnly />
+                  <Field {...fp} label="Nome completo" field="nome" />
+                  <Field {...fp} label="NIF" field="nif" readOnly />
                   <div className="pf-field-row">
-                    <Field label="Género" field="genero" />
+                    <Field {...fp} label="Género" field="genero" />
                     <Field
+                      {...fp}
                       label="Data de nascimento"
                       field="data_nascimento"
                       readOnly
@@ -540,18 +528,16 @@ export default function Profile() {
                   </div>
                 </div>
 
-                {/* Contacto & Morada */}
                 <div className="pf-card">
                   <div className="pf-card-title">
                     <span className="pf-card-title-icon">📱</span>
                     Contacto &amp; Morada
                   </div>
-                  <Field label="Email" field="email" />
-                  <Field label="Morada" field="morada" />
-                  <Field label="Código postal" field="codigo_postal" />
+                  <Field {...fp} label="Email" field="email" />
+                  <Field {...fp} label="Morada" field="morada" />
+                  <Field {...fp} label="Código postal" field="codigo_postal" />
                 </div>
 
-                {/* Atividade Recente */}
                 <div className="pf-card">
                   <div className="pf-card-title">
                     <span className="pf-card-title-icon">🕐</span>
@@ -578,7 +564,6 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Toast notification */}
       {toast && <div className={`pf-toast ${toast.type}`}>{toast.msg}</div>}
     </>
   );
