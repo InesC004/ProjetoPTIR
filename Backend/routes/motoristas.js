@@ -1,15 +1,18 @@
-const express = require('express');
-const router = express.Router();
-const motoristasController = require('../controllers/motoristas');
+const express = require('express')
+const router = express.Router()
+const motoristasController = require('../controllers/motoristas')
+const checkRole = require('../middleware/checkRole')
 
-// Rotas específicas 
-router.get('/', motoristasController.getMotoristas);
-router.post('/', motoristasController.createMotorista);
-router.post('/login', motoristasController.loginMotorista);
+// criar motorista — só gestores
+router.post('/create', checkRole('gestor'), motoristasController.create)
 
-// Rotas dinâmicas 
-router.get('/:id', motoristasController.getMotoristaById);  
-router.put('/:id', motoristasController.updateMotorista);
-router.delete('/:id', motoristasController.deleteMotorista);
+// login motorista
+router.post('/login', motoristasController.login)
 
-module.exports = router;
+// listar todos os motoristas
+router.get('/todos', checkRole('gestor'), motoristasController.getTodos)
+
+// apagar motorista — só gestores
+router.delete('/:id', checkRole('gestor'), motoristasController.delete)
+
+module.exports = router
