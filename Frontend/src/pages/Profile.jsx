@@ -1,5 +1,8 @@
 /* eslint-disable react/prop-types */
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Header from "../components/Header2";
+
+const API_URL = "http://localhost:8080/api/clientes";
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
@@ -15,7 +18,6 @@ const STYLES = `
     overflow-x: hidden;
   }
 
-  /* ── ambient background ── */
   .pf-bg {
     position: fixed; inset: 0; z-index: 0; pointer-events: none;
   }
@@ -31,14 +33,12 @@ const STYLES = `
     background: radial-gradient(circle, #00d4ff, transparent); opacity: 0.08;
   }
 
-  /* ── layout ── */
   .pf-container {
     position: relative; z-index: 1;
     max-width: 900px; margin: 0 auto;
     padding: 40px 24px 80px;
   }
 
-  /* ── page title ── */
   .pf-page-title {
     font-family: 'Syne', sans-serif;
     font-size: 1.15rem; font-weight: 600;
@@ -53,7 +53,6 @@ const STYLES = `
     border-radius: 2px;
   }
 
-  /* ── hero card ── */
   .pf-hero {
     background: linear-gradient(135deg, rgba(26,110,255,0.12) 0%, rgba(0,212,255,0.06) 100%);
     border: 1px solid rgba(26,110,255,0.2);
@@ -75,10 +74,7 @@ const STYLES = `
     background: radial-gradient(ellipse at 20% 50%, rgba(26,110,255,0.06), transparent 60%);
   }
 
-  /* avatar */
-  .pf-avatar-wrap {
-    position: relative; flex-shrink: 0;
-  }
+  .pf-avatar-wrap { position: relative; flex-shrink: 0; }
   .pf-avatar-ring {
     width: 100px; height: 100px; border-radius: 50%;
     padding: 3px;
@@ -103,7 +99,6 @@ const STYLES = `
     background: #00e887; border: 3px solid #050d1a;
   }
 
-  /* hero info */
   .pf-hero-info { flex: 1; }
   .pf-hero-name {
     font-family: 'Syne', sans-serif;
@@ -111,9 +106,7 @@ const STYLES = `
     color: #f0f6ff; line-height: 1.1;
     margin-bottom: 4px;
   }
-  .pf-hero-email {
-    font-size: 0.9rem; color: #6b8baa; margin-bottom: 16px;
-  }
+  .pf-hero-email { font-size: 0.9rem; color: #6b8baa; margin-bottom: 16px; }
   .pf-hero-tags { display: flex; gap: 8px; flex-wrap: wrap; }
   .pf-tag {
     display: inline-flex; align-items: center; gap: 5px;
@@ -123,9 +116,7 @@ const STYLES = `
     background: rgba(26,110,255,0.1); color: #5599ff;
   }
   .pf-tag.green { border-color: rgba(0,232,135,0.25); background: rgba(0,232,135,0.08); color: #00e887; }
-  .pf-tag.gold  { border-color: rgba(255,185,50,0.25); background: rgba(255,185,50,0.08); color: #ffb932; }
 
-  /* stats row */
   .pf-stats {
     margin-left: auto; display: flex; gap: 24px; text-align: center;
     flex-shrink: 0;
@@ -137,7 +128,6 @@ const STYLES = `
   .pf-stat-val span { color: #1a6eff; }
   .pf-stat-label { font-size: 0.7rem; color: #6b8baa; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
 
-  /* ── edit btn ── */
   .pf-edit-btn {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 10px 22px; border-radius: 14px;
@@ -148,13 +138,13 @@ const STYLES = `
     margin-top: 14px;
   }
   .pf-edit-btn:hover { background: rgba(26,110,255,0.22); border-color: rgba(26,110,255,0.6); color: #80b8ff; }
+  .pf-edit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .pf-edit-btn.save {
     background: linear-gradient(135deg, #1a6eff, #0051cc);
     border-color: transparent; color: white;
   }
   .pf-edit-btn.save:hover { filter: brightness(1.15); }
 
-  /* ── sections grid ── */
   .pf-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -185,7 +175,6 @@ const STYLES = `
     font-size: 0.85rem;
   }
 
-  /* field */
   .pf-field { margin-bottom: 18px; }
   .pf-field:last-child { margin-bottom: 0; }
   .pf-field-label {
@@ -215,10 +204,8 @@ const STYLES = `
     box-shadow: 0 0 0 3px rgba(26,110,255,0.12);
   }
 
-  /* two col inside card */
   .pf-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
-  /* ── activity list ── */
   .pf-activity { display: flex; flex-direction: column; gap: 12px; }
   .pf-activity-item {
     display: flex; align-items: center; gap: 14px;
@@ -239,28 +226,44 @@ const STYLES = `
   }
   .pf-activity-icon.blue { background: rgba(26,110,255,0.12); border: 1px solid rgba(26,110,255,0.2); }
   .pf-activity-icon.green { background: rgba(0,232,135,0.1); border: 1px solid rgba(0,232,135,0.2); }
-  .pf-activity-icon.gold  { background: rgba(255,185,50,0.1); border: 1px solid rgba(255,185,50,0.2); }
   .pf-activity-info { flex: 1; }
   .pf-activity-name { font-size: 0.88rem; color: #c8d8ee; font-weight: 500; }
   .pf-activity-date { font-size: 0.72rem; color: #6b8baa; margin-top: 2px; }
   .pf-activity-amount { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; color: #f0f6ff; }
 
-  /* ── progress bar ── */
-  .pf-progress-wrap { margin-bottom: 6px; }
-  .pf-progress-label { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.8rem; color: #6b8baa; }
-  .pf-progress-label span:last-child { color: #5599ff; }
-  .pf-progress-track {
-    height: 6px; border-radius: 100px;
-    background: rgba(255,255,255,0.06);
-    overflow: hidden;
+  /* toast notification */
+  .pf-toast {
+    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+    padding: 14px 28px; border-radius: 14px;
+    font-size: 0.9rem; font-weight: 500; z-index: 999;
+    animation: toastIn 0.3s ease both;
+    font-family: 'DM Sans', sans-serif;
   }
-  .pf-progress-fill {
-    height: 100%; border-radius: 100px;
-    background: linear-gradient(90deg, #1a6eff, #00d4ff);
-    animation: barGrow 1s ease both;
-    transform-origin: left;
+  .pf-toast.success {
+    background: rgba(0,232,135,0.15); border: 1px solid rgba(0,232,135,0.35);
+    color: #00e887;
   }
-  @keyframes barGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  .pf-toast.error {
+    background: rgba(255,80,80,0.15); border: 1px solid rgba(255,80,80,0.35);
+    color: #ff6b6b;
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  /* loading skeleton */
+  .pf-loading {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 60vh; flex-direction: column; gap: 16px;
+  }
+  .pf-spinner {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 3px solid rgba(26,110,255,0.2);
+    border-top-color: #1a6eff;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(20px); }
@@ -269,7 +272,6 @@ const STYLES = `
   .pf-card:nth-child(1) { animation-delay: 0.05s; }
   .pf-card:nth-child(2) { animation-delay: 0.1s; }
   .pf-card:nth-child(3) { animation-delay: 0.15s; }
-  .pf-card:nth-child(4) { animation-delay: 0.2s; }
 
   @media (max-width: 700px) {
     .pf-hero { flex-direction: column; text-align: center; }
@@ -281,48 +283,134 @@ const STYLES = `
   }
 `;
 
-const INITIAL_DATA = {
-  nome: "João Silva",
-  email: "joao@takecab.pt",
-  nif: "234 567 890",
-  genero: "Masculino",
-  data_nascimento: "12 / 03 / 1990",
-  morada: "Rua das Flores, 47, 2.º Esq.",
-  codigo_postal: "1200-192 Lisboa",
-  telefone: "+351 912 345 678",
-};
+// Formata data ISO para "dd / mm / aaaa"
+function formatDate(isoString) {
+  if (!isoString) return "—";
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return isoString;
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  return `${dd} / ${mm} / ${yyyy}`;
+}
 
 export default function Profile() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [data, setData] = useState(INITIAL_DATA);
-  const [draft, setDraft] = useState(INITIAL_DATA);
+  const [draft, setDraft] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null); // { type, msg }
 
+  // Mostra toast temporário
+  function showToast(type, msg) {
+    setToast({ type, msg });
+    setTimeout(() => setToast(null), 3000);
+  }
+
+  // Carrega dados reais do backend ao montar
+  useEffect(() => {
+    async function fetchPerfil() {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_URL}/perfil`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) throw new Error("Erro ao carregar perfil");
+
+        const cliente = await res.json();
+        setData(cliente);
+      } catch (err) {
+        console.error(err);
+        showToast("error", "Não foi possível carregar o perfil.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchPerfil();
+  }, []);
+
+  // Inicia edição
   function startEdit() {
-    setDraft({ ...data });
+    setDraft({
+      nome: data.nome || "",
+      email: data.email || "",
+      genero: data.genero || "",
+      morada: data.morada || "",
+      codigo_postal: data.codigo_postal || "",
+    });
     setEditing(true);
   }
-  function saveEdit() {
-    setData({ ...draft });
-    setEditing(false);
+
+  // Guarda alterações no backend
+  async function saveEdit() {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/perfil`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(draft),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || "Erro ao guardar.");
+      }
+
+      const updated = await res.json();
+
+      // Atualiza estado local
+      setData(updated.cliente || { ...data, ...draft });
+
+      // Atualiza o localStorage para o Header refletir as mudanças
+      const stored = JSON.parse(localStorage.getItem("cliente") || "{}");
+      const newStored = {
+        ...stored,
+        nome: draft.nome,
+        email: draft.email,
+      };
+      localStorage.setItem("cliente", JSON.stringify(newStored));
+
+      setEditing(false);
+      showToast("success", "Perfil atualizado com sucesso!");
+    } catch (err) {
+      console.error(err);
+      showToast("error", err.message || "Erro ao guardar alterações.");
+    } finally {
+      setSaving(false);
+    }
   }
+
   function cancelEdit() {
     setEditing(false);
   }
 
-  function Field({ label, field, fullWidth }) {
+  // Componente de campo reutilizável
+  function Field({ label, field, readOnly = false }) {
+    const displayValue =
+      field === "data_nascimento"
+        ? formatDate(data?.[field])
+        : data?.[field] || "—";
+
     return (
-      <div className={`pf-field${fullWidth ? " pf-field-full" : ""}`}>
+      <div className="pf-field">
         <div className="pf-field-label">{label}</div>
-        {editing ? (
+        {editing && !readOnly ? (
           <input
             className="pf-field-input"
-            value={draft[field]}
+            value={draft[field] || ""}
             onChange={(e) =>
               setDraft((d) => ({ ...d, [field]: e.target.value }))
             }
           />
         ) : (
-          <div className="pf-field-value">{data[field]}</div>
+          <div className="pf-field-value">{displayValue}</div>
         )}
       </div>
     );
@@ -336,7 +424,6 @@ export default function Profile() {
       date: "Hoje, 14:32",
       amount: "€18.50",
     },
-
     {
       icon: "🚕",
       color: "blue",
@@ -349,6 +436,7 @@ export default function Profile() {
   return (
     <>
       <style>{STYLES}</style>
+      <Header isDashboard />
       <div className="pf-root">
         <div className="pf-bg">
           <div className="pf-bg-blob" />
@@ -358,109 +446,140 @@ export default function Profile() {
         <div className="pf-container">
           <div className="pf-page-title">O meu perfil</div>
 
-          {/* ── HERO ── */}
-          <div className="pf-hero">
-            <div className="pf-avatar-wrap">
-              <div className="pf-avatar-ring">
-                <div className="pf-avatar-inner">
-                  <img
-                    src="https://api.dicebear.com/7.x/thumbs/svg?seed=Joao"
-                    alt="Avatar"
-                  />
-                </div>
-              </div>
-              <span className="pf-avatar-badge" />
+          {loading ? (
+            <div className="pf-loading">
+              <div className="pf-spinner" />
+              <span style={{ color: "#6b8baa", fontSize: "0.9rem" }}>
+                A carregar perfil...
+              </span>
             </div>
-
-            <div className="pf-hero-info">
-              <div className="pf-hero-name">{data.nome}</div>
-              <div className="pf-hero-email">{data.email}</div>
-              <div className="pf-hero-tags">
-                <span className="pf-tag green">● Ativo</span>
-                <span className="pf-tag">🛡 Verificado</span>
-              </div>
-              {editing ? (
-                <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
-                  <button className="pf-edit-btn save" onClick={saveEdit}>
-                    💾 Guardar
-                  </button>
-                  <button className="pf-edit-btn" onClick={cancelEdit}>
-                    Cancelar
-                  </button>
-                </div>
-              ) : (
-                <button className="pf-edit-btn" onClick={startEdit}>
-                  ✏️ Editar perfil
-                </button>
-              )}
+          ) : !data ? (
+            <div className="pf-loading">
+              <span style={{ color: "#ff6b6b", fontSize: "0.95rem" }}>
+                Não foi possível carregar o perfil.
+              </span>
             </div>
-
-            <div className="pf-stats">
-              <div>
-                <div className="pf-stat-val">47</div>
-                <div className="pf-stat-label">Viagens</div>
-              </div>
-              <div>
-                <div className="pf-stat-val">
-                  4.<span>9</span>
-                </div>
-                <div className="pf-stat-label">Avaliação</div>
-              </div>
-            </div>
-          </div>
-
-          {/* ── GRID ── */}
-          <div className="pf-grid">
-            {/* Dados Pessoais */}
-            <div className="pf-card">
-              <div className="pf-card-title">
-                <span className="pf-card-title-icon">👤</span>
-                Dados Pessoais
-              </div>
-              <Field label="Nome completo" field="nome" />
-              <Field label="NIF" field="nif" />
-              <div className="pf-field-row">
-                <Field label="Género" field="genero" />
-                <Field label="Data de nascimento" field="data_nascimento" />
-              </div>
-            </div>
-
-            {/* Contacto */}
-            <div className="pf-card">
-              <div className="pf-card-title">
-                <span className="pf-card-title-icon">📱</span>
-                Contacto &amp; Morada
-              </div>
-              <Field label="Email" field="email" />
-              <Field label="Telemóvel" field="telefone" />
-              <Field label="Morada" field="morada" />
-              <Field label="Código postal" field="codigo_postal" />
-            </div>
-
-            {/* Atividade Recente */}
-            <div className="pf-card">
-              <div className="pf-card-title">
-                <span className="pf-card-title-icon">🕐</span>
-                Atividade Recente
-              </div>
-              <div className="pf-activity">
-                {activity.map((a, i) => (
-                  <div className="pf-activity-item" key={i}>
-                    <div className={`pf-activity-icon ${a.color}`}>
-                      {a.icon}
+          ) : (
+            <>
+              {/* ── HERO ── */}
+              <div className="pf-hero">
+                <div className="pf-avatar-wrap">
+                  <div className="pf-avatar-ring">
+                    <div className="pf-avatar-inner">
+                      <img
+                        src={`https://api.dicebear.com/7.x/thumbs/svg?seed=${data.nome || "user"}`}
+                        alt="Avatar"
+                      />
                     </div>
-                    <div className="pf-activity-info">
-                      <div className="pf-activity-name">{a.name}</div>
-                      <div className="pf-activity-date">{a.date}</div>
-                    </div>
-                    <div className="pf-activity-amount">{a.amount}</div>
                   </div>
-                ))}
+                  <span className="pf-avatar-badge" />
+                </div>
+
+                <div className="pf-hero-info">
+                  <div className="pf-hero-name">{data.nome}</div>
+                  <div className="pf-hero-email">{data.email}</div>
+                  <div className="pf-hero-tags">
+                    <span className="pf-tag green">● Ativo</span>
+                    <span className="pf-tag">🛡 Verificado</span>
+                  </div>
+                  {editing ? (
+                    <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+                      <button
+                        className="pf-edit-btn save"
+                        onClick={saveEdit}
+                        disabled={saving}
+                      >
+                        {saving ? "A guardar..." : "💾 Guardar"}
+                      </button>
+                      <button
+                        className="pf-edit-btn"
+                        onClick={cancelEdit}
+                        disabled={saving}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  ) : (
+                    <button className="pf-edit-btn" onClick={startEdit}>
+                      ✏️ Editar perfil
+                    </button>
+                  )}
+                </div>
+
+                <div className="pf-stats">
+                  <div>
+                    <div className="pf-stat-val">47</div>
+                    <div className="pf-stat-label">Viagens</div>
+                  </div>
+                  <div>
+                    <div className="pf-stat-val">
+                      4.<span>9</span>
+                    </div>
+                    <div className="pf-stat-label">Avaliação</div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+
+              {/* ── GRID ── */}
+              <div className="pf-grid">
+                {/* Dados Pessoais */}
+                <div className="pf-card">
+                  <div className="pf-card-title">
+                    <span className="pf-card-title-icon">👤</span>
+                    Dados Pessoais
+                  </div>
+                  <Field label="Nome completo" field="nome" />
+                  <Field label="NIF" field="nif" readOnly />
+                  <div className="pf-field-row">
+                    <Field label="Género" field="genero" />
+                    <Field
+                      label="Data de nascimento"
+                      field="data_nascimento"
+                      readOnly
+                    />
+                  </div>
+                </div>
+
+                {/* Contacto & Morada */}
+                <div className="pf-card">
+                  <div className="pf-card-title">
+                    <span className="pf-card-title-icon">📱</span>
+                    Contacto &amp; Morada
+                  </div>
+                  <Field label="Email" field="email" />
+                  <Field label="Morada" field="morada" />
+                  <Field label="Código postal" field="codigo_postal" />
+                </div>
+
+                {/* Atividade Recente */}
+                <div className="pf-card">
+                  <div className="pf-card-title">
+                    <span className="pf-card-title-icon">🕐</span>
+                    Atividade Recente
+                  </div>
+                  <div className="pf-activity">
+                    {activity.map((a, i) => (
+                      <div className="pf-activity-item" key={i}>
+                        <div className={`pf-activity-icon ${a.color}`}>
+                          {a.icon}
+                        </div>
+                        <div className="pf-activity-info">
+                          <div className="pf-activity-name">{a.name}</div>
+                          <div className="pf-activity-date">{a.date}</div>
+                        </div>
+                        <div className="pf-activity-amount">{a.amount}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
+
+      {/* Toast notification */}
+      {toast && <div className={`pf-toast ${toast.type}`}>{toast.msg}</div>}
     </>
   );
 }
