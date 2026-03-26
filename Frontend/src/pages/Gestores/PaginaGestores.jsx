@@ -5,19 +5,13 @@ import {
   Database,
   Settings,
   BarChart3,
-  Search,
   Car,
   Users,
   Plus,
   Pencil,
   Trash2,
   DollarSign,
-  FileText,
-  Clock,
-  Route,
-  Fuel,
-  TrendingUp,
-  UserCheck,
+  Calculator,
   ChevronRight,
 } from "lucide-react";
 import logo from "../../Pictures/logo1.jpeg";
@@ -27,21 +21,18 @@ import EditarTaxi from "../../components/EditarTaxi";
 import EditarMotorista from "../../components/EditarMotorista";
 import RemoverTaxi from "../../components/RemoverTaxi";
 import RemoverMotorista from "../../components/RemoverMotorista";
-import { DefinirPrecos } from "../../components/ConfigurarPrecos";
+import {
+  DefinirPrecos,
+  ListarPrecos,
+  SimularViagem,
+} from "../../components/ConfigurarPrecos";
 
-/* ═══════════════════════════════════════════════
-   NAV
-   ═══════════════════════════════════════════════ */
 const NAV = [
   { id: "dados", label: "Gestão de Dados", Icon: Database, tag: "Dados" },
   { id: "config", label: "Configuração", Icon: Settings, tag: "Sistema" },
   { id: "relatorios", label: "Relatórios", Icon: BarChart3, tag: "Análise" },
-  { id: "exploracao", label: "Exploração", Icon: Search, tag: "Dados" },
 ];
 
-/* ═══════════════════════════════════════════════
-   COMPONENTE PRINCIPAL
-   ═══════════════════════════════════════════════ */
 export default function PaginaGestores() {
   const navigate = useNavigate();
   const [active, setActive] = useState("dados");
@@ -52,11 +43,12 @@ export default function PaginaGestores() {
   const [modalRemoverTaxi, setModalRemoverTaxi] = useState(false);
   const [modalRemoverMotorista, setModalRemoverMotorista] = useState(false);
   const [modalPrecos, setModalPrecos] = useState(false);
+  const [modalListarPrecos, setModalListarPrecos] = useState(false);
+  const [modalSimular, setModalSimular] = useState(false);
   const current = NAV.find((n) => n.id === active);
 
   return (
     <div className="relative min-h-screen bg-[#060e1e] font-['DM_Sans',sans-serif] text-[#eaf0ff]">
-      {/* ── Fundo decorativo ── */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute -top-[180px] left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full bg-[radial-gradient(circle,rgba(26,110,255,0.08)_0%,transparent_70%)]" />
         <div className="absolute -bottom-[100px] -right-[100px] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(198,77,255,0.05)_0%,transparent_70%)]" />
@@ -72,7 +64,7 @@ export default function PaginaGestores() {
         }}
       />
 
-      {/* ── HEADER ── */}
+      {/* HEADER */}
       <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-5 bg-[#060e1e]/80 backdrop-blur-xl border-b border-white/[0.06]">
         <div
           className="flex items-center gap-3 cursor-pointer group"
@@ -97,17 +89,26 @@ export default function PaginaGestores() {
             <span className="w-1.5 h-1.5 rounded-full bg-[#00e887] shadow-[0_0_6px_#00e887]" />
             Gestor
           </div>
+          <button
+            onClick={() => {
+              localStorage.removeItem("token");
+              localStorage.removeItem("cliente");
+              localStorage.removeItem("role");
+              navigate("/");
+            }}
+            className="px-3.5 py-1.5 rounded-xl text-[12px] font-medium text-red-400/80 border border-red-500/15 bg-red-500/[0.06] hover:bg-red-500/[0.12] hover:border-red-500/30 hover:text-red-400 transition-all duration-200 cursor-pointer"
+          >
+            Sair
+          </button>
         </div>
       </header>
 
-      {/* ── LAYOUT ── */}
+      {/* LAYOUT */}
       <div className="flex pt-16 relative z-[1] min-h-screen">
-        {/* ── SIDEBAR ── */}
         <aside className="hidden lg:flex flex-col w-[250px] min-h-[calc(100vh-64px)] bg-[#081226]/85 backdrop-blur-xl border-r border-[#1a6eff]/[0.12] p-[28px_14px_24px] sticky top-16 self-start shrink-0">
           <p className="text-[10px] font-bold tracking-[0.14em] uppercase text-[#4e6a8a] px-3 mb-[18px]">
             Painel do Gestor
           </p>
-
           <nav className="flex flex-col gap-[3px]">
             {NAV.map((item) => {
               const Ic = item.Icon;
@@ -116,17 +117,10 @@ export default function PaginaGestores() {
                 <button
                   key={item.id}
                   onClick={() => setActive(item.id)}
-                  className={`relative flex items-center gap-[11px] w-full py-[11px] px-[14px] rounded-xl border-none text-[13.5px] font-medium text-left transition-all duration-200 cursor-pointer
-                    ${
-                      isActive
-                        ? "bg-[#1a6eff]/10 text-[#3d8bff] font-semibold"
-                        : "bg-transparent text-[#8ba3c7] hover:bg-[#1a6eff]/[0.06] hover:text-[#eaf0ff]"
-                    }`}
+                  className={`relative flex items-center gap-[11px] w-full py-[11px] px-[14px] rounded-xl border-none text-[13.5px] font-medium text-left transition-all duration-200 cursor-pointer ${isActive ? "bg-[#1a6eff]/10 text-[#3d8bff] font-semibold" : "bg-transparent text-[#8ba3c7] hover:bg-[#1a6eff]/[0.06] hover:text-[#eaf0ff]"}`}
                 >
                   <span
-                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-[3px] bg-[#1a6eff] transition-transform duration-200 origin-center ${
-                      isActive ? "scale-y-100" : "scale-y-0"
-                    }`}
+                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-[3px] bg-[#1a6eff] transition-transform duration-200 origin-center ${isActive ? "scale-y-100" : "scale-y-0"}`}
                   />
                   <Ic
                     size={18}
@@ -140,7 +134,6 @@ export default function PaginaGestores() {
           </nav>
         </aside>
 
-        {/* ── MAIN ── */}
         <main className="flex-1 p-[36px_44px] max-w-[980px]" key={active}>
           <div className="mb-8 animate-[fadeUp_0.5s_ease_both]">
             <div className="inline-flex items-center gap-[7px] text-[11px] font-semibold tracking-[0.1em] uppercase text-[#00d4ff] mb-2.5">
@@ -165,14 +158,7 @@ export default function PaginaGestores() {
                 s="Visão analítica da operação, faturação e reabastecimentos."
               />
             )}
-            {active === "exploracao" && (
-              <PageHead
-                t="Exploração de Dados"
-                s="Consulta detalhada com subtotais por motorista, táxi e cliente."
-              />
-            )}
           </div>
-
           <div className="animate-[fadeUp_0.5s_0.08s_ease_both]">
             {active === "dados" && (
               <SecDados
@@ -185,15 +171,17 @@ export default function PaginaGestores() {
               />
             )}
             {active === "config" && (
-              <SecConfig onDefinirPrecos={() => setModalPrecos(true)} />
+              <SecConfig
+                onDefinirPrecos={() => setModalPrecos(true)}
+                onListarPrecos={() => setModalListarPrecos(true)}
+                onSimularViagem={() => setModalSimular(true)}
+              />
             )}
-            {active === "relatorios" && <SecRelatorios />}
-            {active === "exploracao" && <SecExploracao />}
           </div>
         </main>
       </div>
 
-      {/* ── MODAIS ── */}
+      {/* MODAIS */}
       <RegistarTaxi aberto={modalTaxi} onFechar={() => setModalTaxi(false)} />
       <RegistarMotorista
         aberto={modalMotorista}
@@ -211,7 +199,6 @@ export default function PaginaGestores() {
         aberto={modalRemoverTaxi}
         onFechar={() => setModalRemoverTaxi(false)}
       />
-
       <RemoverMotorista
         aberto={modalRemoverMotorista}
         onFechar={() => setModalRemoverMotorista(false)}
@@ -220,13 +207,17 @@ export default function PaginaGestores() {
         aberto={modalPrecos}
         onFechar={() => setModalPrecos(false)}
       />
+      <ListarPrecos
+        aberto={modalListarPrecos}
+        onFechar={() => setModalListarPrecos(false)}
+        onEditar={() => setModalPrecos(true)}
+      />
+      <SimularViagem
+        aberto={modalSimular}
+        onFechar={() => setModalSimular(false)}
+      />
 
-      <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(12px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
+      <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
     </div>
   );
 }
@@ -242,9 +233,6 @@ function PageHead({ t, s }) {
   );
 }
 
-/* ═══════════════════════════════════════════════
-   SECÇÕES
-   ═══════════════════════════════════════════════ */
 function SecDados({
   onRegistarTaxi,
   onRegistarMotorista,
@@ -295,7 +283,7 @@ function SecDados({
   );
 }
 
-function SecConfig({ onDefinirPrecos }) {
+function SecConfig({ onDefinirPrecos, onListarPrecos, onSimularViagem }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       <Card
@@ -309,75 +297,28 @@ function SecConfig({ onDefinirPrecos }) {
           accent
           onClick={onDefinirPrecos}
         />
-      </Card>
-    </div>
-  );
-}
-
-function SecRelatorios() {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-      <Card
-        CardIcon={Route}
-        bg="linear-gradient(135deg, #1a6eff, #3d8bff)"
-        title="Viagens"
-      >
-        <Action Icon={FileText} label="Nº de viagens" />
-        <Action Icon={Clock} label="Tempo total" />
-        <Action Icon={TrendingUp} label="Quilómetros" />
+        <Action
+          Icon={DollarSign}
+          label="Ver preços atuais"
+          onClick={onListarPrecos}
+        />
       </Card>
       <Card
-        CardIcon={Users}
-        bg="linear-gradient(135deg, #00c873, #00a85e)"
-        title="Entidades"
-      >
-        <Action Icon={UserCheck} label="Motoristas" />
-        <Action Icon={Car} label="Táxis" />
-        <Action Icon={Users} label="Clientes" />
-      </Card>
-      <Card
-        CardIcon={DollarSign}
+        CardIcon={Calculator}
         bg="linear-gradient(135deg, #00d4ff, #1a6eff)"
-        title="Financeiro"
+        title="Simulação de custos"
       >
-        <Action Icon={DollarSign} label="Faturação (€)" />
-        <Action Icon={Fuel} label="Reabastecimentos" />
-        <p className="text-[11.5px] text-[#4e6a8a] pl-1.5 mt-1 leading-relaxed">
-          Custos e tempo de reabastecimento incluídos.
-        </p>
+        <Action
+          Icon={Calculator}
+          label="Simular custo de viagem fictícia"
+          accent
+          onClick={onSimularViagem}
+        />
       </Card>
     </div>
   );
 }
 
-function SecExploracao() {
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      <Card
-        CardIcon={BarChart3}
-        bg="linear-gradient(135deg, #1a6eff, #3d8bff)"
-        title="Subtotais"
-      >
-        <Action Icon={UserCheck} label="Por motorista" />
-        <Action Icon={Car} label="Por táxi" />
-        <Action Icon={Users} label="Por cliente" />
-      </Card>
-      <Card
-        CardIcon={Search}
-        bg="linear-gradient(135deg, #c64dff, #7c3aed)"
-        title="Detalhes"
-      >
-        <Action Icon={Route} label="Detalhes de viagens" />
-        <Action Icon={Car} label="Detalhes de táxis" />
-        <Action Icon={UserCheck} label="Detalhes de motoristas" />
-      </Card>
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════
-   COMPONENTES
-   ═══════════════════════════════════════════════ */
 function Card({ CardIcon, bg, title, children }) {
   return (
     <div className="relative overflow-hidden rounded-[20px] border border-[#1a6eff]/[0.12] bg-[rgba(12,28,56,0.55)] backdrop-blur-xl p-6 transition-all duration-300 hover:border-[#1a6eff]/25 hover:bg-[rgba(18,38,72,0.7)] hover:-translate-y-0.5 hover:shadow-[0_16px_48px_rgba(0,0,0,0.3)]">
@@ -401,29 +342,21 @@ function Card({ CardIcon, bg, title, children }) {
 function Action({ Icon, label, accent, danger, onClick }) {
   const base =
     "group flex items-center justify-between w-full py-3 px-3.5 rounded-xl border text-[13.5px] font-medium cursor-pointer transition-all duration-200 text-left";
-
   let variant;
-  if (accent) {
+  if (accent)
     variant =
       "border-[#1a6eff]/[0.18] bg-[#1a6eff]/[0.06] text-[#eaf0ff] hover:bg-[#1a6eff]/[0.14] hover:border-[#1a6eff]/[0.35] hover:shadow-[0_0_20px_rgba(26,110,255,0.1)] hover:translate-x-[3px]";
-  } else if (danger) {
+  else if (danger)
     variant =
       "border-white/[0.03] bg-white/[0.02] text-[#8ba3c7] hover:bg-[#ef4444]/[0.08] hover:border-[#ef4444]/25 hover:text-[#ff6b6b] hover:translate-x-[3px]";
-  } else {
+  else
     variant =
       "border-white/[0.04] bg-white/[0.02] text-[#eaf0ff] hover:bg-[#1a6eff]/[0.08] hover:border-[#1a6eff]/20 hover:translate-x-[3px]";
-  }
-
   return (
     <button className={`${base} ${variant}`} onClick={onClick}>
       <span className="flex items-center gap-2.5">
         <span
-          className={`w-[30px] h-[30px] rounded-[9px] flex items-center justify-center border transition-all duration-200
-            ${
-              danger
-                ? "bg-white/[0.03] border-white/[0.05] group-hover:bg-[#ef4444]/[0.12] group-hover:border-[#ef4444]/20"
-                : "bg-white/[0.03] border-white/[0.05] group-hover:bg-[#1a6eff]/[0.12] group-hover:border-[#1a6eff]/20"
-            }`}
+          className={`w-[30px] h-[30px] rounded-[9px] flex items-center justify-center border transition-all duration-200 ${danger ? "bg-white/[0.03] border-white/[0.05] group-hover:bg-[#ef4444]/[0.12] group-hover:border-[#ef4444]/20" : "bg-white/[0.03] border-white/[0.05] group-hover:bg-[#1a6eff]/[0.12] group-hover:border-[#1a6eff]/20"}`}
         >
           <Icon size={15} strokeWidth={1.8} />
         </span>
