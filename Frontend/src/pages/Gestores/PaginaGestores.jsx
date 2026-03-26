@@ -12,8 +12,6 @@ import {
   Pencil,
   Trash2,
   DollarSign,
-  Moon,
-  Calculator,
   FileText,
   Clock,
   Route,
@@ -29,6 +27,7 @@ import EditarTaxi from "../../components/EditarTaxi";
 import EditarMotorista from "../../components/EditarMotorista";
 import RemoverTaxi from "../../components/RemoverTaxi";
 import RemoverMotorista from "../../components/RemoverMotorista";
+import { DefinirPrecos } from "../../components/ConfigurarPrecos";
 
 /* ═══════════════════════════════════════════════
    NAV
@@ -52,6 +51,7 @@ export default function PaginaGestores() {
   const [modalEditMotorista, setModalEditMotorista] = useState(false);
   const [modalRemoverTaxi, setModalRemoverTaxi] = useState(false);
   const [modalRemoverMotorista, setModalRemoverMotorista] = useState(false);
+  const [modalPrecos, setModalPrecos] = useState(false);
   const current = NAV.find((n) => n.id === active);
 
   return (
@@ -184,7 +184,9 @@ export default function PaginaGestores() {
                 onRemoverMotorista={() => setModalRemoverMotorista(true)}
               />
             )}
-            {active === "config" && <SecConfig />}
+            {active === "config" && (
+              <SecConfig onDefinirPrecos={() => setModalPrecos(true)} />
+            )}
             {active === "relatorios" && <SecRelatorios />}
             {active === "exploracao" && <SecExploracao />}
           </div>
@@ -214,6 +216,11 @@ export default function PaginaGestores() {
         aberto={modalRemoverMotorista}
         onFechar={() => setModalRemoverMotorista(false)}
       />
+      <DefinirPrecos
+        aberto={modalPrecos}
+        onFechar={() => setModalPrecos(false)}
+      />
+
       <style>{`
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(12px); }
@@ -288,7 +295,7 @@ function SecDados({
   );
 }
 
-function SecConfig() {
+function SecConfig({ onDefinirPrecos }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       <Card
@@ -296,16 +303,12 @@ function SecConfig() {
         bg="linear-gradient(135deg, #1a6eff, #7c3aed)"
         title="Preços por minuto"
       >
-        <Action Icon={DollarSign} label="Definir preço — Básico" accent />
-        <Action Icon={DollarSign} label="Definir preço — Luxuoso" accent />
-      </Card>
-      <Card
-        CardIcon={Moon}
-        bg="linear-gradient(135deg, #c64dff, #7c3aed)"
-        title="Acréscimos e simulação"
-      >
-        <Action Icon={Moon} label="Configurar acréscimos (ex: noturno)" />
-        <Action Icon={Calculator} label="Simular custo de viagem" accent />
+        <Action
+          Icon={DollarSign}
+          label="Definir preços (Básico + Luxuoso)"
+          accent
+          onClick={onDefinirPrecos}
+        />
       </Card>
     </div>
   );
