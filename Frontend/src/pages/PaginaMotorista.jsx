@@ -17,6 +17,10 @@ import {
   CheckCircle2,
   ListOrdered,
   PlusCircle,
+  User,
+  LogOut,
+  Settings,
+  ChevronDown,
 } from "lucide-react";
 import logo from "../Pictures/logo1.jpeg";
 
@@ -37,7 +41,9 @@ const NAV = [
 export default function PaginaMotorista() {
   const navigate = useNavigate();
   const [active, setActive] = useState("turno");
+  const [profileOpen, setProfileOpen] = useState(false);
   const current = NAV.find((n) => n.id === active);
+  
 
   return (
     <div className="relative min-h-screen bg-[#060e1e] font-['DM_Sans',sans-serif] text-[#eaf0ff]">
@@ -77,12 +83,79 @@ export default function PaginaMotorista() {
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#00e887]/10 border border-[#00e887]/20 text-[12px] font-semibold text-[#00e887]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#00e887] shadow-[0_0_6px_#00e887]" />
-            Motorista
+
+        <div className="flex items-center gap-3 relative">
+        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#00e887]/10 border border-[#00e887]/20 text-[12px] font-semibold text-[#00e887]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#00e887] shadow-[0_0_6px_#00e887]" />
+          Motorista
+        </div>
+
+        <button
+          onClick={() => setProfileOpen(!profileOpen)}
+          className="flex items-center gap-2 transition-all"
+          type="button"
+        >
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#00e887] to-[#1a6eff] flex items-center justify-center text-white font-bold text-sm">
+            M
+          </div>
+
+      <ChevronDown
+        size={16}
+        className={`text-[#8ba3c7] transition-transform ${
+          profileOpen ? "rotate-180" : ""
+        }`}
+      />
+    </button>
+
+      {profileOpen && (
+        <div className="absolute right-0 top-[58px] w-56 rounded-2xl border border-white/[0.08] bg-[#0b162b]/95 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)] overflow-hidden z-[100]">
+          <div className="p-4 border-b border-white/[0.06] flex justify-center">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00e887] to-[#1a6eff] flex items-center justify-center text-white font-bold text-base shadow-[0_6px_20px_rgba(0,0,0,0.25)]">
+              M
+            </div>
+          </div>
+
+          <div className="p-2">
+            <button
+              onClick={() => {
+                setProfileOpen(false);
+                navigate("/perfil-motorista");
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[#eaf0ff] hover:bg-white/[0.05] transition"
+              type="button"
+            >
+              <User size={16} />
+              Ver perfil
+            </button>
+
+            <button
+              onClick={() => {
+                setProfileOpen(false);
+                navigate("/configuracoes-motorista");
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[#eaf0ff] hover:bg-white/[0.05] transition"
+              type="button"
+            >
+              <Settings size={16} />
+              Definições
+            </button>
+
+            <button
+              onClick={() => {
+                setProfileOpen(false);
+                navigate("/");
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[#ff8b8b] hover:bg-[#ef4444]/[0.08] transition"
+              type="button"
+            >
+              <LogOut size={16} />
+              Terminar sessão
+            </button>
           </div>
         </div>
+      )}
+</div>
+       
       </header>
 
       {/* ── LAYOUT ── */}
