@@ -16,8 +16,11 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/completar-perfil" element={<CompletarPerfil />} />
-        <Route path="/gestor/dashboard" element={<PaginaGestores />} />
-        <Route path="/motorista/dashboard" element={<PaginaMotorista />} />
+        <Route path="/gestor/PaginaGestores" element={<PaginaGestores />} />
+        <Route
+          path="/motorista/PaginaMotorista"
+          element={<PaginaMotorista />}
+        />
       </Routes>
     </BrowserRouter>
   );

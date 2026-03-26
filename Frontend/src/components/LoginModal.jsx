@@ -47,8 +47,9 @@ export default function LoginModal({ isOpen, onClose }) {
           onClose();
 
           if (data.role === "cliente") navigate("/dashboard");
-          else if (data.role === "motorista") navigate("/motorista/dashboard");
-          else if (data.role === "gestor") navigate("/gestor/dashboard");
+          else if (data.role === "motorista")
+            navigate("/motorista/PaginaMotorista");
+          else if (data.role === "gestor") navigate("/gestor/PaginaGestores");
           return;
         }
 
