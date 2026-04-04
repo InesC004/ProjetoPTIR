@@ -3,29 +3,25 @@ const Taxi = require('../models/taxi')
 // criar taxi (só gestores)
 exports.create = async (req, res) => {
   try {
-    const { matricula, modelo, marca, ano_compra, tipo_motor, nivel_conforto } = req.body
+    const { matricula, modelo, marca, ano_compra, tipo_motor, nivel_conforto, estado } = req.body
 
-    // campos obrigatórios
     if (!matricula || !modelo || !marca || !ano_compra || !tipo_motor || !nivel_conforto) {
       return res.status(400).json({ success: false, message: 'Todos os campos são obrigatórios.' })
     }
 
-    // validar matrícula portuguesa (ex: AA-00-AA ou 00-AA-00)
     if (!/^[A-Z]{2}-\d{2}-[A-Z]{2}$|^\d{2}-[A-Z]{2}-\d{2}$|^\d{2}-\d{2}-[A-Z]{2}$/.test(matricula)) {
       return res.status(400).json({ success: false, message: 'Matrícula inválida.' })
     }
 
-    // validar ano
     const anoAtual = new Date().getFullYear()
     if (ano_compra < 1990 || ano_compra > anoAtual) {
       return res.status(400).json({ success: false, message: `Ano inválido. Deve ser entre 1990 e ${anoAtual}.` })
     }
 
-    // verificar matrícula duplicada
     const existing = await Taxi.findOne({ matricula })
     if (existing) return res.status(409).json({ success: false, message: 'Matrícula já registada.' })
 
-    const taxi = new Taxi({ matricula, modelo, marca, ano_compra, tipo_motor, nivel_conforto })
+    const taxi = new Taxi({ matricula, modelo, marca, ano_compra, tipo_motor, nivel_conforto, estado: estado || 'livre' })
     await taxi.save()
 
     res.status(201).json({ success: true, message: 'Táxi criado com sucesso.', taxi })
@@ -59,8 +55,7 @@ exports.delete = async (req, res) => {
   }
 }
 
-
-// listar taxis disponíveis (só os livres)
+// listar taxis disponíveis (sem autenticação)
 exports.getTaxisDisponiveis = async (req, res) => {
   try {
     const taxis = await Taxi.find({ estado: 'livre' })
@@ -71,21 +66,16 @@ exports.getTaxisDisponiveis = async (req, res) => {
   }
 }
 
-
-
-
 // atualizar taxi
 exports.update = async (req, res) => {
   try {
     const { id } = req.params
     const { matricula, modelo, marca, ano_compra, tipo_motor, nivel_conforto, estado } = req.body
 
-    // validar matrícula se foi enviada
     if (matricula && !/^[A-Z]{2}-\d{2}-[A-Z]{2}$|^\d{2}-[A-Z]{2}-\d{2}$|^\d{2}-\d{2}-[A-Z]{2}$/.test(matricula)) {
       return res.status(400).json({ success: false, message: 'Matrícula inválida.' })
     }
 
-    // validar ano se foi enviado
     if (ano_compra) {
       const anoAtual = new Date().getFullYear()
       if (ano_compra < 1990 || ano_compra > anoAtual) {
@@ -93,7 +83,6 @@ exports.update = async (req, res) => {
       }
     }
 
-    // verificar matrícula duplicada (exceto o próprio táxi)
     if (matricula) {
       const existing = await Taxi.findOne({ matricula, _id: { $ne: id } })
       if (existing) return res.status(409).json({ success: false, message: 'Matrícula já registada.' })

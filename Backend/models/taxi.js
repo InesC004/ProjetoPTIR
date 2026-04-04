@@ -9,6 +9,6 @@ const taxiSchema = new mongoose.Schema({
   nivel_conforto: { type: String, enum: ['basico', 'luxuoso'], required: true },
   estado: { type: String, enum: ['livre', 'em_uso', 'em_reabastecimento'], default: 'livre' }
 },
-{ timestamps: true }) 
+{ timestamps: true })
 
 module.exports = mongoose.model('taxi', taxiSchema)
