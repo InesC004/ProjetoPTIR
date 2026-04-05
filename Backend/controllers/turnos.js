@@ -27,10 +27,10 @@ exports.create = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Data de fim tem de ser depois da data de início.' })
     }
 
-    // duração de exatamente 8 horas
+    // duração máxima de 8 horas
     const duracaoHoras = (fim - inicio) / (1000 * 60 * 60)
-    if (duracaoHoras !== 8) {
-      return res.status(400).json({ success: false, message: 'A duração do turno tem de ser exatamente 8 horas.' })
+    if (duracaoHoras > 8) {
+      return res.status(400).json({ success: false, message: 'A duração do turno não pode exceder 8 horas.' })
     }
 
     const motorista = await Motorista.findById(motorista_id)
@@ -39,13 +39,16 @@ exports.create = async (req, res) => {
     const taxi = await Taxi.findById(taxi_id)
     if (!taxi) return res.status(404).json({ success: false, message: 'Táxi não encontrado.' })
 
+    // taxi tem de estar livre
+    if (taxi.estado !== 'livre') {
+      return res.status(409).json({ success: false, message: 'Táxi não está disponível.' })
+    }
+
     // verificar interseção com outros turnos do mesmo motorista
     const turnoIntersecao = await Turno.findOne({
       motorista: motorista_id,
       estado: { $in: ['agendado', 'ativo'] },
-      $or: [
-        { data_inicio: { $lt: fim }, data_fim: { $gt: inicio } }
-      ]
+      $or: [{ data_inicio: { $lt: fim }, data_fim: { $gt: inicio } }]
     })
     if (turnoIntersecao) {
       return res.status(409).json({ success: false, message: 'Este turno interseta outro turno já existente.' })
@@ -56,7 +59,6 @@ exports.create = async (req, res) => {
     const turno = new Turno({ motorista: motorista_id, taxi: taxi_id, data_inicio: inicio, data_fim: fim, estado })
     await turno.save()
 
-    // só muda o taxi para em_uso se o turno já estiver ativo
     if (estado === 'ativo') {
       await Taxi.findByIdAndUpdate(taxi_id, { estado: 'em_uso' })
     }
