@@ -18,7 +18,7 @@
     "express-oauth2-jwt-bearer": "^1.7.4",
     "jsonwebtoken": "^9.0.3",
     "jwks-rsa": "^3.2.2",
-    "mongodb": "^7.1.0",
+    "mongodb": "^7.1.1",
     "mongoose": "^9.3.1"
   }
 }
