@@ -27,7 +27,6 @@ exports.create = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Data de fim tem de ser depois da data de início.' })
     }
 
-    // duração máxima de 8 horas
     const duracaoHoras = (fim - inicio) / (1000 * 60 * 60)
     if (duracaoHoras > 8) {
       return res.status(400).json({ success: false, message: 'A duração do turno não pode exceder 8 horas.' })
@@ -42,6 +41,12 @@ exports.create = async (req, res) => {
     // taxi tem de estar livre
     if (taxi.estado !== 'livre') {
       return res.status(409).json({ success: false, message: 'Táxi não está disponível.' })
+    }
+
+    // ano de compra do taxi tem de ser <= ano de início do turno
+    const anoInicio = inicio.getFullYear()
+    if (taxi.ano_compra > anoInicio) {
+      return res.status(400).json({ success: false, message: 'O táxi não estava disponível nessa data.' })
     }
 
     // verificar interseção com outros turnos do mesmo motorista
@@ -170,18 +175,23 @@ exports.getTaxisDisponiveis = async (req, res) => {
 
     const inicio = new Date(data_inicio)
     const fim = new Date(data_fim)
+    const anoInicio = inicio.getFullYear()
 
     // taxis que têm turno agendado ou ativo que interseta o período
     const turnosOcupados = await Turno.find({
       estado: { $in: ['agendado', 'ativo'] },
-      $or: [
-        { data_inicio: { $lt: fim }, data_fim: { $gt: inicio } }
-      ]
+      $or: [{ data_inicio: { $lt: fim }, data_fim: { $gt: inicio } }]
     }).select('taxi')
 
     const taxisOcupadosIds = turnosOcupados.map(t => t.taxi)
 
-    const taxis = await Taxi.find({ _id: { $nin: taxisOcupadosIds } })
+    // táxi disponível para o turno se:
+    // 1. não está ocupado nesse período
+    // 2. ano de compra <= ano de início do turno
+    const taxis = await Taxi.find({
+      _id: { $nin: taxisOcupadosIds },
+      ano_compra: { $lte: anoInicio }
+    })
 
     res.json(taxis)
   } catch (err) {
