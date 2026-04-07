@@ -5,8 +5,7 @@ const turnoSchema = new mongoose.Schema({
   taxi: { type: mongoose.Schema.Types.ObjectId, ref: 'taxi', required: true },
   data_inicio: { type: Date, required: true },
   data_fim: { type: Date, required: true },
-  estado: { type: String, enum: ['agendado', 'ativo', 'terminado'], default: 'agendado' },
   viagens: [{ type: mongoose.Schema.Types.ObjectId, ref: 'viagem' }]
-})
+}, { timestamps: true })
 
 module.exports = mongoose.model('turno', turnoSchema)

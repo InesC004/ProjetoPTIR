@@ -1,14 +1,6 @@
 const Turno = require('../models/turno')
-const Motorista = require('../models/motorista')
 const Taxi = require('../models/taxi')
-
-// calcula o estado do turno com base na hora atual
-function calcularEstado(data_inicio, data_fim) {
-  const agora = new Date()
-  if (agora < new Date(data_inicio)) return 'agendado'
-  if (agora >= new Date(data_inicio) && agora <= new Date(data_fim)) return 'ativo'
-  return 'terminado'
-}
+const Reabastecimento = require('../models/reabastecimento')
 
 // criar turno
 exports.create = async (req, res) => {
@@ -17,90 +9,95 @@ exports.create = async (req, res) => {
     const motorista_id = req.user.id
 
     if (!taxi_id || !data_inicio || !data_fim) {
-      return res.status(400).json({ success: false, message: 'Táxi, data de início e data de fim são obrigatórios.' })
+      return res.status(400).json({ message: 'Campos obrigatórios.' })
     }
 
     const inicio = new Date(data_inicio)
     const fim = new Date(data_fim)
 
+    // restrição 1 — início antes do fim
     if (fim <= inicio) {
-      return res.status(400).json({ success: false, message: 'Data de fim tem de ser depois da data de início.' })
+      return res.status(400).json({ message: 'Data de início tem de ser anterior à data de fim.' })
     }
 
+    // restrição 2 — máximo 8 horas
     const duracaoHoras = (fim - inicio) / (1000 * 60 * 60)
     if (duracaoHoras > 8) {
-      return res.status(400).json({ success: false, message: 'A duração do turno não pode exceder 8 horas.' })
+      return res.status(400).json({ message: 'Turno não pode exceder 8 horas.' })
     }
-
-    const motorista = await Motorista.findById(motorista_id)
-    if (!motorista) return res.status(404).json({ success: false, message: 'Motorista não encontrado.' })
 
     const taxi = await Taxi.findById(taxi_id)
-    if (!taxi) return res.status(404).json({ success: false, message: 'Táxi não encontrado.' })
+    if (!taxi) return res.status(404).json({ message: 'Taxi não encontrado.' })
 
-    // taxi tem de estar livre
-    if (taxi.estado !== 'livre') {
-      return res.status(409).json({ success: false, message: 'Táxi não está disponível.' })
-    }
-
-    // ano de compra do taxi tem de ser <= ano de início do turno
+    // restrição 5 — ano de compra do táxi <= ano de início do turno
     const anoInicio = inicio.getFullYear()
     if (taxi.ano_compra > anoInicio) {
-      return res.status(400).json({ success: false, message: 'O táxi não estava disponível nessa data.' })
+      return res.status(400).json({ message: 'O táxi não estava disponível nessa data.' })
     }
 
-    // verificar interseção com outros turnos do mesmo motorista
-    const turnoIntersecao = await Turno.findOne({
+    // restrição 6 — colisão com outros turnos do mesmo motorista
+    const conflitoMotorista = await Turno.findOne({
       motorista: motorista_id,
-      estado: { $in: ['agendado', 'ativo'] },
-      $or: [{ data_inicio: { $lt: fim }, data_fim: { $gt: inicio } }]
+      data_inicio: { $lt: fim },
+      data_fim: { $gt: inicio }
     })
-    if (turnoIntersecao) {
-      return res.status(409).json({ success: false, message: 'Este turno interseta outro turno já existente.' })
+    if (conflitoMotorista) {
+      return res.status(409).json({ message: 'Já tens um turno nesse período.' })
     }
 
-    const estado = calcularEstado(inicio, fim)
+    // restrição 6 — colisão com outros turnos do mesmo táxi
+    const conflitoTaxi = await Turno.findOne({
+      taxi: taxi_id,
+      data_inicio: { $lt: fim },
+      data_fim: { $gt: inicio }
+    })
+    if (conflitoTaxi) {
+      return res.status(409).json({ message: 'Táxi já está ocupado nesse período.' })
+    }
 
-    const turno = new Turno({ motorista: motorista_id, taxi: taxi_id, data_inicio: inicio, data_fim: fim, estado })
+    // restrição 11 — táxi elétrico não pode começar durante carregamento
+    if (taxi.tipo_motor === 'eletrico') {
+      const carregamentoDurante = await Reabastecimento.findOne({
+        taxi: taxi_id,
+        data_inicio: { $lte: inicio },
+        data_fim: { $gt: inicio }
+      })
+      if (carregamentoDurante) {
+        return res.status(409).json({ message: 'O táxi elétrico está em carregamento no início do turno.' })
+      }
+    }
+
+    const turno = new Turno({ motorista: motorista_id, taxi: taxi_id, data_inicio: inicio, data_fim: fim })
     await turno.save()
 
-    if (estado === 'ativo') {
-      await Taxi.findByIdAndUpdate(taxi_id, { estado: 'em_uso' })
-    }
-
-    res.status(201).json({ success: true, message: 'Turno criado com sucesso.', turno })
+    res.status(201).json(turno)
   } catch (err) {
     console.error(err)
-    res.status(500).json({ success: false, message: 'Erro no servidor.' })
+    res.status(500).json({ message: 'Erro no servidor' })
   }
 }
 
-// terminar turno
-exports.terminar = async (req, res) => {
+// cancelar turno antecipadamente
+exports.cancelar = async (req, res) => {
   try {
-    const { id } = req.params
-    const motorista_id = req.user.id
+    const turno = await Turno.findById(req.params.id)
+    if (!turno) return res.status(404).json({ message: 'Turno não encontrado.' })
 
-    const turno = await Turno.findById(id)
-    if (!turno) return res.status(404).json({ success: false, message: 'Turno não encontrado.' })
-
-    if (turno.motorista.toString() !== motorista_id) {
-      return res.status(403).json({ success: false, message: 'Não podes terminar o turno de outro motorista.' })
+    if (turno.motorista.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Não podes cancelar o turno de outro motorista.' })
     }
 
-    if (turno.estado === 'terminado') {
-      return res.status(409).json({ success: false, message: 'Turno já terminado.' })
+    const agora = new Date()
+    if (agora > turno.data_fim) {
+      return res.status(400).json({ message: 'Turno já terminou.' })
     }
 
-    turno.estado = 'terminado'
+    turno.data_fim = agora
     await turno.save()
 
-    await Taxi.findByIdAndUpdate(turno.taxi, { estado: 'livre' })
-
-    res.status(200).json({ success: true, message: 'Turno terminado com sucesso.', turno })
+    res.json({ message: 'Turno cancelado.' })
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ success: false, message: 'Erro no servidor.' })
+    res.status(500).json({ message: 'Erro no servidor' })
   }
 }
 
@@ -113,89 +110,68 @@ exports.getTodos = async (req, res) => {
       .sort({ data_inicio: 1 })
     res.json(turnos)
   } catch (err) {
-    console.error(err)
     res.status(500).json({ message: 'Erro no servidor' })
   }
 }
 
-// listar turnos ativos
-exports.getAtivos = async (req, res) => {
-  try {
-    const turnos = await Turno.find({ estado: 'ativo' })
-      .populate('motorista', 'nome nif')
-      .populate('taxi', 'matricula marca modelo')
-    res.json(turnos)
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ message: 'Erro no servidor' })
-  }
-}
-
-// listar turno ativo do motorista logado
-exports.getMeuTurno = async (req, res) => {
-  try {
-    const motorista_id = req.user.id
-
-    const turno = await Turno.findOne({ motorista: motorista_id, estado: 'ativo' })
-      .populate('taxi', 'matricula marca modelo')
-
-    if (!turno) return res.status(404).json({ success: false, message: 'Não tens turno ativo.' })
-
-    res.json(turno)
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ message: 'Erro no servidor' })
-  }
-}
-
-// listar todos os turnos do motorista logado ordenados por data_inicio
+// listar turnos do motorista logado
 exports.getMeusTurnos = async (req, res) => {
   try {
-    const motorista_id = req.user.id
-
-    const turnos = await Turno.find({ motorista: motorista_id })
-      .populate('taxi', 'matricula marca modelo')
+    const turnos = await Turno.find({ motorista: req.user.id })
+      .populate('taxi', 'matricula marca modelo tipo_motor')
       .sort({ data_inicio: 1 })
-
     res.json(turnos)
   } catch (err) {
-    console.error(err)
     res.status(500).json({ message: 'Erro no servidor' })
   }
 }
 
-// listar taxis disponiveis para um periodo
+// táxis disponíveis para um período
 exports.getTaxisDisponiveis = async (req, res) => {
   try {
     const { data_inicio, data_fim } = req.query
 
     if (!data_inicio || !data_fim) {
-      return res.status(400).json({ success: false, message: 'data_inicio e data_fim são obrigatórios.' })
+      return res.status(400).json({ message: 'data_inicio e data_fim são obrigatórios.' })
     }
 
     const inicio = new Date(data_inicio)
     const fim = new Date(data_fim)
     const anoInicio = inicio.getFullYear()
 
-    // taxis que têm turno agendado ou ativo que interseta o período
+    // taxis ocupados por turnos que intersetam o período
     const turnosOcupados = await Turno.find({
-      estado: { $in: ['agendado', 'ativo'] },
-      $or: [{ data_inicio: { $lt: fim }, data_fim: { $gt: inicio } }]
+      data_inicio: { $lt: fim },
+      data_fim: { $gt: inicio }
     }).select('taxi')
 
     const taxisOcupadosIds = turnosOcupados.map(t => t.taxi)
 
-    // táxi disponível para o turno se:
-    // 1. não está ocupado nesse período
-    // 2. ano de compra <= ano de início do turno
-    const taxis = await Taxi.find({
+    // taxis disponíveis — não ocupados e ano_compra <= anoInicio
+    let taxis = await Taxi.find({
       _id: { $nin: taxisOcupadosIds },
       ano_compra: { $lte: anoInicio }
     })
 
+    // restrição 11 — táxi elétrico não pode começar durante carregamento
+    const taxisEletricos = taxis.filter(t => t.tipo_motor === 'eletrico')
+    const taxisBloqueados = []
+
+    for (const taxi of taxisEletricos) {
+      const carregamentoDurante = await Reabastecimento.findOne({
+        taxi: taxi._id,
+        data_inicio: { $lte: inicio },
+        data_fim: { $gt: inicio }
+      })
+      if (carregamentoDurante) {
+        taxisBloqueados.push(taxi._id.toString())
+      }
+    }
+
+    taxis = taxis.filter(t => !taxisBloqueados.includes(t._id.toString()))
+
     res.json(taxis)
   } catch (err) {
-    console.error(err)
     res.status(500).json({ message: 'Erro no servidor' })
   }
 }
