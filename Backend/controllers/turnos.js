@@ -15,12 +15,10 @@ exports.create = async (req, res) => {
     const inicio = new Date(data_inicio)
     const fim = new Date(data_fim)
 
-    // restrição 1 — início antes do fim
     if (fim <= inicio) {
       return res.status(400).json({ message: 'Data de início tem de ser anterior à data de fim.' })
     }
 
-    // restrição 2 — máximo 8 horas
     const duracaoHoras = (fim - inicio) / (1000 * 60 * 60)
     if (duracaoHoras > 8) {
       return res.status(400).json({ message: 'Turno não pode exceder 8 horas.' })
@@ -29,13 +27,11 @@ exports.create = async (req, res) => {
     const taxi = await Taxi.findById(taxi_id)
     if (!taxi) return res.status(404).json({ message: 'Taxi não encontrado.' })
 
-    // restrição 5 — ano de compra do táxi <= ano de início do turno
     const anoInicio = inicio.getFullYear()
     if (taxi.ano_compra > anoInicio) {
       return res.status(400).json({ message: 'O táxi não estava disponível nessa data.' })
     }
 
-    // restrição 6 — colisão com outros turnos do mesmo motorista
     const conflitoMotorista = await Turno.findOne({
       motorista: motorista_id,
       data_inicio: { $lt: fim },
@@ -45,7 +41,6 @@ exports.create = async (req, res) => {
       return res.status(409).json({ message: 'Já tens um turno nesse período.' })
     }
 
-    // restrição 6 — colisão com outros turnos do mesmo táxi
     const conflitoTaxi = await Turno.findOne({
       taxi: taxi_id,
       data_inicio: { $lt: fim },
@@ -55,7 +50,6 @@ exports.create = async (req, res) => {
       return res.status(409).json({ message: 'Táxi já está ocupado nesse período.' })
     }
 
-    // restrição 11 — táxi elétrico não pode começar durante carregamento
     if (taxi.tipo_motor === 'eletrico') {
       const carregamentoDurante = await Reabastecimento.findOne({
         taxi: taxi_id,
@@ -67,10 +61,21 @@ exports.create = async (req, res) => {
       }
     }
 
-    const turno = new Turno({ motorista: motorista_id, taxi: taxi_id, data_inicio: inicio, data_fim: fim })
+    const turno = new Turno({
+      motorista: motorista_id,
+      taxi: taxi_id,
+      data_inicio: inicio,
+      data_fim: fim
+    })
+
     await turno.save()
 
-    res.status(201).json(turno)
+    const populated = await turno.populate([
+      { path: 'taxi', select: 'matricula marca modelo tipo_motor' },
+      { path: 'motorista', select: 'nome nif' }
+    ])
+
+    res.status(201).json(populated)
   } catch (err) {
     console.error(err)
     res.status(500).json({ message: 'Erro no servidor' })
@@ -139,7 +144,6 @@ exports.getTaxisDisponiveis = async (req, res) => {
     const fim = new Date(data_fim)
     const anoInicio = inicio.getFullYear()
 
-    // taxis ocupados por turnos que intersetam o período
     const turnosOcupados = await Turno.find({
       data_inicio: { $lt: fim },
       data_fim: { $gt: inicio }
@@ -147,13 +151,11 @@ exports.getTaxisDisponiveis = async (req, res) => {
 
     const taxisOcupadosIds = turnosOcupados.map(t => t.taxi)
 
-    // taxis disponíveis — não ocupados e ano_compra <= anoInicio
     let taxis = await Taxi.find({
       _id: { $nin: taxisOcupadosIds },
       ano_compra: { $lte: anoInicio }
     })
 
-    // restrição 11 — táxi elétrico não pode começar durante carregamento
     const taxisEletricos = taxis.filter(t => t.tipo_motor === 'eletrico')
     const taxisBloqueados = []
 
