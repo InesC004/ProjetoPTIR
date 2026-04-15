@@ -10,7 +10,7 @@ router.post('/create', checkRole('gestor'), taxisController.create)
 router.get('/todos', checkRole('gestor'), taxisController.getTodos)
 
 // listar taxis disponíveis — sem autenticação
-router.get('/disponiveis', taxisController.getTaxisDisponiveis)
+router.get('/disponiveis', taxisController.getDisponiveis)
 
 // atualizar taxi — só gestores
 router.put('/:id', checkRole('gestor'), taxisController.update)
