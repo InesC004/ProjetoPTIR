@@ -80,28 +80,39 @@ exports.delete = async (req, res) => {
     const taxiId = req.params.id
     const agora = new Date()
 
-    const turnoAtivo = await Turno.findOne({
+    // 🚫 TURNOS (ativos ou futuros)
+    const turnoAssociado = await Turno.findOne({
       taxi: taxiId,
-      data_inicio: { $lte: agora },
       data_fim: { $gte: agora }
     })
-    if (turnoAtivo) {
-      return res.status(400).json({ message: 'Não é possível apagar o táxi enquanto está em uso num turno.' })
+
+    if (turnoAssociado) {
+      return res.status(400).json({
+        message: 'Não é possível apagar o táxi com turnos ativos ou futuros.'
+      })
     }
 
-    const reabastecimentoAtivo = await Reabastecimento.findOne({
+    // 🚫 REABASTECIMENTOS (ativos ou futuros)
+    const reabastecimentoAssociado = await Reabastecimento.findOne({
       taxi: taxiId,
-      data_inicio: { $lte: agora },
       data_fim: { $gte: agora }
     })
-    if (reabastecimentoAtivo) {
-      return res.status(400).json({ message: 'Não é possível apagar o táxi enquanto está em reabastecimento.' })
+
+    if (reabastecimentoAssociado) {
+      return res.status(400).json({
+        message: 'Não é possível apagar o táxi com reabastecimentos ativos ou futuros.'
+      })
     }
 
+    // apagar
     const taxi = await Taxi.findByIdAndDelete(taxiId)
-    if (!taxi) return res.status(404).json({ message: 'Taxi não encontrado.' })
+
+    if (!taxi) {
+      return res.status(404).json({ message: 'Taxi não encontrado.' })
+    }
 
     res.json({ message: 'Taxi apagado com sucesso.' })
+
   } catch (err) {
     console.error(err)
     res.status(500).json({ message: 'Erro no servidor' })

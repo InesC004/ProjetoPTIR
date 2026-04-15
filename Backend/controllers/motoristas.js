@@ -1,4 +1,5 @@
 const Motorista = require('../models/motorista')
+const Turno = require('../models/turno')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
@@ -135,9 +136,35 @@ exports.getTodos = async (req, res) => {
 exports.delete = async (req, res) => {
   try {
     const { id } = req.params
+
+    const agora = new Date()
+
+    const turnoAtivoOuFuturo = await Turno.findOne({
+      motorista: id,
+      data_fim: { $gte: agora }
+    })
+
+    if (turnoAtivoOuFuturo) {
+      return res.status(400).json({
+        success: false,
+        message: 'Não é possível apagar o motorista com turnos ativos ou futuros.'
+      })
+    }
+
     const deleted = await Motorista.findByIdAndDelete(id)
-    if (!deleted) return res.status(404).json({ success: false, message: 'Motorista não encontrado.' })
-    res.status(200).json({ success: true, message: 'Motorista apagado com sucesso.' })
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: 'Motorista não encontrado.'
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Motorista apagado com sucesso.'
+    })
+
   } catch (err) {
     console.error(err)
     res.status(500).json({ success: false, message: 'Erro no servidor.' })
