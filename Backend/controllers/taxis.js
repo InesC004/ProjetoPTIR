@@ -81,10 +81,7 @@ exports.delete = async (req, res) => {
     const agora = new Date()
 
     // 🚫 TURNOS (ativos ou futuros)
-    const turnoAssociado = await Turno.findOne({
-      taxi: taxiId,
-      data_fim: { $gte: agora }
-    })
+    const turnoAssociado = await Turno.findOne({taxi: taxiId,})
 
     if (turnoAssociado) {
       return res.status(400).json({
