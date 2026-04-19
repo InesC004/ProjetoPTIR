@@ -10,6 +10,7 @@ const taxisRoutes = require('./routes/taxis')
 const motoristasRoutes = require('./routes/motoristas')
 const turnosRoutes = require('./routes/turnos')
 const reabastecimentosRoutes = require('./routes/reabastecimentos')
+const precosRoutes = require('./routes/precos')
 
 
 const app = express()
@@ -42,7 +43,7 @@ app.use('/api/taxis', taxisRoutes)
 app.use('/api/motoristas', motoristasRoutes)
 app.use('/api/turnos', turnosRoutes)
 app.use('/api/reabastecimentos', reabastecimentosRoutes)
-
+app.use('/api/precos', precosRoutes)    
 // Rota de teste
 app.get('/', (req, res) => {
   res.send('Servidor a correr e MongoDB conectado!')
