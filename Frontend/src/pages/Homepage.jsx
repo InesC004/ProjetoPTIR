@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
-import backgroundVideo from "../pictures/fundo.mp4";
+import backgroundVideo from "../Pictures/fundo.mp4";
 
 export default function Homepage() {
   const [loaded, setLoaded] = useState(false);
