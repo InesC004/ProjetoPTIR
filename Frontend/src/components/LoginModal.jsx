@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import image from "../pictures/carroREgistro.jpg";
+import image from "../Pictures/carroREgistro.jpg";
 
 // Endpoints a tentar por ordem — todos usam NIF + access_password
 const LOGIN_ENDPOINTS = [
