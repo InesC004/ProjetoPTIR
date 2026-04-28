@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const cors = require('cors')
 const os = require('os')
 const HOSTNAME = os.hostname()
+
 // Importar rotas
 const clientesRoutes = require('./routes/clientes')
 const gestoresRoutes = require('./routes/gestores')
@@ -12,7 +13,6 @@ const motoristasRoutes = require('./routes/motoristas')
 const turnosRoutes = require('./routes/turnos')
 const reabastecimentosRoutes = require('./routes/reabastecimentos')
 const precosRoutes = require('./routes/precos')
-
 
 const app = express()
 const PORT = process.env.PORT || 8080
@@ -44,17 +44,18 @@ app.use('/api/taxis', taxisRoutes)
 app.use('/api/motoristas', motoristasRoutes)
 app.use('/api/turnos', turnosRoutes)
 app.use('/api/reabastecimentos', reabastecimentosRoutes)
-app.use('/api/precos', precosRoutes)    
+app.use('/api/precos', precosRoutes)
+
 // Rota de teste
 app.get('/', (req, res) => {
-  res.send(`Servidor [${HOSTNAME}] a correr e MongoDB conectado!`)
+  res.json({ servidor: HOSTNAME, msg: 'Servidor a correr e MongoDB conectado!' })
 })
 
 // ===========================
 // Tratamento de endpoints desconhecidos
 // ===========================
 app.use((req, res) => {
-  res.status(404).json({ [${HOSTNAME}]: { msg: 'Endpoint não encontrado' } })
+  res.status(404).json({ servidor: HOSTNAME, msg: 'Endpoint não encontrado' })
 })
 
 // ===========================
@@ -62,7 +63,7 @@ app.use((req, res) => {
 // ===========================
 app.use((err, req, res, next) => {
   console.error(err.stack)
-  res.status(err.status || 500).json({ [${HOSTNAME}]: { msg: err.message || 'Erro no servidor' } })
+  res.status(err.status || 500).json({ servidor: HOSTNAME, msg: err.message || 'Erro no servidor' })
 })
 
 // ===========================
