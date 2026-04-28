@@ -38,6 +38,33 @@ app.use(express.json())
 // ===========================
 // Rotas
 // ===========================
+
+// Página HTML
+app.get('/', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Projeto PTIR</title>
+      </head>
+      <body>
+        <h1>Projeto PTIR</h1>
+        <p>Servidor: ${HOSTNAME}</p>
+        <p>Backend Node.js a correr na porta ${PORT}</p>
+      </body>
+    </html>
+  `)
+})
+
+// API de teste
+app.get('/api', (req, res) => {
+  res.json({
+    servidor: HOSTNAME,
+    msg: 'API a funcionar'
+  })
+})
+
 app.use('/api/clientes', clientesRoutes)
 app.use('/api/gestores', gestoresRoutes)
 app.use('/api/taxis', taxisRoutes)
@@ -45,11 +72,6 @@ app.use('/api/motoristas', motoristasRoutes)
 app.use('/api/turnos', turnosRoutes)
 app.use('/api/reabastecimentos', reabastecimentosRoutes)
 app.use('/api/precos', precosRoutes)
-
-// Rota de teste
-app.get('/', (req, res) => {
-  res.json({ servidor: HOSTNAME, msg: 'Servidor a correr e MongoDB conectado!' })
-})
 
 // ===========================
 // Tratamento de endpoints desconhecidos
