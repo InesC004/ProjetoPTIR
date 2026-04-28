@@ -2,7 +2,8 @@ require('dotenv').config()
 const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
-
+const os = require('os')
+const HOSTNAME = os.hostname()
 // Importar rotas
 const clientesRoutes = require('./routes/clientes')
 const gestoresRoutes = require('./routes/gestores')
@@ -20,13 +21,13 @@ const MONGO_URI = process.env.MONGO_URI
 // ===========================
 // Conectar ao MongoDB
 // ===========================
-console.log(`Tentando conectar a: ${MONGO_URI}`)
+console.log(`[${HOSTNAME}] Tentando conectar a: ${MONGO_URI}`)
 mongoose.set('debug', true)
 mongoose.connect(MONGO_URI, {
   serverSelectionTimeoutMS: 5000,
 })
-  .then(() => console.log(`MongoDB conectado: ${mongoose.connection.host}`))
-  .catch(err => console.error('Erro ao conectar MongoDB:', err.message))
+  .then(() => console.log(`[${HOSTNAME}] MongoDB conectado: ${mongoose.connection.host}`))
+  .catch(err => console.error(`[${HOSTNAME}] Erro ao conectar MongoDB:`, err.message))
 
 // ===========================
 // Middlewares globais
@@ -46,7 +47,7 @@ app.use('/api/reabastecimentos', reabastecimentosRoutes)
 app.use('/api/precos', precosRoutes)    
 // Rota de teste
 app.get('/', (req, res) => {
-  res.send('Servidor a correr e MongoDB conectado!')
+  res.send(`Servidor [${HOSTNAME}] a correr e MongoDB conectado!`)
 })
 
 // ===========================
