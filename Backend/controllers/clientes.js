@@ -186,6 +186,7 @@ exports.getTodos = async (req, res) => {
 
     res.json({
       servidor: HOSTNAME,
+      users: clientes.length,
       clientes
     })
   } catch (err) {
