@@ -54,7 +54,7 @@ app.get('/', (req, res) => {
 // Tratamento de endpoints desconhecidos
 // ===========================
 app.use((req, res) => {
-  res.status(404).json({ msg: 'Endpoint não encontrado' })
+  res.status(404).json({ [${HOSTNAME}]: { msg: 'Endpoint não encontrado' } })
 })
 
 // ===========================
@@ -62,12 +62,12 @@ app.use((req, res) => {
 // ===========================
 app.use((err, req, res, next) => {
   console.error(err.stack)
-  res.status(err.status || 500).json({ msg: err.message || 'Erro no servidor' })
+  res.status(err.status || 500).json({ [${HOSTNAME}]: { msg: err.message || 'Erro no servidor' } })
 })
 
 // ===========================
 // Iniciar servidor
 // ===========================
 app.listen(PORT, () => {
-  console.log(`Servidor a correr na porta ${PORT}`)
+  console.log(`Servidor [${HOSTNAME}] a correr na porta ${PORT}`)
 })
