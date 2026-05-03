@@ -381,14 +381,14 @@ function SecRelatorios() {
 
   const totais = {
     taxi: [
-      ["viagens", "Total de viagens", "128"],
-      ["horas", "Total de horas", "342h"],
-      ["km", "Total de quilómetros", "8 920 km"],
+      ["viagens", "Total de viagens", "00"],
+      ["horas", "Total de horas", "00h"],
+      ["km", "Total de quilómetros", "000km"],
     ],
-    clientes: [["euros", "Total cobrado", "12 480€"]],
+    clientes: [["euros", "Total cobrado", "000€"]],
     reabastecimentos: [
-      ["euros", "Total pago", "2 140€"],
-      ["horas", "Horas gastas", "46h"],
+      ["euros", "Total pago", "00€"],
+      ["horas", "Horas gastas", "00h"],
     ],
     turnos: [
       ["ativos", "A trabalhar agora", aTrabalhar.length],
@@ -420,8 +420,6 @@ function SecRelatorios() {
   const subtotaisMock = [
     ["Motorista João Silva", "12 viagens", "86h", "1 240 km"],
     ["Motorista Ana Costa", "9 viagens", "61h", "920 km"],
-    ["Táxi AA-23-BB", "10 viagens", "74h", "1 100 km"],
-    ["Táxi CC-45-DD", "8 viagens", "52h", "760 km"],
   ];
 
   const viagensMock = [
