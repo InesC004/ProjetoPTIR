@@ -1,15 +1,3 @@
-// =============================================================================
-// api.js — Cliente centralizado para todas as chamadas à API
-// =============================================================================
-// Todas as chamadas ao backend passam por aqui.
-// Não uses fetch() diretamente nos componentes — usa as funções deste ficheiro.
-//
-// Uso:
-//   import api from "@/api";
-//   const motoristas = await api.motoristas.listar();
-//   await api.motoristas.criar(payload);
-// =============================================================================
-
 const BASE_URL = "http://localhost:8080";
 
 // ---------------------------------------------------------------------------
