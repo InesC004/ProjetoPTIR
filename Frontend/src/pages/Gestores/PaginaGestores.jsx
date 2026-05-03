@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Database,
@@ -14,6 +14,7 @@ import {
   Calculator,
   ChevronRight,
 } from "lucide-react";
+
 import logo from "../../Pictures/logo1.jpeg";
 import RegistarTaxi from "../../components/RegistarTaxi";
 import RegistarMotorista from "../../components/RegistarMotorista";
@@ -27,6 +28,8 @@ import {
   SimularViagem,
 } from "../../components/ConfigurarPrecos";
 
+import "../../css/paginaGestores.css";
+
 const NAV = [
   { id: "dados", label: "Gestão de Dados", Icon: Database, tag: "Dados" },
   { id: "config", label: "Configuração", Icon: Settings, tag: "Sistema" },
@@ -36,6 +39,7 @@ const NAV = [
 export default function PaginaGestores() {
   const navigate = useNavigate();
   const [active, setActive] = useState("dados");
+
   const [modalTaxi, setModalTaxi] = useState(false);
   const [modalMotorista, setModalMotorista] = useState(false);
   const [modalEditTaxi, setModalEditTaxi] = useState(false);
@@ -45,86 +49,62 @@ export default function PaginaGestores() {
   const [modalPrecos, setModalPrecos] = useState(false);
   const [modalListarPrecos, setModalListarPrecos] = useState(false);
   const [modalSimular, setModalSimular] = useState(false);
+
   const current = NAV.find((n) => n.id === active);
 
   return (
-    <div className="relative min-h-screen bg-[#060e1e] font-['DM_Sans',sans-serif] text-[#eaf0ff]">
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute -top-[180px] left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full bg-[radial-gradient(circle,rgba(26,110,255,0.08)_0%,transparent_70%)]" />
-        <div className="absolute -bottom-[100px] -right-[100px] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(198,77,255,0.05)_0%,transparent_70%)]" />
-      </div>
-      <div
-        className="fixed inset-0 z-0 pointer-events-none"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(26,110,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(26,110,255,0.03) 1px, transparent 1px)",
-          backgroundSize: "70px 70px",
-          maskImage:
-            "radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 100%)",
-        }}
-      />
+    <div className="pg-page">
+      <div className="pg-bg-grid" />
+      <div className="pg-orb pg-orb-left" />
+      <div className="pg-orb pg-orb-right" />
 
-      <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-5 bg-[#060e1e]/80 backdrop-blur-xl border-b border-white/[0.06]">
-        <div
-          className="flex items-center gap-3 cursor-pointer group"
-          onClick={() => navigate("/")}
-        >
-          <img
-            src={logo}
-            alt="TakeCab"
-            className="h-10 w-auto rounded-[10px] border border-white/[0.08] transition-transform duration-300 group-hover:scale-105"
-          />
-          <div className="flex flex-col">
-            <span className="font-semibold text-white text-[16px] tracking-tight">
-              Take<span className="text-[#3d8bff]">Cab</span>
-            </span>
-            <span className="text-[10px] tracking-[0.16em] uppercase text-white/30">
-              Premium Rides
-            </span>
+      <header className="pg-header">
+        <div className="pg-logo" onClick={() => navigate("/")}>
+          <img src={logo} alt="TakeCab" />
+          <div>
+            <strong>
+              Take<span>Cab</span>
+            </strong>
+            <small>Premium Rides</small>
           </div>
         </div>
-        <div className="flex items-center gap-3.5">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#1a6eff]/10 border border-[#1a6eff]/20 text-[12px] font-semibold text-[#00d4ff]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#00e887] shadow-[0_0_6px_#00e887]" />
+
+        <div className="pg-header-right">
+          <span className="pg-badge">
+            <span />
             Gestor
-          </div>
+          </span>
+
           <button
+            className="pg-logout"
             onClick={() => {
               localStorage.removeItem("token");
               localStorage.removeItem("cliente");
               localStorage.removeItem("role");
               navigate("/");
             }}
-            className="px-3.5 py-1.5 rounded-xl text-[12px] font-medium text-red-400/80 border border-red-500/15 bg-red-500/[0.06] hover:bg-red-500/[0.12] hover:border-red-500/30 hover:text-red-400 transition-all duration-200 cursor-pointer"
           >
             Sair
           </button>
         </div>
       </header>
 
-      <div className="flex pt-16 relative z-[1] min-h-screen">
-        <aside className="hidden lg:flex flex-col w-[250px] min-h-[calc(100vh-64px)] bg-[#081226]/85 backdrop-blur-xl border-r border-[#1a6eff]/[0.12] p-[28px_14px_24px] sticky top-16 self-start shrink-0">
-          <p className="text-[10px] font-bold tracking-[0.14em] uppercase text-[#4e6a8a] px-3 mb-[18px]">
-            Painel do Gestor
-          </p>
-          <nav className="flex flex-col gap-[3px]">
+      <div className="pg-layout">
+        <aside className="pg-sidebar">
+          <p className="pg-sidebar-title">Painel do Gestor</p>
+
+          <nav className="pg-nav">
             {NAV.map((item) => {
-              const Ic = item.Icon;
+              const Icon = item.Icon;
               const isActive = active === item.id;
+
               return (
                 <button
                   key={item.id}
+                  className={`pg-nav-item ${isActive ? "active" : ""}`}
                   onClick={() => setActive(item.id)}
-                  className={`relative flex items-center gap-[11px] w-full py-[11px] px-[14px] rounded-xl border-none text-[13.5px] font-medium text-left transition-all duration-200 cursor-pointer ${isActive ? "bg-[#1a6eff]/10 text-[#3d8bff] font-semibold" : "bg-transparent text-[#8ba3c7] hover:bg-[#1a6eff]/[0.06] hover:text-[#eaf0ff]"}`}
                 >
-                  <span
-                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-[3px] bg-[#1a6eff] transition-transform duration-200 origin-center ${isActive ? "scale-y-100" : "scale-y-0"}`}
-                  />
-                  <Ic
-                    size={18}
-                    strokeWidth={isActive ? 2.2 : 1.6}
-                    className={`transition-opacity ${isActive ? "opacity-100" : "opacity-50"}`}
-                  />
+                  <Icon size={18} />
                   {item.label}
                 </button>
               );
@@ -132,33 +112,40 @@ export default function PaginaGestores() {
           </nav>
         </aside>
 
-        <main className="flex-1 p-[36px_44px] max-w-[980px]" key={active}>
-          <div className="mb-8 animate-[fadeUp_0.5s_ease_both]">
-            <div className="inline-flex items-center gap-[7px] text-[11px] font-semibold tracking-[0.1em] uppercase text-[#00d4ff] mb-2.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#00d4ff] shadow-[0_0_8px_#00d4ff] animate-pulse" />
+        <main className="pg-main" key={active}>
+          <div className="pg-section-head">
+            <div className="pg-tag">
+              <span />
               {current?.tag}
             </div>
+
             {active === "dados" && (
               <PageHead
                 t="Gestão de Dados"
                 s="Registo e manutenção de táxis e motoristas da empresa."
               />
             )}
+
             {active === "config" && (
               <PageHead
                 t="Configuração do Sistema"
                 s="Ajuste de preços, acréscimos e simulação de custos de viagens."
               />
             )}
+
+
+
             {active === "relatorios" && (
               <PageHead
-                t="Relatórios e Análise"
-                s="Visão analítica da operação, faturação e reabastecimentos."
+                t="Relatórios"
+                s="Visualização de relatórios da empresa."
               />
             )}
+
+
           </div>
 
-          <div className="animate-[fadeUp_0.5s_0.08s_ease_both]">
+          <div className="pg-content">
             {active === "dados" && (
               <SecDados
                 onRegistarTaxi={() => setModalTaxi(true)}
@@ -169,6 +156,7 @@ export default function PaginaGestores() {
                 onRemoverMotorista={() => setModalRemoverMotorista(true)}
               />
             )}
+
             {active === "config" && (
               <SecConfig
                 onDefinirPrecos={() => setModalPrecos(true)}
@@ -176,46 +164,21 @@ export default function PaginaGestores() {
                 onSimularViagem={() => setModalSimular(true)}
               />
             )}
+
+            {active === "relatorios" && <SecRelatorios />}
           </div>
         </main>
       </div>
 
       <RegistarTaxi aberto={modalTaxi} onFechar={() => setModalTaxi(false)} />
-      <RegistarMotorista
-        aberto={modalMotorista}
-        onFechar={() => setModalMotorista(false)}
-      />
-      <EditarTaxi
-        aberto={modalEditTaxi}
-        onFechar={() => setModalEditTaxi(false)}
-      />
-      <EditarMotorista
-        aberto={modalEditMotorista}
-        onFechar={() => setModalEditMotorista(false)}
-      />
-      <RemoverTaxi
-        aberto={modalRemoverTaxi}
-        onFechar={() => setModalRemoverTaxi(false)}
-      />
-      <RemoverMotorista
-        aberto={modalRemoverMotorista}
-        onFechar={() => setModalRemoverMotorista(false)}
-      />
-      <DefinirPrecos
-        aberto={modalPrecos}
-        onFechar={() => setModalPrecos(false)}
-      />
-      <ListarPrecos
-        aberto={modalListarPrecos}
-        onFechar={() => setModalListarPrecos(false)}
-        onEditar={() => setModalPrecos(true)}
-      />
-      <SimularViagem
-        aberto={modalSimular}
-        onFechar={() => setModalSimular(false)}
-      />
-
-      <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
+      <RegistarMotorista aberto={modalMotorista} onFechar={() => setModalMotorista(false)} />
+      <EditarTaxi aberto={modalEditTaxi} onFechar={() => setModalEditTaxi(false)} />
+      <EditarMotorista aberto={modalEditMotorista} onFechar={() => setModalEditMotorista(false)} />
+      <RemoverTaxi aberto={modalRemoverTaxi} onFechar={() => setModalRemoverTaxi(false)} />
+      <RemoverMotorista aberto={modalRemoverMotorista} onFechar={() => setModalRemoverMotorista(false)} />
+      <DefinirPrecos aberto={modalPrecos} onFechar={() => setModalPrecos(false)} />
+      <ListarPrecos aberto={modalListarPrecos} onFechar={() => setModalListarPrecos(false)} onEditar={() => setModalPrecos(true)} />
+      <SimularViagem aberto={modalSimular} onFechar={() => setModalSimular(false)} />
     </div>
   );
 }
@@ -223,59 +186,25 @@ export default function PaginaGestores() {
 function PageHead({ t, s }) {
   return (
     <>
-      <h2 className="font-['Syne',sans-serif] text-[28px] font-extrabold tracking-tight text-[#eaf0ff] mb-1.5">
-        {t}
-      </h2>
-      <p className="text-[14px] text-[#8ba3c7] leading-relaxed">{s}</p>
+      <h2 className="pg-title">{t}</h2>
+      <p className="pg-desc">{s}</p>
     </>
   );
 }
 
-function SecDados({
-  onRegistarTaxi,
-  onRegistarMotorista,
-  onEditarTaxi,
-  onEditarMotorista,
-  onRemoverTaxi,
-  onRemoverMotorista,
-}) {
+function SecDados(props) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      <Card
-        CardIcon={Car}
-        bg="linear-gradient(135deg, #1a6eff, #0052cc)"
-        title="Táxis"
-      >
-        <Action
-          Icon={Plus}
-          label="Registar táxi"
-          accent
-          onClick={onRegistarTaxi}
-        />
-        <Action Icon={Pencil} label="Editar táxi" onClick={onEditarTaxi} />
-        <Action Icon={Trash2} label="Remover táxi" onClick={onRemoverTaxi} />
+    <div className="pg-grid">
+      <Card Icon={Car} color="blue" title="Táxis">
+        <Action Icon={Plus} label="Registar táxi" accent onClick={props.onRegistarTaxi} />
+        <Action Icon={Pencil} label="Editar táxi" onClick={props.onEditarTaxi} />
+        <Action Icon={Trash2} label="Remover táxi" danger onClick={props.onRemoverTaxi} />
       </Card>
-      <Card
-        CardIcon={Users}
-        bg="linear-gradient(135deg, #00c873, #00a85e)"
-        title="Motoristas"
-      >
-        <Action
-          Icon={Plus}
-          label="Registar motorista"
-          accent
-          onClick={onRegistarMotorista}
-        />
-        <Action
-          Icon={Pencil}
-          label="Editar motorista"
-          onClick={onEditarMotorista}
-        />
-        <Action
-          Icon={Trash2}
-          label="Remover motorista"
-          onClick={onRemoverMotorista}
-        />
+
+      <Card Icon={Users} color="green" title="Motoristas">
+        <Action Icon={Plus} label="Registar motorista" accent onClick={props.onRegistarMotorista} />
+        <Action Icon={Pencil} label="Editar motorista" onClick={props.onEditarMotorista} />
+        <Action Icon={Trash2} label="Remover motorista" danger onClick={props.onRemoverMotorista} />
       </Card>
     </div>
   );
@@ -283,88 +212,463 @@ function SecDados({
 
 function SecConfig({ onDefinirPrecos, onListarPrecos, onSimularViagem }) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      <Card
-        CardIcon={DollarSign}
-        bg="linear-gradient(135deg, #1a6eff, #7c3aed)"
-        title="Preços por minuto"
-      >
-        <Action
-          Icon={DollarSign}
-          label="Definir preços (Básico + Luxuoso)"
-          accent
-          onClick={onDefinirPrecos}
-        />
-        <Action
-          Icon={DollarSign}
-          label="Ver preços atuais"
-          onClick={onListarPrecos}
-        />
+    <div className="pg-grid">
+      <Card Icon={DollarSign} color="blue" title="Preços por minuto">
+        <Action Icon={DollarSign} label="Definir preços" accent onClick={onDefinirPrecos} />
+        <Action Icon={DollarSign} label="Ver preços atuais" onClick={onListarPrecos} />
       </Card>
-      <Card
-        CardIcon={Calculator}
-        bg="linear-gradient(135deg, #00d4ff, #1a6eff)"
-        title="Simulação de viagem"
-      >
-        <Action
-          Icon={Calculator}
-          label="Simular custo de viagem fictícia"
-          accent
-          onClick={onSimularViagem}
-        />
+
+      <Card Icon={Calculator} color="green" title="Simulação de viagem">
+        <Action Icon={Calculator} label="Simular custo de viagem" accent onClick={onSimularViagem} />
       </Card>
     </div>
   );
 }
 
-function Card({ CardIcon, bg, title, children }) {
+function Card({ Icon, color, title, children }) {
   return (
-    <div className="relative overflow-hidden rounded-[20px] border border-[#1a6eff]/[0.12] bg-[rgba(12,28,56,0.55)] backdrop-blur-xl p-6 transition-all duration-300 hover:border-[#1a6eff]/25 hover:bg-[rgba(18,38,72,0.7)] hover:-translate-y-0.5 hover:shadow-[0_16px_48px_rgba(0,0,0,0.3)]">
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
-      <div className="flex items-center gap-3 mb-5 pb-4 border-b border-white/[0.04]">
-        <div
-          className="w-10 h-10 rounded-[13px] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)]"
-          style={{ background: bg }}
-        >
-          <CardIcon size={18} strokeWidth={1.8} />
+    <div className={`pg-card ${color}`}>
+      <div className="pg-card-head">
+        <div className="pg-card-icon">
+          <Icon size={20} />
         </div>
-        <h3 className="font-['Syne',sans-serif] text-[16px] font-bold tracking-tight">
-          {title}
-        </h3>
+        <h3>{title}</h3>
       </div>
-      <div className="flex flex-col gap-2">{children}</div>
+
+      <div className="pg-actions">{children}</div>
     </div>
   );
 }
 
 function Action({ Icon, label, accent, danger, onClick }) {
-  const base =
-    "group flex items-center justify-between w-full py-3 px-3.5 rounded-xl border text-[13.5px] font-medium cursor-pointer transition-all duration-200 text-left";
-  let variant;
-  if (accent)
-    variant =
-      "border-[#1a6eff]/[0.18] bg-[#1a6eff]/[0.06] text-[#eaf0ff] hover:bg-[#1a6eff]/[0.14] hover:border-[#1a6eff]/[0.35] hover:shadow-[0_0_20px_rgba(26,110,255,0.1)] hover:translate-x-[3px]";
-  else if (danger)
-    variant =
-      "border-white/[0.03] bg-white/[0.02] text-[#8ba3c7] hover:bg-[#ef4444]/[0.08] hover:border-[#ef4444]/25 hover:text-[#ff6b6b] hover:translate-x-[3px]";
-  else
-    variant =
-      "border-white/[0.04] bg-white/[0.02] text-[#eaf0ff] hover:bg-[#1a6eff]/[0.08] hover:border-[#1a6eff]/20 hover:translate-x-[3px]";
   return (
-    <button className={`${base} ${variant}`} onClick={onClick}>
-      <span className="flex items-center gap-2.5">
-        <span
-          className={`w-[30px] h-[30px] rounded-[9px] flex items-center justify-center border transition-all duration-200 ${danger ? "bg-white/[0.03] border-white/[0.05] group-hover:bg-[#ef4444]/[0.12] group-hover:border-[#ef4444]/20" : "bg-white/[0.03] border-white/[0.05] group-hover:bg-[#1a6eff]/[0.12] group-hover:border-[#1a6eff]/20"}`}
-        >
-          <Icon size={15} strokeWidth={1.8} />
+    <button
+      className={`pg-action ${accent ? "accent" : ""} ${danger ? "danger" : ""}`}
+      onClick={onClick}
+    >
+      <span>
+        <span className="pg-action-icon">
+          <Icon size={15} />
         </span>
         {label}
       </span>
-      <ChevronRight
-        size={14}
-        strokeWidth={2}
-        className="text-[#4e6a8a] transition-all duration-200 group-hover:text-[#3d8bff] group-hover:translate-x-0.5"
-      />
     </button>
+  );
+}
+
+
+
+
+
+function SecRelatorios() {
+  const [tipo, setTipo] = useState("taxi");
+  const [total, setTotal] = useState("viagens");
+  const [sub, setSub] = useState(null);
+  const [pesquisa, setPesquisa] = useState("");
+  const [turnos, setTurnos] = useState([]);
+  const [loadingTurnos, setLoadingTurnos] = useState(false);
+
+  const hoje = new Date().toISOString().slice(0, 10);
+  const [dataInicio, setDataInicio] = useState(hoje);
+  const [dataFim, setDataFim] = useState(hoje);
+
+  useEffect(() => {
+    async function carregarTurnos() {
+      try {
+        setLoadingTurnos(true);
+
+        const token = localStorage.getItem("token");
+
+        const res = await fetch("http://localhost:8080/api/turnos/todos", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+     
+
+        if (!res.ok) {
+          throw new Error("Erro HTTP: " + res.status);
+        }
+
+        const contentType = res.headers.get("content-type");
+
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("A resposta não é JSON. Verifica a rota do backend.");
+        }
+
+        const dados = await res.json();
+        setTurnos(Array.isArray(dados) ? dados : []);
+
+      } catch (err) {
+        console.error("Erro ao carregar turnos:", err);
+        setTurnos([]);
+      } finally {
+        setLoadingTurnos(false);
+      }
+    }
+
+    carregarTurnos();
+  }, []);
+
+  function formatarData(data) {
+    return new Date(data).toLocaleString("pt-PT", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function horasTurno(turno) {
+    const inicio = new Date(turno.data_inicio);
+    const fim = new Date(turno.data_fim);
+    return Math.max((fim - inicio) / (1000 * 60 * 60), 0);
+  }
+
+  function estadoTurno(turno) {
+    const agora = new Date();
+    const inicio = new Date(turno.data_inicio);
+    const fim = new Date(turno.data_fim);
+
+    if (agora >= inicio && agora <= fim) return "A trabalhar";
+    if (agora > fim) return "Já trabalhou";
+    return "Ainda não começou";
+  }
+
+  
+
+  function mesmoDiaOuPeriodo(turno) {
+    const inicioTurno = new Date(turno.data_inicio);
+    const fimTurno = new Date(turno.data_fim);
+
+    const inicio = new Date(`${dataInicio}T00:00:00`);
+    const fim = new Date(`${dataFim}T23:59:59`);
+
+    return inicioTurno <= fim && fimTurno >= inicio;
+  }
+  const turnosFiltrados = turnos.filter(mesmoDiaOuPeriodo);
+
+  const turnosPesquisa = turnosFiltrados.filter((turno) => {
+    const texto = `
+      ${turno.motorista?.nome || ""}
+      ${turno.motorista?.nif || ""}
+      ${turno.taxi?.matricula || ""}
+      ${turno.taxi?.marca || ""}
+      ${turno.taxi?.modelo || ""}
+    `.toLowerCase();
+
+    return texto.includes(pesquisa.toLowerCase());
+  });
+
+  const aTrabalhar = turnosPesquisa.filter(
+    (t) => estadoTurno(t) === "A trabalhar",
+  );
+
+  const jaTrabalharam = turnosPesquisa.filter(
+    (t) => estadoTurno(t) === "Já trabalhou",
+  );
+
+  const aindaNaoComecaram = turnosPesquisa.filter(
+    (t) => estadoTurno(t) === "Ainda não começou",
+  );
+
+  const totalHorasTurnos = turnosPesquisa.reduce(
+    (acc, turno) => acc + horasTurno(turno),
+    0,
+  );
+
+  const totais = {
+    taxi: [
+      ["viagens", "Total de viagens", "128"],
+      ["horas", "Total de horas", "342h"],
+      ["km", "Total de quilómetros", "8 920 km"],
+    ],
+    clientes: [["euros", "Total cobrado", "12 480€"]],
+    reabastecimentos: [
+      ["euros", "Total pago", "2 140€"],
+      ["horas", "Horas gastas", "46h"],
+    ],
+    turnos: [
+      ["ativos", "A trabalhar agora", aTrabalhar.length],
+      ["feitos", "Já trabalharam", jaTrabalharam.length],
+      ["pendentes", "Ainda não começaram", aindaNaoComecaram.length],
+      ["horas", "Horas em turnos", `${totalHorasTurnos.toFixed(1)}h`],
+    ],
+  };
+
+  const dados = {
+    taxi: {
+      titulo: "Táxis e motoristas",
+      desc: "Visualize viagens, horas e quilómetros por motorista e táxi.",
+    },
+    clientes: {
+      titulo: "Clientes e faturação",
+      desc: "Visualize totais cobrados e valores pagos por cliente.",
+    },
+    reabastecimentos: {
+      titulo: "Reabastecimentos",
+      desc: "Visualize custos e tempo gasto em reabastecimentos de táxis.",
+    },
+    turnos: {
+      titulo: "Turnos dos motoristas",
+      desc: "Veja quem está a trabalhar, quem já trabalhou e quem ainda não começou.",
+    },
+  };
+
+  const subtotaisMock = [
+    ["Motorista João Silva", "12 viagens", "86h", "1 240 km"],
+    ["Motorista Ana Costa", "9 viagens", "61h", "920 km"],
+    ["Táxi AA-23-BB", "10 viagens", "74h", "1 100 km"],
+    ["Táxi CC-45-DD", "8 viagens", "52h", "760 km"],
+  ];
+
+  const viagensMock = [
+    ["Viagem #1024", "AA-23-BB", "14:20 → 15:05", "45 min", "18 km"],
+    ["Viagem #1018", "AA-23-BB", "10:10 → 10:42", "32 min", "11 km"],
+    ["Viagem #1007", "CC-45-DD", "19:00 → 19:31", "31 min", "9 km"],
+  ];
+
+  const atual = dados[tipo];
+
+  return (
+    <div className="pg-relatorios">
+      <div className="pg-relatorios-topo">
+        <div>
+          <h3>{atual.titulo}</h3>
+          <p>{atual.desc}</p>
+        </div>
+
+        <div className="pg-filtros">
+          <label>
+            Data inicial
+            <input
+              type="date"
+              value={dataInicio}
+              onChange={(e) => setDataInicio(e.target.value)}
+            />
+          </label>
+
+          <label>
+            Data final
+            <input
+              type="date"
+              value={dataFim}
+              onChange={(e) => setDataFim(e.target.value)}
+            />
+          </label>
+        </div>
+      </div>
+
+      <div className="pg-tabs-relatorios">
+        <button
+          className={tipo === "taxi" ? "active" : ""}
+          onClick={() => {
+            setTipo("taxi");
+            setTotal("viagens");
+            setSub(null);
+          }}
+        >
+          Táxis e motoristas
+        </button>
+
+        <button
+          className={tipo === "clientes" ? "active" : ""}
+          onClick={() => {
+            setTipo("clientes");
+            setTotal("euros");
+            setSub(null);
+          }}
+        >
+          Clientes e faturação
+        </button>
+
+        <button
+          className={tipo === "reabastecimentos" ? "active" : ""}
+          onClick={() => {
+            setTipo("reabastecimentos");
+            setTotal("euros");
+            setSub(null);
+          }}
+        >
+          Reabastecimentos
+        </button>
+
+        <button
+          className={tipo === "turnos" ? "active" : ""}
+          onClick={() => {
+            setTipo("turnos");
+            setTotal("ativos");
+            setSub(null);
+          }}
+        >
+          Turnos
+        </button>
+      </div>
+
+      <div className="pg-busca-wrap">
+        <input
+          type="text"
+          placeholder="Pesquisar motorista, táxi, matrícula ou NIF..."
+          value={pesquisa}
+          onChange={(e) => setPesquisa(e.target.value)}
+          className="pg-busca"
+        />
+      </div>
+
+      <div className="pg-total-grid">
+        {totais[tipo].map(([id, label, valor]) => (
+          <button
+            key={id}
+            className={total === id ? "pg-card active" : "pg-card"}
+            onClick={() => {
+              setTotal(id);
+              setSub(null);
+            }}
+          >
+            <span>{label}</span>
+            <strong>{valor}</strong>
+            <small>Clique para ver detalhes</small>
+          </button>
+        ))}
+      </div>
+
+      {tipo !== "turnos" && (
+        <div className="pg-sub">
+          <div className="pg-panel">
+            <h4>Motoristas e táxis</h4>
+
+            {subtotaisMock.map(([nome, viagens, horas, km]) => (
+              <button
+                key={nome}
+                className={sub === nome ? "pg-row active" : "pg-row"}
+                onClick={() => setSub(nome)}
+              >
+                <span>{nome}</span>
+                <strong>
+                  {viagens} · {horas} · {km}
+                </strong>
+              </button>
+            ))}
+          </div>
+
+          <div className="pg-panel">
+            <h4>Viagens</h4>
+
+            {viagensMock.map(([viagem, matricula, periodo, horas, km]) => (
+              <button key={viagem} className="pg-row">
+                <span>
+                  {viagem}
+                  <small>{matricula} · {periodo}</small>
+                </span>
+                <strong>
+                  {horas} · {km}
+                </strong>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tipo === "turnos" && (
+        <div className="pg-sub">
+          <div className="pg-panel">
+            <h4>Resumo dos turnos</h4>
+
+            {loadingTurnos && (
+              <p className="pg-empty">A carregar turnos da base de dados...</p>
+            )}
+
+            {!loadingTurnos && turnosPesquisa.length === 0 && (
+              <p className="pg-empty">Nenhum turno encontrado neste período.</p>
+            )}
+
+            {!loadingTurnos &&
+              turnosPesquisa.map((turno) => (
+                <button
+                  key={turno._id}
+                  className={sub === turno._id ? "pg-row active" : "pg-row"}
+                  onClick={() => setSub(turno._id)}
+                >
+                  <span>
+                    {turno.motorista?.nome || "Motorista sem nome"}
+                    <small>
+                      {turno.taxi?.matricula || "Sem matrícula"} ·{" "}
+                      {estadoTurno(turno)}
+                    </small>
+                  </span>
+
+                  <strong>{horasTurno(turno).toFixed(1)}h</strong>
+                </button>
+              ))}
+          </div>
+
+          <div className="pg-panel">
+            <h4>Detalhes do turno</h4>
+
+            {!sub && (
+              <p className="pg-empty">
+                Selecione um turno para ver os detalhes.
+              </p>
+            )}
+
+            {sub &&
+              turnosPesquisa
+                .filter((turno) => turno._id === sub)
+                .map((turno) => (
+                  <div key={turno._id} className="pg-turno-detalhes">
+                    <div>
+                      <span>Motorista</span>
+                      <strong>{turno.motorista?.nome || "Sem nome"}</strong>
+                    </div>
+
+                    <div>
+                      <span>NIF</span>
+                      <strong>{turno.motorista?.nif || "—"}</strong>
+                    </div>
+
+                    <div>
+                      <span>Táxi</span>
+                      <strong>
+                        {turno.taxi?.marca} {turno.taxi?.modelo}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Matrícula</span>
+                      <strong>{turno.taxi?.matricula || "—"}</strong>
+                    </div>
+
+                    <div>
+                      <span>Início</span>
+                      <strong>{formatarData(turno.data_inicio)}</strong>
+                    </div>
+
+                    <div>
+                      <span>Fim</span>
+                      <strong>{formatarData(turno.data_fim)}</strong>
+                    </div>
+
+                    <div>
+                      <span>Estado</span>
+                      <strong>{estadoTurno(turno)}</strong>
+                    </div>
+
+                    <div>
+                      <span>Horas</span>
+                      <strong>{horasTurno(turno).toFixed(1)}h</strong>
+                    </div>
+
+                    <div>
+                      <span>Viagens associadas</span>
+                      <strong>{turno.viagens?.length || 0}</strong>
+                    </div>
+                  </div>
+                ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
