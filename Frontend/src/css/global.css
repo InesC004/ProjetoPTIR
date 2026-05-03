@@ -1,18 +1,22 @@
 @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap");
-
+dd
 /* ═══════════════════════════════════════════
    VARIÁVEIS GLOBAIS & RESET
    ═══════════════════════════════════════════ */
 :root {
-  --fundo: #050d1a;
+  --fundo: #f0f4ff;
+  --fundo-escuro: #f0f4ff;
   --azul: #1a6eff;
   --azul-claro: #3d8bff;
   --ciano: #00d4ff;
   --rosa: #c64dff;
-  --verde: #00e887;
+  --verde: #00c96e;
   --branco: #f0f6ff;
+  --texto: #0d1829;
+  --texto-sub: #4a6080;
   --cinza: #6b8baa;
-  --card: rgba(10, 30, 60, 0.6);
+  --card: rgba(255, 255, 255, 0.85);
+  --card-borda: rgba(26, 110, 255, 0.14);
   --borda: rgba(26, 110, 255, 0.18);
 }
 
@@ -1556,7 +1560,7 @@ body {
    ═══════════════════════════════════════════ */
 .perfil-pagina {
   min-height: 100vh;
-  background: #050d1a;
+  background: #ffffff;
   color: #f0f6ff;
   font-family: "DM Sans", sans-serif;
   padding-top: 80px;

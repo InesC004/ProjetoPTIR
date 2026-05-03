@@ -50,25 +50,31 @@ const auth = {
    * Tenta login em clientes, motoristas e gestores por ordem.
    * Devolve { token, role, cliente? } em caso de sucesso.
    */
-  async login({ email, password }) {
+  async login({ nif, access_password, email, password } = {}) {
     const endpoints = [
       "/api/clientes/login",
       "/api/motoristas/login",
       "/api/gestores/login",
     ];
 
+    // Aceita ambos os formatos (nif/access_password e email/password)
+    // para compatibilidade com os 3 endpoints.
+    const body = {
+      nif,
+      access_password,
+      email: email ?? nif,
+      password: password ?? access_password,
+    };
+
     for (const path of endpoints) {
       const res = await fetch(`${BASE_URL}${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json().catch(() => ({}));
-
-      if (res.ok && data.success) {
-        return data; // { token, role, cliente? }
-      }
+      if (res.ok && data.success) return data; // { token, role, cliente? }
     }
 
     throw new Error("Credenciais inválidas.");

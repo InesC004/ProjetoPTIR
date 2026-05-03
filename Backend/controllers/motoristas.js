@@ -112,8 +112,8 @@ exports.login = async (req, res) => {
       success: true,
       message: 'Login bem sucedido.',
       role: 'motorista',
-      motorista: { nome: motorista.nome, nif: motorista.nif, email: motorista.email },
-      token
+      motorista: { nome: motorista.nome, nif: motorista.nif, email: motorista.email, numero_carta: motorista.numero_carta, genero: motorista.genero,  data_nascimento: motorista.data_nascimento, morada: motorista.morada,codigo_postal: motorista.codigo_postal},
+      token,
     })
   } catch (err) {
     console.error(err)

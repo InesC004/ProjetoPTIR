@@ -1,13 +1,20 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useRef } from "react";
 import Header from "../components/Header2";
-
+import "../css/dashboardCliente.css";
 // ═══════════════════════════════════════════════════════════════════════════════
 // UTILITÁRIOS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 async function carregarLeaflet() {
   return new Promise((resolve, reject) => {
+    if (!document.querySelector('link[data-leaflet-css="true"]')) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      link.dataset.leafletCss = "true";
+      document.head.appendChild(link);
+    }
     if (window.L) return resolve(window.L);
     const script = document.createElement("script");
     script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
@@ -230,7 +237,7 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
         attributionControl: false,
       }).setView([38.7223, -9.1393], 14);
       L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
         { maxZoom: 19 },
       ).addTo(mapa);
       L.control.zoom({ position: "bottomright" }).addTo(mapa);
@@ -434,58 +441,22 @@ export default function Dashboard() {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--fundo)" }}>
+    <div className="dash-pagina">
       <div className="fundo-grelha" />
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: "-20%",
-            left: "20%",
-            width: 700,
-            height: 700,
-            background: "rgba(26,110,255,0.12)",
-            borderRadius: "50%",
-            filter: "blur(160px)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: "-15%",
-            right: "-5%",
-            width: 540,
-            height: 540,
-            background: "rgba(198,77,255,0.07)",
-            borderRadius: "50%",
-            filter: "blur(140px)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "-8%",
-            width: 380,
-            height: 380,
-            background: "rgba(0,212,255,0.06)",
-            borderRadius: "50%",
-            filter: "blur(120px)",
-          }}
-        />
+      <div className="dash-orbs">
+        <div className="dash-orb-1" />
+        <div className="dash-orb-2" />
+        <div className="dash-orb-3" />
       </div>
 
       <Header isDashboard />
 
       <section className="hero">
         <div className="painel-esquerdo">
+          <div className="badge animar">
+            <span className="badge-ponto" />
+            Motoristas disponíveis · Lisboa
+          </div>
           <h1 className="titulo animar-1">
             Chegue a qualquer
             <br />
@@ -497,6 +468,20 @@ export default function Dashboard() {
           </p>
 
           <div className="card-reserva animar-2">
+            <div className="step-dots" aria-hidden="true">
+              <div className={`step-dot ${partida ? "feito" : "ativo"}`}>1</div>
+              <div className={`step-line ${partida ? "feito" : ""}`} />
+              <div
+                className={`step-dot ${destino ? "feito-rosa" : partida ? "ativo" : ""}`}
+              >
+                2
+              </div>
+              <div className={`step-line ${destino ? "feito-2" : ""}`} />
+              <div className={`step-dot ${partida && destino ? "ativo" : ""}`}>
+                3
+              </div>
+            </div>
+
             <button
               className="btn-localizacao"
               onClick={usarLocalizacaoAtual}
@@ -596,29 +581,6 @@ export default function Dashboard() {
                     ? "A calcular rota…"
                     : "→ Pedir Viagem"}
             </button>
-          </div>
-
-          <div className="estatisticas animar-3">
-            <div>
-              <div className="stat-numero">
-                3<span>min</span>
-              </div>
-              <div className="stat-label">Tempo médio</div>
-            </div>
-            <div className="stat-divider" />
-            <div>
-              <div className="stat-numero">
-                50<span>k+</span>
-              </div>
-              <div className="stat-label">Passageiros</div>
-            </div>
-            <div className="stat-divider" />
-            <div>
-              <div className="stat-numero">
-                4.9<span>★</span>
-              </div>
-              <div className="stat-label">Avaliação</div>
-            </div>
           </div>
         </div>
 

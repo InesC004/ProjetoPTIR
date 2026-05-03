@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
-import image from "../pictures/carroREgistro.jpg";
+import image from "../Pictures/carroRegistro.jpg";
 import api from "../Api";
 
 export default function RegisterModal({ isOpen, onClose }) {

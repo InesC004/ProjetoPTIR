@@ -3,10 +3,11 @@ import Homepage from "./pages/Homepage";
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
-import CompletarPerfil from "./pages/Completar-perfil";
+import CompletarPerfil from "./pages/completar-perfil";
 import PaginaGestores from "./pages/Gestores/PaginaGestores";
 import PaginaMotorista from "./pages/PaginaMotorista";
 import CriarGestor from "./pages/CriarGestor";
+import PerfilMotorista from "./pages/PerfilMotorista";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
           path="/motorista/PaginaMotorista"
           element={<PaginaMotorista />}
         />
+        <Route path="/perfil-motorista" element={<PerfilMotorista />} />
         <Route path="/admin/criar-gestor" element={<CriarGestor />} />
       </Routes>
     </BrowserRouter>

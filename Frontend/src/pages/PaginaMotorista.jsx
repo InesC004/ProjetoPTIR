@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import logo from "../Pictures/logo1.jpeg";
 
+// import "../global.css";
+import "../css/paginaMotorista.css";
 /* ═══════════════════════════════════════════════
    NAV
    ═══════════════════════════════════════════════ */
@@ -43,130 +45,296 @@ export default function PaginaMotorista() {
   const [active, setActive] = useState("turno");
   const [profileOpen, setProfileOpen] = useState(false);
   const current = NAV.find((n) => n.id === active);
-  
 
   return (
-    <div className="relative min-h-screen bg-[#060e1e] font-['DM_Sans',sans-serif] text-[#eaf0ff]">
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "var(--fundo)",
+        fontFamily: "'DM Sans', sans-serif",
+        color: "var(--branco)",
+      }}
+    >
       {/* ── Fundo decorativo ── */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute -top-[180px] left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full bg-[radial-gradient(circle,rgba(0,232,135,0.06)_0%,transparent_70%)]" />
-        <div className="absolute -bottom-[100px] -right-[100px] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(26,110,255,0.05)_0%,transparent_70%)]" />
-      </div>
+      <div className="fundo-grelha" />
       <div
-        className="fixed inset-0 z-0 pointer-events-none"
         style={{
-          backgroundImage:
-            "linear-gradient(rgba(0,232,135,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,232,135,0.02) 1px, transparent 1px)",
-          backgroundSize: "70px 70px",
-          maskImage:
-            "radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 100%)",
+          position: "fixed",
+          inset: 0,
+          zIndex: 0,
+          pointerEvents: "none",
         }}
-      />
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: -180,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 900,
+            height: 900,
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, rgba(0,232,135,0.06) 0%, transparent 70%)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: -100,
+            right: -100,
+            width: 600,
+            height: 600,
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, rgba(26,110,255,0.05) 0%, transparent 70%)",
+          }}
+        />
+      </div>
 
       {/* ── HEADER ── */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-5 bg-[#060e1e]/80 backdrop-blur-xl border-b border-white/[0.06]">
+      <header
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 300,
+          height: 64,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 28px",
+          backdropFilter: "blur(24px)",
+          borderBottom: "1px solid rgba(26,110,255,0.15)",
+        }}
+      >
+        {/* Logo */}
         <div
-          className="flex items-center gap-3 cursor-pointer group"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            cursor: "pointer",
+          }}
           onClick={() => navigate("/")}
         >
           <img
             src={logo}
             alt="TakeCab"
-            className="h-10 w-auto rounded-[10px] border border-white/[0.08] transition-transform duration-300 group-hover:scale-105"
+            style={{
+              height: 40,
+              width: "auto",
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.1)",
+            }}
           />
-          <div className="flex flex-col">
-            <span className="font-semibold text-white text-[16px] tracking-tight">
-              Take<span className="text-[#3d8bff]">Cab</span>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span
+              style={{
+                fontFamily: "'Syne', sans-serif",
+                fontWeight: 800,
+                fontSize: "1rem",
+                letterSpacing: "-0.02em",
+                color: "var(--branco)",
+                lineHeight: 1,
+              }}
+            >
+              Take<span style={{ color: "var(--azul-claro)" }}>Cab</span>
             </span>
-            <span className="text-[10px] tracking-[0.16em] uppercase text-white/30">
+            <span
+              style={{
+                fontSize: "0.55rem",
+                color: "var(--cinza)",
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+              }}
+            >
               Premium Rides
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 relative">
-        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#00e887]/10 border border-[#00e887]/20 text-[12px] font-semibold text-[#00e887]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#00e887] shadow-[0_0_6px_#00e887]" />
-          Motorista
-        </div>
-
-        <button
-          onClick={() => setProfileOpen(!profileOpen)}
-          className="flex items-center gap-2 transition-all"
-          type="button"
+        {/* Lado direito: badge + avatar */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            position: "relative",
+          }}
         >
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#00e887] to-[#1a6eff] flex items-center justify-center text-white font-bold text-sm">
-            M
-          </div>
-
-      <ChevronDown
-        size={16}
-        className={`text-[#8ba3c7] transition-transform ${
-          profileOpen ? "rotate-180" : ""
-        }`}
-      />
-    </button>
-
-      {profileOpen && (
-        <div className="absolute right-0 top-[58px] w-56 rounded-2xl border border-white/[0.08] bg-[#0b162b]/95 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)] overflow-hidden z-[100]">
-          <div className="p-4 border-b border-white/[0.06] flex justify-center">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00e887] to-[#1a6eff] flex items-center justify-center text-white font-bold text-base shadow-[0_6px_20px_rgba(0,0,0,0.25)]">
-              M
-            </div>
-          </div>
-
-          <div className="p-2">
-            <button
-              onClick={() => {
-                setProfileOpen(false);
-                navigate("/perfil-motorista");
+          <span className="badge" style={{ marginBottom: 0 }}>
+            <span
+              className="badge-ponto"
+              style={{
+                background: "var(--verde)",
+                boxShadow: "0 0 8px var(--verde)",
               }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[#eaf0ff] hover:bg-white/[0.05] transition"
+            />
+            Motorista
+          </span>
+
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setProfileOpen(!profileOpen)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+              }}
               type="button"
             >
-              <User size={16} />
-              Ver perfil
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  background:
+                    "linear-gradient(135deg, var(--verde), var(--azul))",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: "0.9rem",
+                  fontFamily: "'Syne', sans-serif",
+                }}
+              >
+                M
+              </div>
+              <ChevronDown
+                size={16}
+                style={{
+                  color: "var(--cinza)",
+                  transition: "transform 0.2s",
+                  transform: profileOpen ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+              />
             </button>
 
-            <button
-              onClick={() => {
-                setProfileOpen(false);
-                navigate("/configuracoes-motorista");
-              }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[#eaf0ff] hover:bg-white/[0.05] transition"
-              type="button"
-            >
-              <Settings size={16} />
-              Definições
-            </button>
-
-            <button
-              onClick={() => {
-                setProfileOpen(false);
-                navigate("/");
-              }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[#ff8b8b] hover:bg-[#ef4444]/[0.08] transition"
-              type="button"
-            >
-              <LogOut size={16} />
-              Terminar sessão
-            </button>
+            {profileOpen && (
+              <div className="perfil-menu">
+                <div className="perfil-menu-topo">
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: "50%",
+                      background:
+                        "linear-gradient(135deg, var(--verde), var(--azul))",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#fff",
+                      fontWeight: 700,
+                      fontSize: "0.9rem",
+                      flexShrink: 0,
+                    }}
+                  >
+                    M
+                  </div>
+                  <div>
+                    <div className="perfil-menu-nome">Motorista</div>
+                    <div className="perfil-menu-email">
+                      motorista@takecab.pt
+                    </div>
+                  </div>
+                </div>
+                <div className="perfil-menu-lista">
+                  <button
+                    className="perfil-menu-item"
+                    onClick={() => {
+                      setProfileOpen(false);
+                      navigate("/perfil-motorista");
+                    }}
+                    type="button"
+                  >
+                    <span className="perfil-menu-icone">
+                      <User size={14} />
+                    </span>
+                    Ver perfil
+                  </button>
+                  <button
+                    className="perfil-menu-item"
+                    onClick={() => {
+                      setProfileOpen(false);
+                      navigate("/configuracoes-motorista");
+                    }}
+                    type="button"
+                  >
+                    <span className="perfil-menu-icone">
+                      <Settings size={14} />
+                    </span>
+                    Definições
+                  </button>
+                  <div className="perfil-menu-divisor" />
+                  <button
+                    className="perfil-menu-item danger"
+                    onClick={() => {
+                      setProfileOpen(false);
+                      navigate("/");
+                    }}
+                    type="button"
+                  >
+                    <span className="perfil-menu-icone">
+                      <LogOut size={14} />
+                    </span>
+                    Terminar sessão
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      )}
-</div>
-       
       </header>
 
       {/* ── LAYOUT ── */}
-      <div className="flex pt-16 relative z-[1] min-h-screen">
+      <div
+        style={{
+          display: "flex",
+          paddingTop: 64,
+          position: "relative",
+          zIndex: 1,
+          minHeight: "100vh",
+        }}
+      >
         {/* ── SIDEBAR ── */}
-        <aside className="hidden lg:flex flex-col w-[250px] min-h-[calc(100vh-64px)] bg-[#081226]/85 backdrop-blur-xl border-r border-[#00e887]/[0.08] p-[28px_14px_24px] sticky top-16 self-start shrink-0">
-          <p className="text-[10px] font-bold tracking-[0.14em] uppercase text-[#4e6a8a] px-3 mb-[18px]">
+        <aside
+          style={{
+            width: 290,
+            minHeight: "calc(100vh - 64px)",
+            background: "#071a35",
+            backdropFilter: "blur(24px)",
+            borderRight: "1px solid rgba(0,232,135,0.08)",
+            padding: "28px 14px 24px",
+            position: "sticky",
+            top: 64,
+            alignSelf: "flex-start",
+            display: "flex",
+            flexDirection: "column",
+            flexShrink: 0,
+          }}
+        >
+          <p
+            style={{
+              fontSize: "0.85rem",
+              fontWeight: 900,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "var(--cinza)",
+              padding: "0 10px",
+              marginBottom: 18,
+            }}
+          >
             Painel do Motorista
           </p>
 
-          <nav className="flex flex-col gap-[3px]">
+          <nav style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {NAV.map((item) => {
               const Ic = item.Icon;
               const isActive = active === item.id;
@@ -174,20 +342,46 @@ export default function PaginaMotorista() {
                 <button
                   key={item.id}
                   onClick={() => setActive(item.id)}
-                  className={`relative flex items-center gap-[11px] w-full py-[11px] px-[14px] rounded-xl border-none text-[13.5px] font-medium text-left transition-all duration-200 cursor-pointer
-                    ${
-                      isActive
-                        ? "bg-[#00e887]/10 text-[#00e887] font-semibold"
-                        : "bg-transparent text-[#8ba3c7] hover:bg-[#00e887]/[0.04] hover:text-[#eaf0ff]"
-                    }`}
+                  style={{
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 11,
+                    width: "100%",
+                    padding: "11px 14px",
+                    borderRadius: 12,
+                    border: "none",
+                    fontSize: "1.1rem",
+                    fontWeight: isActive ? 500 : 500,
+                    textAlign: "left",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    fontFamily: "'DM Sans', sans-serif",
+                    background: isActive
+                      ? "rgba(0,232,135,0.1)"
+                      : "transparent",
+                    color: isActive ? "var(--verde)" : "var(--cinza)",
+                  }}
+                  type="button"
                 >
                   <span
-                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-[3px] bg-[#00e887] transition-transform duration-200 origin-center ${isActive ? "scale-y-100" : "scale-y-0"}`}
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 6,
+                      bottom: 6,
+                      width: 3,
+                      borderRadius: "0 3px 3px 0",
+                      background: "var(--verde)",
+                      transform: isActive ? "scaleY(1)" : "scaleY(0)",
+                      transition: "transform 0.2s",
+                      transformOrigin: "center",
+                    }}
                   />
                   <Ic
-                    size={18}
+                    size={17}
                     strokeWidth={isActive ? 2.2 : 1.6}
-                    className={`transition-opacity ${isActive ? "opacity-100" : "opacity-50"}`}
+                    style={{ opacity: isActive ? 1 : 0.5 }}
                   />
                   {item.label}
                 </button>
@@ -196,76 +390,167 @@ export default function PaginaMotorista() {
           </nav>
 
           {/* Turno ativo (mock) */}
-          <div className="mt-auto p-4 rounded-2xl bg-gradient-to-br from-[#00e887]/[0.08] to-[#1a6eff]/[0.05] border border-[#00e887]/[0.12]">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-[#00e887] shadow-[0_0_8px_#00e887] animate-pulse" />
-              <span className="text-[11px] font-semibold text-[#00e887] uppercase tracking-wider">
+          <div
+            style={{
+              marginTop: "auto",
+              padding: 16,
+              borderRadius: 16,
+              background:
+                "linear-gradient(135deg, rgba(0,232,135,0.08), rgba(26,110,255,0.05))",
+              border: "1px solid rgba(0,232,135,0.12)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 8,
+              }}
+            >
+              <span
+                style={{
+                  width: 9,
+                  height: 9,
+                  borderRadius: "50%",
+                  background: "var(--verde)",
+                  boxShadow: "0 0 8px var(--verde)",
+                  animation: "piscar 2s ease infinite",
+                }}
+              />
+              <span
+                style={{
+                  fontSize: "0.80rem",
+                  fontWeight: 700,
+                  color: "var(--verde)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                }}
+              >
                 Turno Ativo
               </span>
             </div>
-            <p className="text-[13px] font-semibold text-[#eaf0ff]">
+            <p
+              style={{
+                fontSize: "0.9rem",
+                fontWeight: 600,
+                color: "var(--branco)",
+              }}
+            >
               Mercedes Classe E
             </p>
-            <p className="text-[11px] text-[#4e6a8a] mt-0.5">
+            <p
+              style={{
+                fontSize: "0.7rem",
+                color: "var(--cinza)",
+                marginTop: 2,
+              }}
+            >
               AA-23-BB · Luxuoso
             </p>
-            <div className="flex items-center gap-1.5 mt-3 text-[11px] text-[#8ba3c7]">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginTop: 10,
+                fontSize: "0.7rem",
+                color: "var(--cinza)",
+              }}
+            >
               <Clock size={12} /> 14:00 — 22:00
             </div>
           </div>
         </aside>
 
         {/* ── MAIN ── */}
-        <main className="flex-1 p-[36px_44px] max-w-[1020px]" key={active}>
-          <div className="mb-8 animate-[fadeUp_0.5s_ease_both]">
-            <div className="inline-flex items-center gap-[7px] text-[11px] font-semibold tracking-[0.1em] uppercase text-[#00e887] mb-2.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#00e887] shadow-[0_0_8px_#00e887] animate-pulse" />
+        <main className="motorista-main" key={active}>          {/* Cabeçalho da secção */}
+          <div style={{ marginBottom: 32, animation: "subir 0.5s ease both" }}>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
+                fontSize: "1rem",
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "var(--verde)",
+                marginBottom: 10,
+              }}
+            >
+              <span
+                style={{
+                  width: 9,
+                  height: 9,
+                  borderRadius: "50%",
+                  background: "var(--verde)",
+                  boxShadow: "0 0 8px var(--verde)",
+                  animation: "piscar 2s ease infinite",
+                }}
+              />
               {current?.tag}
             </div>
-            {active === "turno" && (
-              <PageHead
-                t="Requisitar Táxi"
-                s="Registe um turno e escolha um táxi disponível para conduzir."
-              />
-            )}
-            {active === "pedidos" && (
-              <PageHead
-                t="Pedidos de Táxi"
-                s="Visualize e aceite pedidos de clientes que aguardam motorista."
-              />
-            )}
-            {active === "viagem" && <PageHead t="Viagens" s="viagens page" />}
-            {active === "fatura" && <PageHead t="Faturas" s=" faturas page." />}
-            {active === "reabastecimento" && (
-              <PageHead t="Reabastecimento" s=" reabastecimentos page" />
-            )}
+            <h2
+              style={{
+                fontFamily: "'Syne', sans-serif",
+                fontSize: "1.8rem",
+                fontWeight: 800,
+                letterSpacing: "-0.03em",
+                color: "#06112a",
+                marginBottom: 6,
+              }}
+            >
+              {current?.label}
+            </h2>
+            <p
+              style={{
+                fontSize: "1rem",
+                color: "var(--cinza)",
+                lineHeight: 1.6,
+              }}
+            >
+              {active === "turno" &&
+                "Registe um turno e escolha um táxi disponível para conduzir."}
+              {active === "pedidos" &&
+                "Visualize e aceite pedidos de clientes que aguardam motorista."}
+              {active === "viagem" &&
+                "Registe e consulte as suas viagens com clientes."}
+              {active === "fatura" &&
+                "Emita e consulte faturas das viagens realizadas."}
+              {active === "reabastecimento" &&
+                "Registe reabastecimentos de combustível ou energia elétrica."}
+            </p>
           </div>
 
-          <div className="animate-[fadeUp_0.5s_0.08s_ease_both]">
+          <div style={{ animation: "subir 0.5s 0.08s ease both" }}>
             {active === "turno" && <SecTurno />}
             {active === "pedidos" && <SecPedidos />}
+            {active === "viagem" && (
+              <SecPlaceholder
+                icone="🚗"
+                titulo="Viagens"
+                desc="Aqui poderá registar e consultar as suas viagens com clientes."
+              />
+            )}
+            {active === "fatura" && (
+              <SecPlaceholder
+                icone="🧾"
+                titulo="Faturas"
+                desc="Aqui poderá emitir e consultar as faturas das suas viagens."
+              />
+            )}
+            {active === "reabastecimento" && (
+              <SecPlaceholder
+                icone="⛽"
+                titulo="Reabastecimento"
+                desc="Aqui poderá registar reabastecimentos de combustível ou carregamentos elétricos."
+              />
+            )}
           </div>
         </main>
       </div>
-
-      <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(12px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
-  );
-}
-
-function PageHead({ t, s }) {
-  return (
-    <>
-      <h2 className="font-['Syne',sans-serif] text-[28px] font-extrabold tracking-tight text-[#eaf0ff] mb-1.5">
-        {t}
-      </h2>
-      <p className="text-[14px] text-[#8ba3c7] leading-relaxed">{s}</p>
-    </>
   );
 }
 
@@ -274,25 +559,26 @@ function PageHead({ t, s }) {
    ═══════════════════════════════════════════════ */
 function SecTurno() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      <Card
-        CardIcon={Calendar}
-        bg="linear-gradient(135deg, #00e887, #00a85e)"
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+      <MotCard
+        icon={<Calendar size={18} />}
+        gradient="linear-gradient(135deg, var(--verde), #00a85e)"
         title="Novo Turno"
       >
-        <Action Icon={PlusCircle} label="Definir período do turno" accent />
-        <Action Icon={Clock} label="Verificar disponibilidade" />
-        <Action Icon={CarFront} label="Escolher táxi disponível" accent />
-      </Card>
-      <Card
-        CardIcon={ListOrdered}
-        bg="linear-gradient(135deg, #1a6eff, #3d8bff)"
+        <MotAction Icon={PlusCircle} label="Definir período do turno" accent />
+        <MotAction Icon={Clock} label="Verificar disponibilidade" />
+        <MotAction Icon={CarFront} label="Escolher táxi disponível" accent />
+      </MotCard>
+
+      <MotCard
+        icon={<ListOrdered size={18} />}
+        gradient="linear-gradient(135deg, var(--azul), var(--azul-claro))"
         title="Os Meus Turnos"
       >
-        <Action Icon={Clock} label="Ver turnos ativos" />
-        <Action Icon={Calendar} label="Histórico de turnos" />
-        <Action Icon={CarFront} label="Táxis utilizados" />
-      </Card>
+        <MotAction Icon={Clock} label="Ver turnos ativos" />
+        <MotAction Icon={Calendar} label="Histórico de turnos" />
+        <MotAction Icon={CarFront} label="Táxis utilizados" />
+      </MotCard>
     </div>
   );
 }
@@ -302,24 +588,56 @@ function SecTurno() {
    ═══════════════════════════════════════════════ */
 function SecPedidos() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      <Card
-        CardIcon={Navigation}
-        bg="linear-gradient(135deg, #00d4ff, #1a6eff)"
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+      <MotCard
+        icon={<Navigation size={18} />}
+        gradient="linear-gradient(135deg, var(--ciano), var(--azul))"
         title="Pedidos Pendentes"
       >
-        <Action Icon={MapPin} label="Ver pedidos por proximidade" accent />
-        <Action Icon={Users} label="Detalhes do cliente e destino" />
-        <Action Icon={CheckCircle2} label="Aceitar pedido" accent />
-      </Card>
-      <Card
-        CardIcon={Timer}
-        bg="linear-gradient(135deg, #c64dff, #7c3aed)"
+        <MotAction Icon={MapPin} label="Ver pedidos por proximidade" accent />
+        <MotAction Icon={Users} label="Detalhes do cliente e destino" />
+        <MotAction Icon={CheckCircle2} label="Aceitar pedido" accent />
+      </MotCard>
+
+      <MotCard
+        icon={<Timer size={18} />}
+        gradient="linear-gradient(135deg, var(--rosa), #7c3aed)"
         title="Aguardar Confirmação"
       >
-        <Action Icon={Clock} label="Pedidos aceites a aguardar cliente" />
-        <Action Icon={Square} label="Cancelar aceitação" danger />
-      </Card>
+        <MotAction Icon={Clock} label="Pedidos aceites a aguardar cliente" />
+        <MotAction Icon={Square} label="Cancelar aceitação" danger />
+      </MotCard>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   PLACEHOLDER PARA SECÇÕES EM DESENVOLVIMENTO
+   ═══════════════════════════════════════════════ */
+function SecPlaceholder({ icone, titulo, desc }) {
+  return (
+    <div
+      className="card-feat"
+      style={{ textAlign: "center", padding: "64px 40px" }}
+    >
+      <div
+        className="feat-icone"
+        style={{
+          margin: "0 auto 20px",
+          fontSize: "2rem",
+          width: 64,
+          height: 64,
+        }}
+      >
+        {icone}
+      </div>
+      <div
+        className="feat-titulo"
+        style={{ fontSize: "1.1rem", marginBottom: 10 }}
+      >
+        {titulo}
+      </div>
+      <p className="feat-desc">{desc}</p>
     </div>
   );
 }
@@ -327,52 +645,147 @@ function SecPedidos() {
 /* ═══════════════════════════════════════════════
    COMPONENTES BASE
    ═══════════════════════════════════════════════ */
-function Card({ CardIcon, bg, title, children }) {
+function MotCard({ icon, gradient, title, children }) {
   return (
-    <div className="relative overflow-hidden rounded-[20px] border border-[#00e887]/[0.08] bg-[rgba(12,28,56,0.55)] backdrop-blur-xl p-6 transition-all duration-300 hover:border-[#00e887]/20 hover:bg-[rgba(18,38,72,0.7)] hover:-translate-y-0.5 hover:shadow-[0_16px_48px_rgba(0,0,0,0.3)]">
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
-      <div className="flex items-center gap-3 mb-5 pb-4 border-b border-white/[0.04]">
+    <div className="card-feat" style={{ padding: 24 }}>
+      {/* Linha topo */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 1,
+          background:
+            "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)",
+        }}
+      />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          marginBottom: 20,
+          paddingBottom: 16,
+          borderBottom: "1px solid rgba(255,255,255,0.04)",
+        }}
+      >
         <div
-          className="w-10 h-10 rounded-[13px] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)]"
-          style={{ background: bg }}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 13,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#fff",
+            background: gradient,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
+          }}
         >
-          <CardIcon size={18} strokeWidth={1.8} />
+          {icon}
         </div>
-        <h3 className="font-['Syne',sans-serif] text-[16px] font-bold tracking-tight">
+        <h3
+          style={{
+            fontFamily: "'Syne', sans-serif",
+            fontSize: "1rem",
+            fontWeight: 700,
+            letterSpacing: "-0.01em",
+          }}
+        >
           {title}
         </h3>
       </div>
-      <div className="flex flex-col gap-2">{children}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {children}
+      </div>
     </div>
   );
 }
 
-function Action({ Icon, label, accent, danger, onClick }) {
-  const base =
-    "group flex items-center justify-between w-full py-3 px-3.5 rounded-xl border text-[13.5px] font-medium cursor-pointer transition-all duration-200 text-left";
+function MotAction({ Icon, label, accent, danger, onClick }) {
+  const [hovered, setHovered] = useState(false);
 
-  let variant;
+  const base = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    padding: "11px 14px",
+    borderRadius: 12,
+    fontSize: "0.9rem",
+    fontWeight: 500,
+    cursor: "pointer",
+    transition: "all 0.2s",
+    textAlign: "left",
+    fontFamily: "'DM Sans', sans-serif",
+  };
+
+  let style;
   if (accent) {
-    variant =
-      "border-[#00e887]/[0.15] bg-[#00e887]/[0.05] text-[#eaf0ff] hover:bg-[#00e887]/[0.12] hover:border-[#00e887]/[0.3] hover:shadow-[0_0_20px_rgba(0,232,135,0.08)] hover:translate-x-[3px]";
+    style = {
+      ...base,
+      border: hovered
+        ? "1px solid rgba(0,232,135,0.3)"
+        : "1px solid rgba(0,232,135,0.15)",
+      background: hovered ? "rgba(0,232,135,0.12)" : "rgba(0,232,135,0.05)",
+      color: "var(--branco)",
+      transform: hovered ? "translateX(3px)" : "none",
+    };
   } else if (danger) {
-    variant =
-      "border-white/[0.03] bg-white/[0.02] text-[#8ba3c7] hover:bg-[#ef4444]/[0.08] hover:border-[#ef4444]/25 hover:text-[#ff6b6b] hover:translate-x-[3px]";
+    style = {
+      ...base,
+      border: hovered
+        ? "1px solid rgba(239,68,68,0.25)"
+        : "1px solid rgba(255,255,255,0.04)",
+      background: hovered ? "rgba(239,68,68,0.08)" : "rgba(255,255,255,0.02)",
+      color: hovered ? "#ff6b6b" : "var(--cinza)",
+      transform: hovered ? "translateX(3px)" : "none",
+    };
   } else {
-    variant =
-      "border-white/[0.04] bg-white/[0.02] text-[#eaf0ff] hover:bg-[#00e887]/[0.06] hover:border-[#00e887]/15 hover:translate-x-[3px]";
+    style = {
+      ...base,
+      border: hovered
+        ? "1px solid rgba(0,232,135,0.15)"
+        : "1px solid rgba(255,255,255,0.04)",
+      background: hovered ? "rgba(0,232,135,0.06)" : "rgba(255,255,255,0.02)",
+      color: "var(--branco)",
+      transform: hovered ? "translateX(3px)" : "none",
+    };
   }
 
+  const iconBoxStyle = {
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background:
+      danger && hovered
+        ? "rgba(239,68,68,0.12)"
+        : hovered
+          ? "rgba(0,232,135,0.1)"
+          : "rgba(255,255,255,0.03)",
+    border:
+      danger && hovered
+        ? "1px solid rgba(239,68,68,0.2)"
+        : hovered
+          ? "1px solid rgba(0,232,135,0.2)"
+          : "1px solid rgba(255,255,255,0.05)",
+    transition: "all 0.2s",
+  };
+
   return (
-    <button className={`${base} ${variant}`} onClick={onClick}>
-      <span className="flex items-center gap-2.5">
-        <span
-          className={`w-[30px] h-[30px] rounded-[9px] flex items-center justify-center border transition-all duration-200 ${
-            danger
-              ? "bg-white/[0.03] border-white/[0.05] group-hover:bg-[#ef4444]/[0.12] group-hover:border-[#ef4444]/20"
-              : "bg-white/[0.03] border-white/[0.05] group-hover:bg-[#00e887]/[0.1] group-hover:border-[#00e887]/20"
-          }`}
-        >
+    <button
+      style={style}
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      type="button"
+    >
+      <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={iconBoxStyle}>
           <Icon size={15} strokeWidth={1.8} />
         </span>
         {label}
@@ -380,7 +793,11 @@ function Action({ Icon, label, accent, danger, onClick }) {
       <ChevronRight
         size={14}
         strokeWidth={2}
-        className="text-[#4e6a8a] transition-all duration-200 group-hover:text-[#00e887] group-hover:translate-x-0.5"
+        style={{
+          color: hovered ? "var(--verde)" : "var(--cinza)",
+          transition: "all 0.2s",
+          transform: hovered ? "translateX(2px)" : "none",
+        }}
       />
     </button>
   );

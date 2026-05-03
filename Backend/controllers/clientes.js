@@ -91,9 +91,13 @@ exports.login = async (req, res) => {
       cliente: {
         nome: cliente.nome,
         nif: cliente.nif,
-        email: cliente.email
+        email: cliente.email,
+        genero: cliente.genero,
+        data_nascimento: cliente.data_nascimento,
+        morada: cliente.morada,
+        codigo_postal: cliente.codigo_postal
       },
-      token
+      token,
     })
   } catch (err) {
     console.error(err)

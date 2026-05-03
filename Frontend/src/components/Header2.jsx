@@ -72,7 +72,6 @@ export default function Header({ isDashboard = false }) {
           <nav className="header-nav">
             <a href="/dashboard">Viagens</a>
             <a href="/trips">Histórico</a>
-            <a href="#">Promoções</a>
             <a href="#">Suporte</a>
           </nav>
         )}

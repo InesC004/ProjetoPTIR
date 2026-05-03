@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import image from "../Pictures/carroREgistro.jpg";
+import image from "../Pictures/carroRegistro.jpg";
 import api from "../Api";
 
 export default function LoginModal({ isOpen, onClose }) {
@@ -21,23 +21,31 @@ export default function LoginModal({ isOpen, onClose }) {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
       const data = await api.auth.login(formData);
+
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
-      localStorage.setItem("cliente", JSON.stringify(data.cliente || {}));
-      onClose();
-      if (data.role === "cliente") navigate("/dashboard");
-      else if (data.role === "motorista")
+
+      if (data.role === "cliente") {
+        localStorage.setItem("cliente", JSON.stringify(data.cliente || {}));
+        navigate("/dashboard");
+      } else if (data.role === "motorista") {
+        localStorage.setItem("motorista", JSON.stringify(data.motorista || {}));
         navigate("/motorista/PaginaMotorista");
-      else if (data.role === "gestor") navigate("/gestor/PaginaGestores");
+      } else if (data.role === "gestor") {
+        localStorage.setItem("gestor", JSON.stringify(data.gestor || {}));
+        navigate("/gestor/PaginaGestores");
+      }
+
+      onClose();
     } catch (err) {
       setError(err.message || "Não foi possível conectar ao servidor.");
     } finally {
       setLoading(false);
     }
   }
-
   return (
     <>
       <div className="modal-fundo" onClick={onClose} />
