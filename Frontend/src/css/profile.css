@@ -100,6 +100,7 @@
 
 .perfil-card {
   padding: 28px;
+  width: 33em;
   border-radius: 26px;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(190, 210, 235, 0.72);
@@ -188,17 +189,20 @@
   font-weight: 900;
 }
 
-@media (max-width: 850px) {
-  .perfil-grid {
-    grid-template-columns: 1fr;
-  }
+.perfil-btn-online{
+  margin-bottom: 0.3em;
+  margin-right: 0.2em;
+  animation: pulsar 1.5s infinite ease-in-out;
+}
 
-  .perfil-hero {
-    flex-direction: column;
-    align-items: flex-start;
+@keyframes pulsar {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
-
-  .perfil-badge {
-    margin-left: 0;
+  50% {
+    opacity: 0.4;
+    transform: scale(0.7);
   }
 }

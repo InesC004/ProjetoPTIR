@@ -248,6 +248,9 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  white-space: nowrap;
+  height: 20px!important;
+  
 }
 .descricao {
   color: #4a6080;
@@ -511,7 +514,7 @@
   /* altura total do painel */
   flex: 1;
   height: 100%;
-  min-height: 560px;
+  min-height: 760px;
 }
 .caixa-mapa .leaflet-container {
   width: 100% !important;
@@ -3794,7 +3797,8 @@
 }
 
 .dash-pagina .badge {
-  margin-bottom: 34px !important;
+  margin-bottom: 14px !important;
+  margin-top: -18px!important;
 }
 
 .dash-pagina .titulo {
@@ -4431,8 +4435,8 @@
 
 /* Mapa: maior, mais à direita e visualmente mais forte */
 .dash-pagina .painel-mapa {
-  max-width: 820px !important;
-  width: 820px !important;
+  max-width: 800px !important;
+  width: 800px !important;
   height: 600px !important;
   min-height: 600px !important;
   max-height: 600px !important;
@@ -4582,8 +4586,8 @@
 @media (min-width: 1181px) {
   .dash-pagina .hero {
     grid-template-columns: minmax(560px, 600px) minmax(760px, 820px) !important;
-    max-width: 1540px !important;
-    gap: 54px !important;
+    max-width: 1640px !important;
+    gap: 120px !important;
     justify-content: center !important;
     align-items: center !important;
     padding-left: 40px !important;
@@ -4596,11 +4600,11 @@
   .dash-pagina .card-reserva,
   .dash-pagina .estatisticas {
     width: 100% !important;
-    max-width: 600px !important;
+    max-width: 700px !important;
   }
 
   .dash-pagina .titulo {
-    font-size: clamp(3.35rem, 4.15vw, 5rem) !important;
+    font-size: clamp(3.35rem, 4.15vw, 4.2rem) !important;
     line-height: 0.94 !important;
   }
 
@@ -4609,12 +4613,12 @@
   }
 
   .dash-pagina .painel-mapa {
-    width: 820px !important;
+    width: 890px !important;
     max-width: 820px !important;
-    height: 610px !important;
+    height: 670px !important;
     min-height: 610px !important;
     max-height: 610px !important;
-    margin-top: 8px !important;
+    margin-top: 160px !important;
     transform: translateX(88px) !important;
   }
 
@@ -4688,3 +4692,26 @@
     max-height: 545px !important;
   }
 }
+
+
+
+
+
+
+
+.linha-1 {
+  white-space: nowrap;
+  margin-bottom: 200px!important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
