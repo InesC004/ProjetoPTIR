@@ -11,24 +11,19 @@ import {
   Square,
   MapPin,
   ChevronRight,
-  Calendar,
   Navigation,
   Timer,
   CheckCircle2,
-  ListOrdered,
-  PlusCircle,
   User,
   LogOut,
   Settings,
   ChevronDown,
 } from "lucide-react";
 import logo from "../Pictures/logo1.jpeg";
-
-// import "../global.css";
+import TurnosMotorista from "../components/TurnosMotorista";
+import ReabastecimentosMotorista from "../components/ReabastecimentosMotorista";
 import "../css/paginaMotorista.css";
-/* ═══════════════════════════════════════════════
-   NAV
-   ═══════════════════════════════════════════════ */
+
 const NAV = [
   { id: "turno", label: "Requisitar Táxi", Icon: CarFront, tag: "Turno" },
   { id: "pedidos", label: "Pedidos de Táxi", Icon: Navigation, tag: "Pedidos" },
@@ -37,14 +32,19 @@ const NAV = [
   { id: "reabastecimento", label: "Reabastecimento", Icon: Fuel, tag: "Táxi" },
 ];
 
-/* ═══════════════════════════════════════════════
-   COMPONENTE PRINCIPAL
-   ═══════════════════════════════════════════════ */
 export default function PaginaMotorista() {
   const navigate = useNavigate();
   const [active, setActive] = useState("turno");
   const [profileOpen, setProfileOpen] = useState(false);
   const current = NAV.find((n) => n.id === active);
+
+  function terminarSessao() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("cliente");
+    localStorage.removeItem("role");
+    setProfileOpen(false);
+    navigate("/");
+  }
 
   return (
     <div
@@ -55,16 +55,8 @@ export default function PaginaMotorista() {
         color: "var(--branco)",
       }}
     >
-      {/* ── Fundo decorativo ── */}
       <div className="fundo-grelha" />
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 0,
-          pointerEvents: "none",
-        }}
-      >
+      <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
         <div
           style={{
             position: "absolute",
@@ -74,8 +66,7 @@ export default function PaginaMotorista() {
             width: 900,
             height: 900,
             borderRadius: "50%",
-            background:
-              "radial-gradient(circle, rgba(0,232,135,0.06) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(0,232,135,0.06) 0%, transparent 70%)",
           }}
         />
         <div
@@ -86,13 +77,11 @@ export default function PaginaMotorista() {
             width: 600,
             height: 600,
             borderRadius: "50%",
-            background:
-              "radial-gradient(circle, rgba(26,110,255,0.05) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(26,110,255,0.05) 0%, transparent 70%)",
           }}
         />
       </div>
 
-      {/* ── HEADER ── */}
       <header
         style={{
           position: "fixed",
@@ -109,25 +98,11 @@ export default function PaginaMotorista() {
           borderBottom: "1px solid rgba(26,110,255,0.15)",
         }}
       >
-        {/* Logo */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            cursor: "pointer",
-          }}
-          onClick={() => navigate("/")}
-        >
+        <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => navigate("/")}>
           <img
             src={logo}
             alt="TakeCab"
-            style={{
-              height: 40,
-              width: "auto",
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.1)",
-            }}
+            style={{ height: 40, width: "auto", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)" }}
           />
           <div style={{ display: "flex", flexDirection: "column" }}>
             <span
@@ -142,51 +117,22 @@ export default function PaginaMotorista() {
             >
               Take<span style={{ color: "var(--azul-claro)" }}>Cab</span>
             </span>
-            <span
-              style={{
-                fontSize: "0.55rem",
-                color: "var(--cinza)",
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-              }}
-            >
+            <span style={{ fontSize: "0.55rem", color: "var(--cinza)", letterSpacing: "0.2em", textTransform: "uppercase" }}>
               Premium Rides
             </span>
           </div>
         </div>
 
-        {/* Lado direito: badge + avatar */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            position: "relative",
-          }}
-        >
+        <div style={{ display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
           <span className="badge" style={{ marginBottom: 0 }}>
-            <span
-              className="badge-ponto"
-              style={{
-                background: "var(--verde)",
-                boxShadow: "0 0 8px var(--verde)",
-              }}
-            />
+            <span className="badge-ponto" style={{ background: "var(--verde)", boxShadow: "0 0 8px var(--verde)" }} />
             Motorista
           </span>
 
           <div style={{ position: "relative" }}>
             <button
               onClick={() => setProfileOpen(!profileOpen)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
-              }}
+              style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", padding: 0 }}
               type="button"
             >
               <div
@@ -194,8 +140,7 @@ export default function PaginaMotorista() {
                   width: 36,
                   height: 36,
                   borderRadius: "50%",
-                  background:
-                    "linear-gradient(135deg, var(--verde), var(--azul))",
+                  background: "linear-gradient(135deg, var(--verde), var(--azul))",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -209,11 +154,7 @@ export default function PaginaMotorista() {
               </div>
               <ChevronDown
                 size={16}
-                style={{
-                  color: "var(--cinza)",
-                  transition: "transform 0.2s",
-                  transform: profileOpen ? "rotate(180deg)" : "rotate(0deg)",
-                }}
+                style={{ color: "var(--cinza)", transition: "transform 0.2s", transform: profileOpen ? "rotate(180deg)" : "rotate(0deg)" }}
               />
             </button>
 
@@ -225,8 +166,7 @@ export default function PaginaMotorista() {
                       width: 36,
                       height: 36,
                       borderRadius: "50%",
-                      background:
-                        "linear-gradient(135deg, var(--verde), var(--azul))",
+                      background: "linear-gradient(135deg, var(--verde), var(--azul))",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -240,50 +180,21 @@ export default function PaginaMotorista() {
                   </div>
                   <div>
                     <div className="perfil-menu-nome">Motorista</div>
-                    <div className="perfil-menu-email">
-                      motorista@takecab.pt
-                    </div>
+                    <div className="perfil-menu-email">motorista@takecab.pt</div>
                   </div>
                 </div>
                 <div className="perfil-menu-lista">
-                  <button
-                    className="perfil-menu-item"
-                    onClick={() => {
-                      setProfileOpen(false);
-                      navigate("/perfil-motorista");
-                    }}
-                    type="button"
-                  >
-                    <span className="perfil-menu-icone">
-                      <User size={14} />
-                    </span>
+                  <button className="perfil-menu-item" onClick={() => { setProfileOpen(false); navigate("/perfil-motorista"); }} type="button">
+                    <span className="perfil-menu-icone"><User size={14} /></span>
                     Ver perfil
                   </button>
-                  <button
-                    className="perfil-menu-item"
-                    onClick={() => {
-                      setProfileOpen(false);
-                      navigate("/configuracoes-motorista");
-                    }}
-                    type="button"
-                  >
-                    <span className="perfil-menu-icone">
-                      <Settings size={14} />
-                    </span>
+                  <button className="perfil-menu-item" onClick={() => { setProfileOpen(false); navigate("/configuracoes-motorista"); }} type="button">
+                    <span className="perfil-menu-icone"><Settings size={14} /></span>
                     Definições
                   </button>
                   <div className="perfil-menu-divisor" />
-                  <button
-                    className="perfil-menu-item danger"
-                    onClick={() => {
-                      setProfileOpen(false);
-                      navigate("/");
-                    }}
-                    type="button"
-                  >
-                    <span className="perfil-menu-icone">
-                      <LogOut size={14} />
-                    </span>
+                  <button className="perfil-menu-item danger" onClick={terminarSessao} type="button">
+                    <span className="perfil-menu-icone"><LogOut size={14} /></span>
                     Terminar sessão
                   </button>
                 </div>
@@ -293,17 +204,7 @@ export default function PaginaMotorista() {
         </div>
       </header>
 
-      {/* ── LAYOUT ── */}
-      <div
-        style={{
-          display: "flex",
-          paddingTop: 64,
-          position: "relative",
-          zIndex: 1,
-          minHeight: "100vh",
-        }}
-      >
-        {/* ── SIDEBAR ── */}
+      <div style={{ display: "flex", paddingTop: 64, position: "relative", zIndex: 1, minHeight: "100vh" }}>
         <aside
           style={{
             width: 290,
@@ -320,17 +221,7 @@ export default function PaginaMotorista() {
             flexShrink: 0,
           }}
         >
-          <p
-            style={{
-              fontSize: "0.85rem",
-              fontWeight: 900,
-              letterSpacing: "0.14em",
-              textTransform: "uppercase",
-              color: "var(--cinza)",
-              padding: "0 10px",
-              marginBottom: 18,
-            }}
-          >
+          <p style={{ fontSize: "0.85rem", fontWeight: 900, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--cinza)", padding: "0 10px", marginBottom: 18 }}>
             Painel do Motorista
           </p>
 
@@ -352,14 +243,12 @@ export default function PaginaMotorista() {
                     borderRadius: 12,
                     border: "none",
                     fontSize: "1.1rem",
-                    fontWeight: isActive ? 500 : 500,
+                    fontWeight: 500,
                     textAlign: "left",
                     cursor: "pointer",
                     transition: "all 0.2s",
                     fontFamily: "'DM Sans', sans-serif",
-                    background: isActive
-                      ? "rgba(0,232,135,0.1)"
-                      : "transparent",
+                    background: isActive ? "rgba(0,232,135,0.1)" : "transparent",
                     color: isActive ? "var(--verde)" : "var(--cinza)",
                   }}
                   type="button"
@@ -378,93 +267,37 @@ export default function PaginaMotorista() {
                       transformOrigin: "center",
                     }}
                   />
-                  <Ic
-                    size={17}
-                    strokeWidth={isActive ? 2.2 : 1.6}
-                    style={{ opacity: isActive ? 1 : 0.5 }}
-                  />
+                  <Ic size={17} strokeWidth={isActive ? 2.2 : 1.6} style={{ opacity: isActive ? 1 : 0.5 }} />
                   {item.label}
                 </button>
               );
             })}
           </nav>
 
-          {/* Turno ativo (mock) */}
           <div
             style={{
               marginTop: "auto",
               padding: 16,
               borderRadius: 16,
-              background:
-                "linear-gradient(135deg, rgba(0,232,135,0.08), rgba(26,110,255,0.05))",
+              background: "linear-gradient(135deg, rgba(0,232,135,0.08), rgba(26,110,255,0.05))",
               border: "1px solid rgba(0,232,135,0.12)",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: 8,
-              }}
-            >
-              <span
-                style={{
-                  width: 9,
-                  height: 9,
-                  borderRadius: "50%",
-                  background: "var(--verde)",
-                  boxShadow: "0 0 8px var(--verde)",
-                  animation: "piscar 2s ease infinite",
-                }}
-              />
-              <span
-                style={{
-                  fontSize: "0.80rem",
-                  fontWeight: 700,
-                  color: "var(--verde)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.1em",
-                }}
-              >
-                Turno Ativo
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <span style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--verde)", boxShadow: "0 0 8px var(--verde)", animation: "piscar 2s ease infinite" }} />
+              <span style={{ fontSize: "0.80rem", fontWeight: 700, color: "var(--verde)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                API Ligada
               </span>
             </div>
-            <p
-              style={{
-                fontSize: "0.9rem",
-                fontWeight: 600,
-                color: "var(--branco)",
-              }}
-            >
-              Mercedes Classe E
-            </p>
-            <p
-              style={{
-                fontSize: "0.7rem",
-                color: "var(--cinza)",
-                marginTop: 2,
-              }}
-            >
-              AA-23-BB · Luxuoso
-            </p>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                marginTop: 10,
-                fontSize: "0.7rem",
-                color: "var(--cinza)",
-              }}
-            >
-              <Clock size={12} /> 14:00 — 22:00
+            <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--branco)" }}>Turnos e Reabastecimentos</p>
+            <p style={{ fontSize: "0.7rem", color: "var(--cinza)", marginTop: 2 }}>/api/turnos · /api/reabastecimentos</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, fontSize: "0.7rem", color: "var(--cinza)" }}>
+              <Clock size={12} /> Backend localhost:8080
             </div>
           </div>
         </aside>
 
-        {/* ── MAIN ── */}
-        <main className="motorista-main" key={active}>          {/* Cabeçalho da secção */}
+        <main className="motorista-main" key={active}>
           <div style={{ marginBottom: 32, animation: "subir 0.5s ease both" }}>
             <div
               style={{
@@ -479,16 +312,7 @@ export default function PaginaMotorista() {
                 marginBottom: 10,
               }}
             >
-              <span
-                style={{
-                  width: 9,
-                  height: 9,
-                  borderRadius: "50%",
-                  background: "var(--verde)",
-                  boxShadow: "0 0 8px var(--verde)",
-                  animation: "piscar 2s ease infinite",
-                }}
-              />
+              <span style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--verde)", boxShadow: "0 0 8px var(--verde)", animation: "piscar 2s ease infinite" }} />
               {current?.tag}
             </div>
             <h2
@@ -503,50 +327,21 @@ export default function PaginaMotorista() {
             >
               {current?.label}
             </h2>
-            <p
-              style={{
-                fontSize: "1rem",
-                color: "var(--cinza)",
-                lineHeight: 1.6,
-              }}
-            >
-              {active === "turno" &&
-                "Registe um turno e escolha um táxi disponível para conduzir."}
-              {active === "pedidos" &&
-                "Visualize e aceite pedidos de clientes que aguardam motorista."}
-              {active === "viagem" &&
-                "Registe e consulte as suas viagens com clientes."}
-              {active === "fatura" &&
-                "Emita e consulte faturas das viagens realizadas."}
-              {active === "reabastecimento" &&
-                "Registe reabastecimentos de combustível ou energia elétrica."}
+            <p style={{ fontSize: "1rem", color: "var(--cinza)", lineHeight: 1.6 }}>
+              {active === "turno" && "Registe um turno e escolha um táxi disponível para conduzir."}
+              {active === "pedidos" && "Visualize e aceite pedidos de clientes que aguardam motorista."}
+              {active === "viagem" && "Registe e consulte as suas viagens com clientes."}
+              {active === "fatura" && "Emita e consulte faturas das viagens realizadas."}
+              {active === "reabastecimento" && "Registe reabastecimentos de combustível ou energia elétrica."}
             </p>
           </div>
 
           <div style={{ animation: "subir 0.5s 0.08s ease both" }}>
-            {active === "turno" && <SecTurno />}
+            {active === "turno" && <TurnosMotorista />}
             {active === "pedidos" && <SecPedidos />}
-            {active === "viagem" && (
-              <SecPlaceholder
-                icone="🚗"
-                titulo="Viagens"
-                desc="Aqui poderá registar e consultar as suas viagens com clientes."
-              />
-            )}
-            {active === "fatura" && (
-              <SecPlaceholder
-                icone="🧾"
-                titulo="Faturas"
-                desc="Aqui poderá emitir e consultar as faturas das suas viagens."
-              />
-            )}
-            {active === "reabastecimento" && (
-              <SecPlaceholder
-                icone="⛽"
-                titulo="Reabastecimento"
-                desc="Aqui poderá registar reabastecimentos de combustível ou carregamentos elétricos."
-              />
-            )}
+            {active === "viagem" && <SecPlaceholder icone="🚗" titulo="Viagens" desc="Aqui poderá registar e consultar as suas viagens com clientes." />}
+            {active === "fatura" && <SecPlaceholder icone="🧾" titulo="Faturas" desc="Aqui poderá emitir e consultar as faturas das suas viagens." />}
+            {active === "reabastecimento" && <ReabastecimentosMotorista />}
           </div>
         </main>
       </div>
@@ -554,56 +349,16 @@ export default function PaginaMotorista() {
   );
 }
 
-/* ═══════════════════════════════════════════════
-   US5 — REQUISITAR TÁXI PARA TURNO
-   ═══════════════════════════════════════════════ */
-function SecTurno() {
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-      <MotCard
-        icon={<Calendar size={18} />}
-        gradient="linear-gradient(135deg, var(--verde), #00a85e)"
-        title="Novo Turno"
-      >
-        <MotAction Icon={PlusCircle} label="Definir período do turno" accent />
-        <MotAction Icon={Clock} label="Verificar disponibilidade" />
-        <MotAction Icon={CarFront} label="Escolher táxi disponível" accent />
-      </MotCard>
-
-      <MotCard
-        icon={<ListOrdered size={18} />}
-        gradient="linear-gradient(135deg, var(--azul), var(--azul-claro))"
-        title="Os Meus Turnos"
-      >
-        <MotAction Icon={Clock} label="Ver turnos ativos" />
-        <MotAction Icon={Calendar} label="Histórico de turnos" />
-        <MotAction Icon={CarFront} label="Táxis utilizados" />
-      </MotCard>
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════
-   US7 — VER / ACEITAR PEDIDOS DE TÁXI
-   ═══════════════════════════════════════════════ */
 function SecPedidos() {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-      <MotCard
-        icon={<Navigation size={18} />}
-        gradient="linear-gradient(135deg, var(--ciano), var(--azul))"
-        title="Pedidos Pendentes"
-      >
+      <MotCard icon={<Navigation size={18} />} gradient="linear-gradient(135deg, var(--ciano), var(--azul))" title="Pedidos Pendentes">
         <MotAction Icon={MapPin} label="Ver pedidos por proximidade" accent />
         <MotAction Icon={Users} label="Detalhes do cliente e destino" />
         <MotAction Icon={CheckCircle2} label="Aceitar pedido" accent />
       </MotCard>
 
-      <MotCard
-        icon={<Timer size={18} />}
-        gradient="linear-gradient(135deg, var(--rosa), #7c3aed)"
-        title="Aguardar Confirmação"
-      >
+      <MotCard icon={<Timer size={18} />} gradient="linear-gradient(135deg, var(--rosa), #7c3aed)" title="Aguardar Confirmação">
         <MotAction Icon={Clock} label="Pedidos aceites a aguardar cliente" />
         <MotAction Icon={Square} label="Cancelar aceitação" danger />
       </MotCard>
@@ -611,44 +366,21 @@ function SecPedidos() {
   );
 }
 
-/* ═══════════════════════════════════════════════
-   PLACEHOLDER PARA SECÇÕES EM DESENVOLVIMENTO
-   ═══════════════════════════════════════════════ */
 function SecPlaceholder({ icone, titulo, desc }) {
   return (
-    <div
-      className="card-feat"
-      style={{ textAlign: "center", padding: "64px 40px" }}
-    >
-      <div
-        className="feat-icone"
-        style={{
-          margin: "0 auto 20px",
-          fontSize: "2rem",
-          width: 64,
-          height: 64,
-        }}
-      >
+    <div className="card-feat" style={{ textAlign: "center", padding: "64px 40px" }}>
+      <div className="feat-icone" style={{ margin: "0 auto 20px", fontSize: "2rem", width: 64, height: 64 }}>
         {icone}
       </div>
-      <div
-        className="feat-titulo"
-        style={{ fontSize: "1.1rem", marginBottom: 10 }}
-      >
-        {titulo}
-      </div>
+      <div className="feat-titulo" style={{ fontSize: "1.1rem", marginBottom: 10 }}>{titulo}</div>
       <p className="feat-desc">{desc}</p>
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════
-   COMPONENTES BASE
-   ═══════════════════════════════════════════════ */
 function MotCard({ icon, gradient, title, children }) {
   return (
     <div className="card-feat" style={{ padding: 24 }}>
-      {/* Linha topo */}
       <div
         style={{
           position: "absolute",
@@ -656,49 +388,16 @@ function MotCard({ icon, gradient, title, children }) {
           left: 0,
           right: 0,
           height: 1,
-          background:
-            "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)",
+          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)",
         }}
       />
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          marginBottom: 20,
-          paddingBottom: 16,
-          borderBottom: "1px solid rgba(255,255,255,0.04)",
-        }}
-      >
-        <div
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 13,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#fff",
-            background: gradient,
-            boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
-          }}
-        >
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+        <div style={{ width: 40, height: 40, borderRadius: 13, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", background: gradient, boxShadow: "0 4px 16px rgba(0,0,0,0.25)" }}>
           {icon}
         </div>
-        <h3
-          style={{
-            fontFamily: "'Syne', sans-serif",
-            fontSize: "1rem",
-            fontWeight: 700,
-            letterSpacing: "-0.01em",
-          }}
-        >
-          {title}
-        </h3>
+        <h3 style={{ fontFamily: "'Syne', sans-serif", fontSize: "1rem", fontWeight: 700, letterSpacing: "-0.01em" }}>{title}</h3>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {children}
-      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{children}</div>
     </div>
   );
 }
@@ -725,9 +424,7 @@ function MotAction({ Icon, label, accent, danger, onClick }) {
   if (accent) {
     style = {
       ...base,
-      border: hovered
-        ? "1px solid rgba(0,232,135,0.3)"
-        : "1px solid rgba(0,232,135,0.15)",
+      border: hovered ? "1px solid rgba(0,232,135,0.3)" : "1px solid rgba(0,232,135,0.15)",
       background: hovered ? "rgba(0,232,135,0.12)" : "rgba(0,232,135,0.05)",
       color: "var(--branco)",
       transform: hovered ? "translateX(3px)" : "none",
@@ -735,9 +432,7 @@ function MotAction({ Icon, label, accent, danger, onClick }) {
   } else if (danger) {
     style = {
       ...base,
-      border: hovered
-        ? "1px solid rgba(239,68,68,0.25)"
-        : "1px solid rgba(255,255,255,0.04)",
+      border: hovered ? "1px solid rgba(239,68,68,0.25)" : "1px solid rgba(255,255,255,0.04)",
       background: hovered ? "rgba(239,68,68,0.08)" : "rgba(255,255,255,0.02)",
       color: hovered ? "#ff6b6b" : "var(--cinza)",
       transform: hovered ? "translateX(3px)" : "none",
@@ -745,9 +440,7 @@ function MotAction({ Icon, label, accent, danger, onClick }) {
   } else {
     style = {
       ...base,
-      border: hovered
-        ? "1px solid rgba(0,232,135,0.15)"
-        : "1px solid rgba(255,255,255,0.04)",
+      border: hovered ? "1px solid rgba(0,232,135,0.15)" : "1px solid rgba(255,255,255,0.04)",
       background: hovered ? "rgba(0,232,135,0.06)" : "rgba(255,255,255,0.02)",
       color: "var(--branco)",
       transform: hovered ? "translateX(3px)" : "none",
@@ -761,44 +454,18 @@ function MotAction({ Icon, label, accent, danger, onClick }) {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background:
-      danger && hovered
-        ? "rgba(239,68,68,0.12)"
-        : hovered
-          ? "rgba(0,232,135,0.1)"
-          : "rgba(255,255,255,0.03)",
-    border:
-      danger && hovered
-        ? "1px solid rgba(239,68,68,0.2)"
-        : hovered
-          ? "1px solid rgba(0,232,135,0.2)"
-          : "1px solid rgba(255,255,255,0.05)",
+    background: danger && hovered ? "rgba(239,68,68,0.12)" : hovered ? "rgba(0,232,135,0.1)" : "rgba(255,255,255,0.03)",
+    border: danger && hovered ? "1px solid rgba(239,68,68,0.2)" : hovered ? "1px solid rgba(0,232,135,0.2)" : "1px solid rgba(255,255,255,0.05)",
     transition: "all 0.2s",
   };
 
   return (
-    <button
-      style={style}
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      type="button"
-    >
+    <button style={style} onClick={onClick} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} type="button">
       <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={iconBoxStyle}>
-          <Icon size={15} strokeWidth={1.8} />
-        </span>
+        <span style={iconBoxStyle}><Icon size={15} strokeWidth={1.8} /></span>
         {label}
       </span>
-      <ChevronRight
-        size={14}
-        strokeWidth={2}
-        style={{
-          color: hovered ? "var(--verde)" : "var(--cinza)",
-          transition: "all 0.2s",
-          transform: hovered ? "translateX(2px)" : "none",
-        }}
-      />
+      <ChevronRight size={14} strokeWidth={2} style={{ color: hovered ? "var(--verde)" : "var(--cinza)", transition: "all 0.2s", transform: hovered ? "translateX(2px)" : "none" }} />
     </button>
   );
 }
