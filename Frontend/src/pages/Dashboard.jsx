@@ -458,7 +458,7 @@ export default function Dashboard() {
             <br />
             <span className="titulo-gradiente">lado em minutos</span>
             <br />
-          </h1>          
+          </h1>
           <p className="descricao animar-2">
             Clique no mapa para marcar a partida e o destino. A rota é calculada
             por estradas reais em tempo real.
@@ -645,21 +645,6 @@ export default function Dashboard() {
                       : "OpenStreetMap · Leaflet · ORS"}
                   </div>
                 </div>
-              </div>
-              <div className="barra-dir">
-                {dadosRota ? (
-                  <>
-                    <div className="barra-valor">
-                      {fmtTempo(dadosRota.duracaoS)}
-                    </div>
-                    <div className="barra-valor2">tempo estimado</div>
-                  </>
-                ) : (
-                  <>
-                    <div className="barra-valor">~2 min</div>
-                    <div className="barra-valor2">ETA médio</div>
-                  </>
-                )}
               </div>
             </div>
           </div>

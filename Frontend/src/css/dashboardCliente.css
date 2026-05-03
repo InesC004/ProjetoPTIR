@@ -22,7 +22,7 @@
   font-family: "DM Sans", sans-serif;
 }
 
-/* ── Orbs decorativos ── */
+/* - Orbs decorativos - */
 .dash-orbs {
   position: fixed;
   inset: 0;
@@ -249,8 +249,7 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   white-space: nowrap;
-  height: 20px!important;
-  
+  height: 20px !important;
 }
 .descricao {
   color: #4a6080;
@@ -3798,7 +3797,7 @@
 
 .dash-pagina .badge {
   margin-bottom: 14px !important;
-  margin-top: -18px!important;
+  margin-top: -18px !important;
 }
 
 .dash-pagina .titulo {
@@ -4693,25 +4692,211 @@
   }
 }
 
-
-
-
-
-
-
 .linha-1 {
   white-space: nowrap;
-  margin-bottom: 200px!important;
+  margin-bottom: 200px !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVIDADE — BREAKPOINTS LIMPOS
+═══════════════════════════════════════════════════════════════ */
 
+/* ── 1280px: ecrãs largos mas não gigantes ── */
+@media (max-width: 1280px) {
+  .hero {
+    grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
+    gap: 36px;
+    padding: 100px 36px 56px;
+  }
+}
 
+/* ── 1100px: tablet landscape / laptop pequeno ── */
+@media (max-width: 1100px) {
+  .hero {
+    grid-template-columns: 1fr;
+    max-width: 760px;
+    padding: 96px 28px 52px;
+    gap: 28px;
+  }
+  .painel-esquerdo {
+    position: static;
+    max-height: none;
+  }
+  .painel-mapa {
+    height: 500px;
+  }
+  .secao {
+    padding: 72px 28px;
+  }
+  .cta-wrap {
+    padding: 0 28px 72px;
+  }
+}
 
+/* ── 768px: tablet portrait ── */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 24px;
+    height: 64px;
+  }
+  .header-nav {
+    display: none;
+  }
 
+  .hero {
+    padding: 84px 16px 40px;
+    gap: 24px;
+  }
+  .titulo {
+    font-size: clamp(2rem, 7vw, 2.8rem);
+  }
+  .linha-1 {
+    white-space: normal;
+  }
 
+  .grelha-3 {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .secao {
+    padding: 56px 16px;
+  }
+  .cta-wrap {
+    padding: 0 16px 56px;
+  }
+  .cta-box {
+    padding: 60px 24px;
+  }
 
+  .painel-mapa {
+    height: 420px;
+  }
+  .barra-topo-mapa {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .dica-mapa {
+    max-width: 100%;
+  }
+}
 
+/* ── 480px: mobile ── */
+@media (max-width: 480px) {
+  .header {
+    padding: 0 14px;
+  }
+  .hero {
+    padding: 76px 12px 32px;
+  }
+  .titulo {
+    font-size: 1.85rem;
+    letter-spacing: -0.04em;
+  }
+  .descricao {
+    font-size: 0.9rem;
+  }
 
+  .card-reserva {
+    padding: 16px;
+    border-radius: 20px;
+  }
+  .step-dots {
+    gap: 8px;
+  }
+  .step-dot {
+    width: 30px;
+    height: 30px;
+    font-size: 0.72rem;
+  }
+  .input-morada {
+    height: 48px;
+    font-size: 0.88rem;
+  }
+  .btn-localizacao {
+    height: 46px;
+    font-size: 0.8rem;
+  }
+  .btn-pedir {
+    height: 50px;
+    font-size: 0.9rem;
+  }
 
+  .grelha-3 {
+    grid-template-columns: 1fr;
+  }
+  .painel-mapa {
+    height: 360px;
+  }
 
+  .dica-mapa {
+    font-size: 0.7rem;
+    padding: 7px 12px;
+  }
+  .btn-recomecar {
+    font-size: 0.7rem;
+    padding: 7px 12px;
+  }
 
+  .barra-inferior-mapa {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+  .barra-dir {
+    margin-left: 0;
+    text-align: left;
+  }
+
+  .estatisticas {
+    gap: 12px;
+    padding: 14px;
+  }
+  .stat-numero {
+    font-size: 1.2rem;
+  }
+  .stat-label {
+    font-size: 0.65rem;
+  }
+
+  .modal-caixa {
+    grid-template-columns: 1fr;
+  }
+  .modal-imagem {
+    display: none;
+  }
+
+  .cta-box {
+    padding: 40px 16px;
+  }
+  .btn-branco {
+    padding: 14px 28px;
+  }
+
+  .secao {
+    padding: 44px 12px;
+  }
+  .cta-wrap {
+    padding: 0 12px 44px;
+  }
+}
+
+/* ── 360px: mobile muito pequeno ── */
+@media (max-width: 360px) {
+  .titulo {
+    font-size: 1.65rem;
+  }
+  .card-reserva {
+    padding: 14px;
+  }
+  .step-dots {
+    grid-template-columns: 28px 1fr 28px 1fr 28px;
+  }
+  .step-dot {
+    width: 28px;
+    height: 28px;
+  }
+  .painel-mapa {
+    height: 300px;
+  }
+}
