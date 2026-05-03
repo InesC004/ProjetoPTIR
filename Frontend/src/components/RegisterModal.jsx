@@ -1,13 +1,13 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
 import image from "../pictures/carroREgistro.jpg";
+import api from "../Api";
 
 export default function RegisterModal({ isOpen, onClose }) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-
   const [formData, setFormData] = useState({
     name: "",
     nif: "",
@@ -23,48 +23,35 @@ export default function RegisterModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
-      const res = await fetch("http://localhost:8080/api/clientes/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Erro ao registar.");
-      } else {
-        setSuccess(true);
-        setTimeout(() => {
-          setSuccess(false);
-          setStep(1);
-          setFormData({
-            name: "",
-            nif: "",
-            email: "",
-            gender: "",
-            birth_day: "",
-            birth_month: "",
-            birth_year: "",
-            address: "",
-            postal_code: "",
-            access_password: "",
-          });
-          onClose();
-        }, 2000);
-      }
-    } catch {
-      setError("Não foi possível conectar ao servidor.");
+      await api.auth.registarCliente(formData);
+      setSuccess(true);
+      setTimeout(() => {
+        setSuccess(false);
+        setStep(1);
+        setFormData({
+          name: "",
+          nif: "",
+          email: "",
+          gender: "",
+          birth_day: "",
+          birth_month: "",
+          birth_year: "",
+          address: "",
+          postal_code: "",
+          access_password: "",
+        });
+        onClose();
+      }, 2000);
+    } catch (err) {
+      setError(err.message || "Não foi possível conectar ao servidor.");
     } finally {
       setLoading(false);
     }
@@ -72,38 +59,25 @@ export default function RegisterModal({ isOpen, onClose }) {
 
   return (
     <>
-      <div
-        onClick={onClose}
-        className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
-      />
-
-      <div className="fixed inset-0 flex items-center justify-center z-[110] p-4">
-        <div className="relative bg-[#0a1628] text-white rounded-2xl overflow-hidden w-[900px] max-w-full max-h-[90vh] grid md:grid-cols-2 shadow-2xl border border-white/10">
-          <div className="relative hidden md:block">
-            <img
-              src={image}
-              alt="TakeCab"
-              className="h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0a1628]/80 to-transparent" />
-            <div className="absolute inset-0 flex flex-col justify-end p-8">
-              <h2 className="text-2xl font-light mb-2">
-                Join{" "}
-                <span className="font-semibold text-[#60a5fa]">TakeCab</span>
-              </h2>
-              <p className="text-white/60 text-sm">
-                Rápido, Seguro e confortavel
+      <div className="modal-fundo" onClick={onClose} />
+      <div className="modal-centro">
+        <div className="modal-caixa">
+          {/* Imagem lateral */}
+          <div className="modal-imagem">
+            <img src={image} alt="TakeCab" />
+            <div className="modal-imagem-overlay" />
+            <div className="modal-imagem-texto">
+              <p className="modal-imagem-titulo">
+                Join <span>TakeCab</span>
               </p>
+              <p className="modal-imagem-sub">Rápido, Seguro e Confortável</p>
             </div>
           </div>
 
-          <div className="p-8 overflow-y-auto">
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-            >
+          {/* Formulário */}
+          <div className="modal-form-area">
+            <button className="modal-fechar" onClick={onClose}>
               <svg
-                className="w-5 h-5 text-white/70"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -117,109 +91,83 @@ export default function RegisterModal({ isOpen, onClose }) {
               </svg>
             </button>
 
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold">Criar Conta</h2>
-              <p className="text-sm text-white/50 mt-1">Passo {step} of 2</p>
-              <div className="h-1 bg-white/10 rounded-full overflow-hidden mt-4">
-                <div
-                  className="h-full bg-gradient-to-r from-[#1d5eff] to-[#3b82f6] rounded-full transition-all duration-300"
-                  style={{ width: step === 1 ? "50%" : "100%" }}
-                />
-              </div>
+            <h2 className="modal-titulo">Criar Conta</h2>
+            <p className="modal-sub">Passo {step} de 2</p>
+            <div className="modal-progresso-wrap">
+              <div
+                className="modal-progresso-barra"
+                style={{ width: step === 1 ? "50%" : "100%" }}
+              />
             </div>
 
             {success && (
-              <div className="mb-4 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm text-center">
-                ✓ Conta Criada com Sucesso! Bem-vindo a TakeaCab!
+              <div className="modal-sucesso">
+                ✓ Conta criada com sucesso! Bem-vindo ao TakeCab!
               </div>
             )}
+            {error && <div className="modal-erro">{error}</div>}
 
-            {error && (
-              <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form className="modal-form" onSubmit={handleSubmit}>
               {step === 1 ? (
                 <>
-                  {/* Full Name */}
-                  <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">
-                      Nome Completo
-                    </label>
+                  <div className="modal-campo">
+                    <label className="modal-label">Nome Completo</label>
                     <input
+                      className="modal-input"
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      placeholder="Enter your full name"
+                      placeholder="O seu nome completo"
                       required
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                     />
                   </div>
 
-                  {/* Email */}
-                  <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">
-                      Email
-                    </label>
+                  <div className="modal-campo">
+                    <label className="modal-label">Email</label>
                     <input
+                      className="modal-input"
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="Enter your email"
+                      placeholder="O seu email"
                       required
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                     />
                   </div>
 
-                  {/* NIF & Gender */}
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <label className="block text-sm font-medium text-white/70 mb-2">
-                        NIF
-                      </label>
+                  <div className="modal-campo-2">
+                    <div className="modal-campo">
+                      <label className="modal-label">NIF</label>
                       <input
+                        className="modal-input"
                         name="nif"
                         value={formData.nif}
                         onChange={handleChange}
-                        placeholder="Enter your NIF"
+                        placeholder="9 dígitos"
                         required
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-white/70 mb-2">
-                        Género
-                      </label>
+                    <div className="modal-campo">
+                      <label className="modal-label">Género</label>
                       <select
+                        className="modal-select"
                         name="gender"
                         value={formData.gender}
                         onChange={handleChange}
                         required
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-[#3b82f6]/50 focus:outline-none"
                       >
-                        <option value="" className="bg-[#0a1628]">
-                          Selecione um Género
-                        </option>
-                        <option value="Male" className="bg-[#0a1628]">
-                          Masculino
-                        </option>
-                        <option value="Female" className="bg-[#0a1628]">
-                          Feminino
-                        </option>
+                        <option value="">Selecionar</option>
+                        <option value="Male">Masculino</option>
+                        <option value="Female">Feminino</option>
                       </select>
                     </div>
                   </div>
 
-                  {/* Date of Birth */}
-                  <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">
-                      Data de Nascimento
-                    </label>
-                    <div className="grid grid-cols-3 gap-3">
+                  <div className="modal-campo">
+                    <label className="modal-label">Data de Nascimento</label>
+                    <div className="modal-campo-3">
                       <input
+                        className="modal-input"
                         type="number"
                         name="birth_day"
                         value={formData.birth_day}
@@ -228,9 +176,9 @@ export default function RegisterModal({ isOpen, onClose }) {
                         min="1"
                         max="31"
                         required
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                       />
                       <input
+                        className="modal-input"
                         type="number"
                         name="birth_month"
                         value={formData.birth_month}
@@ -239,9 +187,9 @@ export default function RegisterModal({ isOpen, onClose }) {
                         min="1"
                         max="12"
                         required
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                       />
                       <input
+                        className="modal-input"
                         type="number"
                         name="birth_year"
                         value={formData.birth_year}
@@ -250,19 +198,17 @@ export default function RegisterModal({ isOpen, onClose }) {
                         min="1940"
                         max="2008"
                         required
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                       />
                     </div>
                   </div>
 
                   <button
                     type="button"
+                    className="modal-btn-principal"
                     onClick={() => setStep(2)}
-                    className="w-full py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-[#1d5eff] to-[#3b82f6] hover:opacity-90 transition-opacity mt-2 flex items-center justify-center gap-2"
                   >
-                    Continue
+                    Continuar
                     <svg
-                      className="w-4 h-4"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -278,60 +224,50 @@ export default function RegisterModal({ isOpen, onClose }) {
                 </>
               ) : (
                 <>
-                  {/* Address */}
-                  <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">
-                      Morada
-                    </label>
+                  <div className="modal-campo">
+                    <label className="modal-label">Morada</label>
                     <input
+                      className="modal-input"
                       name="address"
                       value={formData.address}
                       onChange={handleChange}
-                      placeholder="Coloque a sua Morada"
+                      placeholder="A sua morada"
                       required
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                     />
                   </div>
 
-                  {/* Postal Code */}
-                  <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">
-                      Código Postal
-                    </label>
+                  <div className="modal-campo">
+                    <label className="modal-label">Código Postal</label>
                     <input
+                      className="modal-input"
                       name="postal_code"
                       value={formData.postal_code}
                       onChange={handleChange}
-                      placeholder="ex: 1000-200"
+                      placeholder="0000-000"
                       required
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                     />
                   </div>
 
-                  {/* Password */}
-                  <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">
-                      Palavra-passe
-                    </label>
+                  <div className="modal-campo">
+                    <label className="modal-label">Palavra-passe</label>
                     <input
+                      className="modal-input"
                       type="password"
                       name="access_password"
                       value={formData.access_password}
                       onChange={handleChange}
-                      placeholder="Crie uma Palavra-passe segura"
+                      placeholder="Crie uma palavra-passe segura"
                       required
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 focus:border-[#3b82f6]/50 focus:outline-none"
                     />
                   </div>
 
-                  <div className="flex gap-3 mt-2">
+                  <div className="modal-btn-linha">
                     <button
                       type="button"
+                      className="modal-btn-secundario"
                       onClick={() => setStep(1)}
-                      className="flex-1 py-3.5 rounded-xl font-semibold text-white/80 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
                     >
                       <svg
-                        className="w-4 h-4"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -347,37 +283,17 @@ export default function RegisterModal({ isOpen, onClose }) {
                     </button>
                     <button
                       type="submit"
+                      className="modal-btn-principal"
                       disabled={loading}
-                      className="flex-[2] py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-[#1d5eff] to-[#3b82f6] hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {loading ? (
                         <>
-                          <svg
-                            className="w-4 h-4 animate-spin"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8v8z"
-                            />
-                          </svg>
-                          A Registar...
+                          <span className="spinner-inline" />A registar...
                         </>
                       ) : (
                         <>
-                          Registar
+                          Registar{" "}
                           <svg
-                            className="w-4 h-4"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -397,11 +313,8 @@ export default function RegisterModal({ isOpen, onClose }) {
               )}
             </form>
 
-            <p className="text-center text-white/50 text-sm mt-6">
-              Já tem uma Conta?{" "}
-              <a href="#" className="text-[#60a5fa] hover:underline">
-                Entrar
-              </a>
+            <p className="modal-link">
+              Já tem uma conta? <a href="#">Entrar</a>
             </p>
           </div>
         </div>

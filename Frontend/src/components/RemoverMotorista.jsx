@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
+import api from "../Api";
 import {
   X,
   Search,
@@ -28,12 +29,7 @@ export default function RemoverMotorista({ aberto, onFechar }) {
     setLoading(true);
     setErro("");
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:8080/api/motoristas/todos", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
+      const data = await api.motoristas.listar();
       setMotoristas(data);
     } catch {
       setErro("Erro ao carregar motoristas.");
@@ -56,26 +52,12 @@ export default function RemoverMotorista({ aberto, onFechar }) {
     setSucesso("");
 
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(
-        `http://localhost:8080/api/motoristas/${motoristaAConfirmar._id}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        },
+      await api.motoristas.remover(motoristaAConfirmar._id);
+      setMotoristas((prev) =>
+        prev.filter((m) => m._id !== motoristaAConfirmar._id),
       );
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        setErro(data.message || "Erro ao remover motorista.");
-      } else {
-        setMotoristas((prev) =>
-          prev.filter((m) => m._id !== motoristaAConfirmar._id),
-        );
-        setSucesso("Motorista removido com sucesso.");
-        setMotoristaAConfirmar(null);
-      }
+      setSucesso("Motorista removido com sucesso.");
+      setMotoristaAConfirmar(null);
     } catch {
       setErro("Não foi possível ligar ao servidor.");
     } finally {

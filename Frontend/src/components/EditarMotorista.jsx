@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useRef } from "react";
+import api from "../Api";
 import {
   User,
   X,
@@ -130,12 +131,7 @@ export default function EditarMotorista({ aberto, onFechar }) {
     setLoadingList(true);
     setListError("");
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:8080/api/motoristas/todos", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
+      const data = await api.motoristas.listar();
       setMotoristas(data);
     } catch {
       setListError("Erro ao carregar motoristas.");
@@ -209,7 +205,6 @@ export default function EditarMotorista({ aberto, onFechar }) {
     setApiError("");
 
     try {
-      const token = localStorage.getItem("token");
       const payload = {
         nome: form.nome.trim(),
         nif: form.nif.trim(),
@@ -221,23 +216,8 @@ export default function EditarMotorista({ aberto, onFechar }) {
         numero_carta: form.numero_carta.trim(),
       };
 
-      const res = await fetch(
-        `http://localhost:8080/api/motoristas/${editing._id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        },
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setApiError(data.message || "Erro ao atualizar motorista.");
-      } else {
+      const data = await api.motoristas.atualizar(editing._id, payload);
+      {
         setMotoristas((prev) =>
           prev.map((m) => (m._id === editing._id ? data.motorista || data : m)),
         );

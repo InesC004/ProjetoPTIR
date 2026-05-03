@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Header from "../components/Header";
+import Header from "../components/Header2";
 import backgroundVideo from "../Pictures/fundo.mp4";
 
 export default function Homepage() {

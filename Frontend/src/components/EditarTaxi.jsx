@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useRef } from "react";
+import api from "../Api";
 import {
   Car,
   X,
@@ -310,9 +311,7 @@ export default function EditarTaxi({ aberto, onFechar }) {
     setLoadingList(true);
     setListError("");
     try {
-      const res = await fetch("http://localhost:8080/taxis");
-      if (!res.ok) throw new Error();
-      const data = await res.json();
+      const data = await api.taxis.listar();
       setTaxis(data);
     } catch {
       setListError("Erro ao carregar táxis.");
@@ -395,30 +394,20 @@ export default function EditarTaxi({ aberto, onFechar }) {
     setApiError("");
 
     try {
-      const res = await fetch(`http://localhost:8080/taxis/${editing._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          matricula: form.matricula.toUpperCase(),
-          marca: form.marca,
-          modelo: form.modelo,
-          ano_compra: parseInt(form.ano_compra, 10),
-          tipo_motor: form.tipo_motor,
-          nivel_conforto: form.nivel_conforto,
-        }),
+      const data = await api.taxis.atualizar(editing._id, {
+        matricula: form.matricula.toUpperCase(),
+        marca: form.marca,
+        modelo: form.modelo,
+        ano_compra: parseInt(form.ano_compra, 10),
+        tipo_motor: form.tipo_motor,
+        nivel_conforto: form.nivel_conforto,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setApiError(data.error || data.message || "Erro ao atualizar.");
-      } else {
-        setSuccess(true);
-        // Atualizar lista local
-        setTaxis((prev) => prev.map((t) => (t._id === editing._id ? data : t)));
-        setTimeout(() => {
-          setSuccess(false);
-          cancelEdit();
-        }, 1500);
-      }
+      setSuccess(true);
+      setTaxis((prev) => prev.map((t) => (t._id === editing._id ? data : t)));
+      setTimeout(() => {
+        setSuccess(false);
+        cancelEdit();
+      }, 1500);
     } catch {
       setApiError("Não foi possível conectar ao servidor.");
     } finally {

@@ -6,6 +6,7 @@ import Profile from "./pages/Profile";
 import CompletarPerfil from "./pages/Completar-perfil";
 import PaginaGestores from "./pages/Gestores/PaginaGestores";
 import PaginaMotorista from "./pages/PaginaMotorista";
+import CriarGestor from "./pages/CriarGestor";
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
           path="/motorista/PaginaMotorista"
           element={<PaginaMotorista />}
         />
+        <Route path="/admin/criar-gestor" element={<CriarGestor />} />
       </Routes>
     </BrowserRouter>
   );

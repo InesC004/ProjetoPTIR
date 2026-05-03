@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState, useRef, useEffect } from "react";
+import api from "../Api";
 import {
   Car,
   X,
@@ -339,32 +340,21 @@ export default function RegistarTaxi({ aberto, onFechar }) {
     };
 
     try {
-      const res = await fetch("http://localhost:8080/taxis", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(novoTaxi),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setApiError(data.message || "Erro ao registar o táxi.");
-      } else {
-        setSuccess(true);
-        setTimeout(() => {
-          setSuccess(false);
-          setForm({
-            matricula: "",
-            marca: "",
-            modelo: "",
-            ano_compra: "",
-            tipo_motor: "",
-            nivel_conforto: "",
-          });
-          setErrors({});
-          onFechar();
-        }, 2000);
-      }
+      await api.taxis.criar(novoTaxi);
+      setSuccess(true);
+      setTimeout(() => {
+        setSuccess(false);
+        setForm({
+          matricula: "",
+          marca: "",
+          modelo: "",
+          ano_compra: "",
+          tipo_motor: "",
+          nivel_conforto: "",
+        });
+        setErrors({});
+        onFechar();
+      }, 2000);
     } catch {
       setApiError("Não foi possível conectar ao servidor.");
     } finally {

@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
+import api from "../Api";
 import {
   X,
   Search,
@@ -27,9 +28,7 @@ export default function RemoverTaxi({ aberto, onFechar }) {
     setLoading(true);
     setErro("");
     try {
-      const res = await fetch("http://localhost:8080/taxis");
-      if (!res.ok) throw new Error();
-      const data = await res.json();
+      const data = await api.taxis.listar();
       setTaxis(data);
     } catch {
       setErro("Erro ao carregar táxis.");
@@ -52,22 +51,10 @@ export default function RemoverTaxi({ aberto, onFechar }) {
     setSucesso("");
 
     try {
-      const res = await fetch(
-        `http://localhost:8080/taxis/${taxiAConfirmar._id}`,
-        {
-          method: "DELETE",
-        },
-      );
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        setErro(data.error || data.message || "Erro ao remover táxi.");
-      } else {
-        setTaxis((prev) => prev.filter((t) => t._id !== taxiAConfirmar._id));
-        setSucesso("Táxi removido com sucesso.");
-        setTaxiAConfirmar(null);
-      }
+      await api.taxis.remover(taxiAConfirmar._id);
+      setTaxis((prev) => prev.filter((t) => t._id !== taxiAConfirmar._id));
+      setSucesso("Táxi removido com sucesso.");
+      setTaxiAConfirmar(null);
     } catch {
       setErro("Não foi possível ligar ao servidor.");
     } finally {
@@ -185,8 +172,8 @@ export default function RemoverTaxi({ aberto, onFechar }) {
                     >
                       {removendoId === taxiAConfirmar._id ? (
                         <>
-                          <Loader2 size={15} className="animate-spin" />
-                          A remover...
+                          <Loader2 size={15} className="animate-spin" />A
+                          remover...
                         </>
                       ) : (
                         <>
@@ -203,8 +190,7 @@ export default function RemoverTaxi({ aberto, onFechar }) {
 
           {loading ? (
             <div className="flex items-center justify-center gap-3 py-10 text-[#8ba3c7] text-[14px]">
-              <Loader2 size={18} className="animate-spin" />
-              A carregar táxis...
+              <Loader2 size={18} className="animate-spin" />A carregar táxis...
             </div>
           ) : filtrados.length === 0 ? (
             <div className="text-center py-10 text-[#8ba3c7] text-[14px]">

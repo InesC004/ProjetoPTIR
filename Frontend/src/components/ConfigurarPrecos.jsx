@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
+import api from "../Api";
 import {
   X,
   DollarSign,
@@ -13,12 +14,6 @@ import {
   Clock,
   ChevronDown,
 } from "lucide-react";
-
-const API = "http://localhost:8080/api/precos";
-
-function getToken() {
-  return localStorage.getItem("token");
-}
 
 /* ═══════════════════════════════════════════════
    DEFINIR PREÇOS (criar/editar)
@@ -48,9 +43,7 @@ export function DefinirPrecos({ aberto, onFechar }) {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(API);
-      if (!res.ok) throw new Error();
-      const data = await res.json();
+      const data = await api.precos.listar();
       setPrecos(data);
       const pb = data.find((p) => p.nivel_conforto === "basico");
       const pl = data.find((p) => p.nivel_conforto === "luxuoso");
@@ -99,11 +92,6 @@ export function DefinirPrecos({ aberto, onFechar }) {
     setError("");
     setSuccess("");
     try {
-      const token = getToken();
-      const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      };
       for (const [nivel, dados] of [
         ["basico", basico],
         ["luxuoso", luxuoso],
@@ -115,25 +103,9 @@ export function DefinirPrecos({ aberto, onFechar }) {
           acrescimo_noturno: parseFloat(dados.acrescimo_noturno),
         };
         if (existente) {
-          const res = await fetch(`${API}/${existente._id}`, {
-            method: "PUT",
-            headers,
-            body: JSON.stringify(body),
-          });
-          if (!res.ok) {
-            const d = await res.json().catch(() => ({}));
-            throw new Error(d.error || `Erro ao atualizar ${nivel}`);
-          }
+          await api.precos.atualizar(existente._id, body);
         } else {
-          const res = await fetch(API, {
-            method: "POST",
-            headers,
-            body: JSON.stringify(body),
-          });
-          if (!res.ok) {
-            const d = await res.json().catch(() => ({}));
-            throw new Error(d.error || `Erro ao criar ${nivel}`);
-          }
+          await api.precos.criar(body);
         }
       }
       setSuccess("Preços guardados com sucesso!");
@@ -343,9 +315,7 @@ export function ListarPrecos({ aberto, onFechar, onEditar }) {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(API);
-      if (!res.ok) throw new Error();
-      setPrecos(await res.json());
+      setPrecos(await api.precos.listar());
     } catch {
       setError("Erro ao carregar preços.");
     } finally {
@@ -496,9 +466,7 @@ export function SimularViagem({ aberto, onFechar }) {
   async function fetchPrecos() {
     setLoading(true);
     try {
-      const res = await fetch(API);
-      if (!res.ok) throw new Error();
-      const data = await res.json();
+      const data = await api.precos.listar();
       setPrecos(data);
     } catch {
       setError("Erro ao carregar preços.");

@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useCallback } from "react";
+import api from "../Api";
 import {
   UserPlus,
   X,
@@ -234,43 +235,28 @@ export default function RegistarMotorista({ aberto, onFechar }) {
     };
 
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:8080/api/motoristas/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setApiError(data.message || "Erro ao registar o motorista.");
-      } else {
-        setSuccess(true);
-        setTimeout(() => {
-          setSuccess(false);
-          setStep(1);
-          setForm({
-            name: "",
-            nif: "",
-            email: "",
-            genero: "",
-            birth_day: "",
-            birth_month: "",
-            birth_year: "",
-            morada: "",
-            codigo_postal: "",
-            localidade: "",
-            password: "",
-            numero_carta: "",
-          });
-          setErrors({});
-          onFechar();
-        }, 2000);
-      }
+      await api.motoristas.criar(payload);
+      setSuccess(true);
+      setTimeout(() => {
+        setSuccess(false);
+        setStep(1);
+        setForm({
+          name: "",
+          nif: "",
+          email: "",
+          genero: "",
+          birth_day: "",
+          birth_month: "",
+          birth_year: "",
+          morada: "",
+          codigo_postal: "",
+          localidade: "",
+          password: "",
+          numero_carta: "",
+        });
+        setErrors({});
+        onFechar();
+      }, 2000);
     } catch {
       setApiError("Não foi possível conectar ao servidor.");
     } finally {
