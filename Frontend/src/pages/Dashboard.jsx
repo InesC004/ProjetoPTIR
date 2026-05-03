@@ -453,14 +453,11 @@ export default function Dashboard() {
 
       <section className="hero">
         <div className="painel-esquerdo">
-          <div className="badge animar">
-            <span className="badge-ponto" />
-            Motoristas disponíveis · Lisboa
-          </div>
           <h1 className="titulo animar-1">
-            Chegue a qualquer
+            <span className="linha-1">Chegue a qualquer</span>
             <br />
-            <span className="titulo-gradiente">lado em minutos.</span>
+            <span className="titulo-gradiente">lado em minutos</span>
+            <br />
           </h1>
           <p className="descricao animar-2">
             Clique no mapa para marcar a partida e o destino. A rota é calculada
@@ -648,21 +645,6 @@ export default function Dashboard() {
                       : "OpenStreetMap · Leaflet · ORS"}
                   </div>
                 </div>
-              </div>
-              <div className="barra-dir">
-                {dadosRota ? (
-                  <>
-                    <div className="barra-valor">
-                      {fmtTempo(dadosRota.duracaoS)}
-                    </div>
-                    <div className="barra-valor2">tempo estimado</div>
-                  </>
-                ) : (
-                  <>
-                    <div className="barra-valor">~2 min</div>
-                    <div className="barra-valor2">ETA médio</div>
-                  </>
-                )}
               </div>
             </div>
           </div>
