@@ -1,6 +1,9 @@
 const Cliente = require('../models/cliente')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const os = require('os')
+
+const HOSTNAME = os.hostname()
 
 const SALT_ROUNDS = Number(process.env.SALT_ROUNDS)
 const JWT_SECRET = process.env.JWT_SECRET
@@ -32,10 +35,20 @@ exports.register = async (req, res) => {
     })
 
     await cliente.save()
-    res.status(201).json({ success: true, message: 'Cliente registado com sucesso.', cliente })
+
+    res.status(201).json({
+      success: true,
+      message: 'Cliente registado com sucesso.',
+      servidor: HOSTNAME,
+      cliente
+    })
   } catch (err) {
     console.error(err)
-    res.status(500).json({ success: false, message: 'Erro no servidor' })
+    res.status(500).json({
+      success: false,
+      message: 'Erro no servidor',
+      servidor: HOSTNAME
+    })
   }
 }
 
@@ -46,12 +59,20 @@ exports.login = async (req, res) => {
 
     const cliente = await Cliente.findOne({ nif })
     if (!cliente) {
-      return res.status(401).json({ success: false, message: 'Credenciais inválidas.' })
+      return res.status(401).json({
+        success: false,
+        message: 'Credenciais inválidas.',
+        servidor: HOSTNAME
+      })
     }
 
     const match = await bcrypt.compare(access_password, cliente.password)
     if (!match) {
-      return res.status(401).json({ success: false, message: 'Credenciais inválidas.' })
+      return res.status(401).json({
+        success: false,
+        message: 'Credenciais inválidas.',
+        servidor: HOSTNAME
+      })
     }
 
     const payload = {
@@ -66,12 +87,21 @@ exports.login = async (req, res) => {
       success: true,
       message: 'Login bem sucedido.',
       role: 'cliente',
-      cliente: { nome: cliente.nome, nif: cliente.nif, email: cliente.email },
+      servidor: HOSTNAME,
+      cliente: {
+        nome: cliente.nome,
+        nif: cliente.nif,
+        email: cliente.email
+      },
       token
     })
   } catch (err) {
     console.error(err)
-    res.status(500).json({ success: false, message: 'Erro no servidor' })
+    res.status(500).json({
+      success: false,
+      message: 'Erro no servidor',
+      servidor: HOSTNAME
+    })
   }
 }
 
@@ -79,16 +109,30 @@ exports.login = async (req, res) => {
 exports.getPerfil = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1]
-    if (!token) return res.status(401).json({ success: false, message: 'Necessário login.' })
+    if (!token) return res.status(401).json({
+      success: false,
+      message: 'Necessário login.',
+      servidor: HOSTNAME
+    })
 
     const payload = jwt.verify(token, JWT_SECRET)
     const cliente = await Cliente.findById(payload.id).select('-password')
-    if (!cliente) return res.status(404).json({ message: 'Cliente não encontrado' })
 
-    res.json(cliente)
+    if (!cliente) return res.status(404).json({
+      message: 'Cliente não encontrado',
+      servidor: HOSTNAME
+    })
+
+    res.json({
+      servidor: HOSTNAME,
+      cliente
+    })
   } catch (err) {
     console.error(err)
-    res.status(500).json({ message: 'Erro no servidor' })
+    res.status(500).json({
+      message: 'Erro no servidor',
+      servidor: HOSTNAME
+    })
   }
 }
 
@@ -97,20 +141,41 @@ exports.delete = async (req, res) => {
   try {
     const { id } = req.params
     const token = req.headers.authorization?.split(' ')[1]
-    if (!token) return res.status(401).json({ success: false, message: 'Necessário login.' })
+    if (!token) return res.status(401).json({
+      success: false,
+      message: 'Necessário login.',
+      servidor: HOSTNAME
+    })
 
     const payload = jwt.verify(token, JWT_SECRET)
     if (id !== payload.id.toString()) {
-      return res.status(403).json({ success: false, message: 'Não podes apagar outro cliente.' })
+      return res.status(403).json({
+        success: false,
+        message: 'Não podes apagar outro cliente.',
+        servidor: HOSTNAME
+      })
     }
 
     const deleted = await Cliente.findByIdAndDelete(id)
-    if (!deleted) return res.status(404).json({ success: false, message: 'Cliente não encontrado.' })
+    if (!deleted) return res.status(404).json({
+      success: false,
+      message: 'Cliente não encontrado.',
+      servidor: HOSTNAME
+    })
 
-    res.status(200).json({ success: true, message: 'Cliente apagado com sucesso.', deleted })
+    res.status(200).json({
+      success: true,
+      message: 'Cliente apagado com sucesso.',
+      servidor: HOSTNAME,
+      deleted
+    })
   } catch (err) {
     console.error(err)
-    res.status(500).json({ success: false, message: 'Erro no servidor.' })
+    res.status(500).json({
+      success: false,
+      message: 'Erro no servidor.',
+      servidor: HOSTNAME
+    })
   }
 }
 
@@ -118,9 +183,17 @@ exports.delete = async (req, res) => {
 exports.getTodos = async (req, res) => {
   try {
     const clientes = await Cliente.find().select('-password')
-    res.json(clientes)
+
+    res.json({
+      servidor: HOSTNAME,
+      users: clientes.length,
+      clientes
+    })
   } catch (err) {
     console.error(err)
-    res.status(500).json({ message: 'Erro no servidor' })
+    res.status(500).json({
+      message: 'Erro no servidor',
+      servidor: HOSTNAME
+    })
   }
 }
