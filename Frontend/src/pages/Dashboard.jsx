@@ -336,7 +336,11 @@ export default function Dashboard() {
   const [aLocalizarGPS, setALocalizarGPS] = useState(false);
   const [dadosRota, setDadosRota] = useState(null);
   const [aCalcular, setACalcular] = useState(false);
-
+  const [nivelConforto, setNivelConforto] = useState("basico");
+  const [numeroPessoas, setNumeroPessoas] = useState(1);
+  const [pedidoAtual, setPedidoAtual] = useState(null);
+  const [aPedir, setAPedir] = useState(false);
+  const [erroPedido, setErroPedido] = useState("");
   useEffect(() => {
     if (!partida || !destino) {
       setDadosRota(null);
@@ -401,7 +405,69 @@ export default function Dashboard() {
       () => setALocalizarGPS(false),
     );
   }
+  async function pedirViagem() {
+    setErroPedido("");
 
+    if (!partida || !destino) {
+      setErroPedido("Defina a partida e o destino.");
+      return;
+    }
+
+    setAPedir(true);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const resposta = await fetch("http://localhost:8080/api/pedidos/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          origem_morada: moradaPartida,
+          origem_lat: partida[0],
+          origem_lng: partida[1],
+          destino_morada: moradaDestino,
+          destino_lat: destino[0],
+          destino_lng: destino[1],
+          numero_pessoas: numeroPessoas,
+          nivel_conforto: nivelConforto,
+        }),
+      });
+
+      const texto = await resposta.text();
+      const dados = texto ? JSON.parse(texto) : {};
+
+      if (!resposta.ok) {
+        throw new Error(dados.message || "Erro ao pedir viagem.");
+      }
+
+      setPedidoAtual(dados.pedido);
+    } catch (erro) {
+      setErroPedido(erro.message);
+    } finally {
+      setAPedir(false);
+    }
+  }
+
+  async function cancelarPedido() {
+    if (!pedidoAtual) return;
+
+    const token = localStorage.getItem("token");
+
+    await fetch(
+      `http://localhost:8080/api/pedidos/${pedidoAtual._id}/cancelar`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    setPedidoAtual(null);
+  }
   const funcionalidades = [
     {
       n: "01",
@@ -566,9 +632,38 @@ export default function Dashboard() {
               </div>
             )}
 
+            <div className="rotulo-campo">Nível de conforto</div>
+            <div className="linha-input">
+              <select
+                className="input-morada"
+                value={nivelConforto}
+                onChange={(e) => setNivelConforto(e.target.value)}
+                style={{ paddingLeft: 16 }}
+              >
+                <option value="basico">Básico</option>
+                <option value="luxuoso">Luxuoso</option>
+              </select>
+            </div>
+
+            <div className="rotulo-campo">Número de pessoas</div>
+            <div className="linha-input">
+              <input
+                className="input-morada"
+                type="number"
+                min="1"
+                max="4"
+                value={numeroPessoas}
+                onChange={(e) => setNumeroPessoas(Number(e.target.value))}
+                style={{ paddingLeft: 16 }}
+              />
+            </div>
+
             <button
               className="btn-pedir"
-              disabled={!partida || !destino || aCalcular}
+              onClick={pedirViagem}
+              disabled={
+                !partida || !destino || aCalcular || aPedir || pedidoAtual
+              }
             >
               {!partida
                 ? "📍 Clique no mapa para a partida"
@@ -576,8 +671,35 @@ export default function Dashboard() {
                   ? "🏁 Clique no mapa para o destino"
                   : aCalcular
                     ? "A calcular rota…"
-                    : "→ Pedir Viagem"}
+                    : aPedir
+                      ? "A pedir viagem..."
+                      : pedidoAtual
+                        ? "Pedido enviado"
+                        : "→ Pedir Viagem"}
             </button>
+
+            {erroPedido && (
+              <p style={{ color: "#e53935", marginTop: 10, fontWeight: 700 }}>
+                {erroPedido}
+              </p>
+            )}
+
+            {pedidoAtual && (
+              <div style={{ marginTop: 14 }}>
+                <p style={{ color: "#07142a", fontWeight: 800 }}>
+                  Pedido enviado. A aguardar motorista...
+                </p>
+
+                <button
+                  type="button"
+                  className="btn-localizacao"
+                  onClick={cancelarPedido}
+                  style={{ marginTop: 8 }}
+                >
+                  Cancelar pedido
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
