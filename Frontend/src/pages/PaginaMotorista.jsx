@@ -4,16 +4,10 @@ import { useNavigate } from "react-router-dom";
 import {
   CarFront,
   Route,
-  Users,
   Receipt,
   Fuel,
   Clock,
-  Square,
-  MapPin,
-  ChevronRight,
   Navigation,
-  Timer,
-  CheckCircle2,
   User,
   LogOut,
   Settings,
@@ -23,6 +17,7 @@ import logo from "../Pictures/logo1.jpeg";
 import TurnosMotorista from "../components/TurnosMotorista";
 import ReabastecimentosMotorista from "../components/ReabastecimentosMotorista";
 import "../css/paginaMotorista.css";
+import PedidosMotorista from "../components/PedidosMotorista";
 
 const NAV = [
   { id: "turno", label: "Requisitar Táxi", Icon: CarFront, tag: "Turno" },
@@ -615,7 +610,7 @@ export default function PaginaMotorista() {
 
           <div style={{ animation: "subir 0.5s 0.08s ease both" }}>
             {active === "turno" && <TurnosMotorista />}
-            {active === "pedidos" && <SecPedidos />}
+            {active === "pedidos" && <PedidosMotorista />}
             {active === "viagem" && (
               <SecPlaceholder
                 icone="🚗"
@@ -634,31 +629,6 @@ export default function PaginaMotorista() {
           </div>
         </main>
       </div>
-    </div>
-  );
-}
-
-function SecPedidos() {
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-      <MotCard
-        icon={<Navigation size={18} />}
-        gradient="linear-gradient(135deg, var(--ciano), var(--azul))"
-        title="Pedidos Pendentes"
-      >
-        <MotAction Icon={MapPin} label="Ver pedidos por proximidade" accent />
-        <MotAction Icon={Users} label="Detalhes do cliente e destino" />
-        <MotAction Icon={CheckCircle2} label="Aceitar pedido" accent />
-      </MotCard>
-
-      <MotCard
-        icon={<Timer size={18} />}
-        gradient="linear-gradient(135deg, var(--rosa), #7c3aed)"
-        title="Aguardar Confirmação"
-      >
-        <MotAction Icon={Clock} label="Pedidos aceites a aguardar cliente" />
-        <MotAction Icon={Square} label="Cancelar aceitação" danger />
-      </MotCard>
     </div>
   );
 }
@@ -688,162 +658,5 @@ function SecPlaceholder({ icone, titulo, desc }) {
       </div>
       <p className="feat-desc">{desc}</p>
     </div>
-  );
-}
-
-function MotCard({ icon, gradient, title, children }) {
-  return (
-    <div className="card-feat" style={{ padding: 24 }}>
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 1,
-          background:
-            "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)",
-        }}
-      />
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          marginBottom: 20,
-          paddingBottom: 16,
-          borderBottom: "1px solid rgba(255,255,255,0.04)",
-        }}
-      >
-        <div
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 13,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#fff",
-            background: gradient,
-            boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
-          }}
-        >
-          {icon}
-        </div>
-        <h3
-          style={{
-            fontFamily: "'Syne', sans-serif",
-            fontSize: "1rem",
-            fontWeight: 700,
-            letterSpacing: "-0.01em",
-          }}
-        >
-          {title}
-        </h3>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function MotAction({ Icon, label, accent, danger, onClick }) {
-  const [hovered, setHovered] = useState(false);
-
-  const base = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
-    padding: "11px 14px",
-    borderRadius: 12,
-    fontSize: "0.9rem",
-    fontWeight: 500,
-    cursor: "pointer",
-    transition: "all 0.2s",
-    textAlign: "left",
-    fontFamily: "'DM Sans', sans-serif",
-  };
-
-  let style;
-  if (accent) {
-    style = {
-      ...base,
-      border: hovered
-        ? "1px solid rgba(0,232,135,0.3)"
-        : "1px solid rgba(0,232,135,0.15)",
-      background: hovered ? "rgba(0,232,135,0.12)" : "rgba(0,232,135,0.05)",
-      color: "var(--branco)",
-      transform: hovered ? "translateX(3px)" : "none",
-    };
-  } else if (danger) {
-    style = {
-      ...base,
-      border: hovered
-        ? "1px solid rgba(239,68,68,0.25)"
-        : "1px solid rgba(255,255,255,0.04)",
-      background: hovered ? "rgba(239,68,68,0.08)" : "rgba(255,255,255,0.02)",
-      color: hovered ? "#ff6b6b" : "var(--cinza)",
-      transform: hovered ? "translateX(3px)" : "none",
-    };
-  } else {
-    style = {
-      ...base,
-      border: hovered
-        ? "1px solid rgba(0,232,135,0.15)"
-        : "1px solid rgba(255,255,255,0.04)",
-      background: hovered ? "rgba(0,232,135,0.06)" : "rgba(255,255,255,0.02)",
-      color: "var(--branco)",
-      transform: hovered ? "translateX(3px)" : "none",
-    };
-  }
-
-  const iconBoxStyle = {
-    width: 30,
-    height: 30,
-    borderRadius: 9,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background:
-      danger && hovered
-        ? "rgba(239,68,68,0.12)"
-        : hovered
-          ? "rgba(0,232,135,0.1)"
-          : "rgba(255,255,255,0.03)",
-    border:
-      danger && hovered
-        ? "1px solid rgba(239,68,68,0.2)"
-        : hovered
-          ? "1px solid rgba(0,232,135,0.2)"
-          : "1px solid rgba(255,255,255,0.05)",
-    transition: "all 0.2s",
-  };
-
-  return (
-    <button
-      style={style}
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      type="button"
-    >
-      <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={iconBoxStyle}>
-          <Icon size={15} strokeWidth={1.8} />
-        </span>
-        {label}
-      </span>
-      <ChevronRight
-        size={14}
-        strokeWidth={2}
-        style={{
-          color: hovered ? "var(--verde)" : "var(--cinza)",
-          transition: "all 0.2s",
-          transform: hovered ? "translateX(2px)" : "none",
-        }}
-      />
-    </button>
   );
 }
