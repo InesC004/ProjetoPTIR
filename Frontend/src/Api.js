@@ -203,6 +203,44 @@ const precos = {
 };
 
 // =============================================================================
+// Pedidos de Táxi
+// =============================================================================
+
+const pedidos = {
+  /** Listar pedidos de táxi disponíveis para o motorista autenticado. */
+  async listarDisponiveis(posicao = {}) {
+    const params = new URLSearchParams();
+
+    if (posicao.lat !== undefined && posicao.lng !== undefined) {
+      params.set("lat", posicao.lat);
+      params.set("lng", posicao.lng);
+    }
+
+    const query = params.toString();
+
+    return request(`/api/pedido/disponiveis${query ? `?${query}` : ""}`, {
+      auth: true,
+    });
+  },
+
+  /** Aceitar um pedido de táxi. */
+  async aceitar(id) {
+    return request(`/api/pedido/${id}/aceitar`, {
+      method: "PUT",
+      auth: true,
+    });
+  },
+
+  /** Cancelar a aceitação de um pedido de táxi. */
+  async cancelarAceitacao(id) {
+    return request(`/api/pedido/${id}/cancelar-aceitacao`, {
+      method: "PUT",
+      auth: true,
+    });
+  },
+};
+
+// =============================================================================
 // Serviços externos
 // =============================================================================
 
@@ -275,6 +313,7 @@ const api = {
   motoristas,
   taxis,
   precos,
+  pedidos,
   externos,
 };
 
