@@ -14,6 +14,8 @@ const turnosRoutes = require('./routes/turnos')
 const reabastecimentosRoutes = require('./routes/reabastecimentos')
 const precosRoutes = require('./routes/precos')
 const pedidosRoutes = require('./routes/pedidos')
+const viagensRoutes = require('./routes/viagens')
+const pagamentosRoutes = require('./routes/pagamentos')
 const app = express()
 const PORT = process.env.PORT || 8080
 const MONGO_URI = process.env.MONGO_URI
@@ -73,6 +75,8 @@ app.use('/api/turnos', turnosRoutes)
 app.use('/api/reabastecimentos', reabastecimentosRoutes)
 app.use('/api/precos', precosRoutes)
 app.use('/api/pedido', pedidosRoutes)
+app.use('/api/viagens', viagensRoutes)
+app.use('/api/pagamentos', pagamentosRoutes)
 // ===========================
 // Tratamento de endpoints desconhecidos
 // ===========================
