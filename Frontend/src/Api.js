@@ -151,28 +151,35 @@ const motoristas = {
 // =============================================================================
 // Táxis
 // =============================================================================
-
 const taxis = {
-  /** Listar todos os táxis. */
   async listar() {
-    return request("/taxis");
+    return request("/api/taxis/todos", { auth: true });
   },
 
-  /** Criar táxi. */
   async criar(payload) {
-    return request("/taxis", { method: "POST", body: payload });
+    return request("/api/taxis/create", {
+      method: "POST",
+      body: payload,
+      auth: true,
+    });
   },
 
-  /** Atualizar táxi por ID. */
   async atualizar(id, payload) {
-    return request(`/taxis/${id}`, { method: "PUT", body: payload });
+    return request(`/api/taxis/${id}`, {
+      method: "PUT",
+      body: payload,
+      auth: true,
+    });
   },
 
-  /** Remover táxi por ID. */
   async remover(id) {
-    return request(`/taxis/${id}`, { method: "DELETE" });
+    return request(`/api/taxis/${id}`, {
+      method: "DELETE",
+      auth: true,
+    });
   },
 };
+
 
 // =============================================================================
 // Preços

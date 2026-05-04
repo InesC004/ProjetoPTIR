@@ -84,12 +84,8 @@ export default function Header({ isDashboard = false }) {
               onClick={() => setProfileOpen((p) => !p)}
               aria-label="Menu de perfil"
             >
-              <img
-                src={`https://api.dicebear.com/7.x/thumbs/svg?seed=${cliente.nome || "user"}`}
-                alt="Avatar"
-              />
-              <span className="perfil-btn-online" />
             </button>
+            <span className="perfil-btn-online" />
 
             {profileOpen && (
               <div className="perfil-menu">

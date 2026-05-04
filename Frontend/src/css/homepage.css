@@ -1,0 +1,72 @@
+.block{
+    background-color: aliceblue;
+    padding: 0.15em;
+}
+
+
+.subtitulo {
+  margin-top: 28px;
+  max-width: 620px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: fadeUp 1s ease forwards;
+}
+
+.subtitulo p {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 300;
+  letter-spacing: 0.01em;
+}
+
+
+/* CONTAINER */
+.cta-container {
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transform: translateY(32px);
+  opacity: 0;
+  transition: all 1s ease;
+}
+
+.cta-container.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+
+/* BOTÃO */
+.cta-button {
+  padding: 16px 32px;
+  border-radius: 18px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #1d5eff, #3a8dff);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* HOVER */
+.cta-button:hover {
+  background: linear-gradient(135deg, #1746c9, #2f6fe0);
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(29, 94, 255, 0.3);
+}
+
+/* CONTEÚDO */
+.cta-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ÍCONE */
+.cta-icon {
+  width: 20px;
+  height: 20px;
+}

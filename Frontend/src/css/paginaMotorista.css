@@ -13,8 +13,6 @@
   --borda: rgba(99, 163, 255, 0.28);
 }
 
-
-
 *,
 *::before,
 *::after {
@@ -32,7 +30,6 @@ body {
   color: var(--branco);
   overflow-x: hidden;
 }
-
 
 .badge {
   display: inline-flex;
@@ -68,7 +65,6 @@ body {
     transform: scale(0.7);
   }
 }
-
 
 @keyframes tcDropIn {
   from {
@@ -171,7 +167,6 @@ body {
   border-color: rgba(255, 50, 50, 0.35);
 }
 
-
 .card-feat::before {
   content: "";
   position: absolute;
@@ -183,7 +178,6 @@ body {
   opacity: 0;
   transition: opacity 0.3s;
 }
-
 
 .card-feat:hover::before {
   opacity: 1;
@@ -233,7 +227,6 @@ body {
   }
 }
 
-
 .fundo-grelha {
   position: fixed;
   inset: 0;
@@ -273,17 +266,9 @@ body {
     0 0 32px rgba(47, 125, 255, 0.12);
 }
 
-
-h2{
-  color: #000!important;
+h2 {
+  color: #000 !important;
 }
-
-
-
-
-
-
-
 
 :root {
   --fundo: #f4fbff;
@@ -309,9 +294,21 @@ body {
   max-width: none;
   min-height: calc(100vh - 64px);
   background:
-    radial-gradient(circle at 8% 92%, rgba(48, 240, 160, 0.22), transparent 28%),
-    radial-gradient(circle at 100% 88%, rgba(47, 125, 255, 0.18), transparent 34%),
-    radial-gradient(circle at 85% 12%, rgba(99, 163, 255, 0.12), transparent 28%),
+    radial-gradient(
+      circle at 8% 92%,
+      rgba(48, 240, 160, 0.22),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 100% 88%,
+      rgba(47, 125, 255, 0.18),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 85% 12%,
+      rgba(99, 163, 255, 0.12),
+      transparent 28%
+    ),
     linear-gradient(135deg, #ffffff 0%, #f6fbff 48%, #eef6ff 100%);
   color: var(--texto-main);
   position: relative;
@@ -325,7 +322,10 @@ body {
   right: 70px;
   width: 180px;
   height: 180px;
-  background-image: radial-gradient(rgba(47, 125, 255, 0.18) 1px, transparent 1px);
+  background-image: radial-gradient(
+    rgba(47, 125, 255, 0.18) 1px,
+    transparent 1px
+  );
   background-size: 12px 12px;
   opacity: 0.55;
   pointer-events: none;

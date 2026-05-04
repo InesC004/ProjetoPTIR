@@ -15,15 +15,15 @@ export default function PerfilMotorista() {
   const navigate = useNavigate();
   const [motorista, setMotorista] = useState(null);
 
-    useEffect(() => {
+  useEffect(() => {
     const dadosGuardados = localStorage.getItem("motorista");
 
     if (dadosGuardados) {
-        setMotorista(JSON.parse(dadosGuardados));
+      setMotorista(JSON.parse(dadosGuardados));
     } else {
-        navigate("/");
+      navigate("/");
     }
-    }, [navigate]);
+  }, [navigate]);
 
   if (!motorista) {
     return (
@@ -45,18 +45,22 @@ export default function PerfilMotorista() {
 
       <div className="perfil-card">
         <div className="perfil-topo">
-        <div className="perfil-avatar">
+          <div className="perfil-avatar">
             {motorista.nome?.charAt(0)?.toUpperCase() || "M"}
-        </div>
+          </div>
 
-        <div>
+          <div>
             <h1>{motorista.nome || "Motorista"}</h1>
             <p className="perfil-subtitulo">Perfil do Motorista</p>
-        </div>
+          </div>
         </div>
 
         <div className="perfil-info">
-          <Info icon={<Mail size={18} />} label="Email" value={motorista.email} />
+          <Info
+            icon={<Mail size={18} />}
+            label="Email"
+            value={motorista.email}
+          />
           <Info icon={<Hash size={18} />} label="NIF" value={motorista.nif} />
           <Info
             icon={<CreditCard size={18} />}
@@ -73,7 +77,9 @@ export default function PerfilMotorista() {
             label="Data nascimento"
             value={
               motorista.data_nascimento
-                ? new Date(motorista.data_nascimento).toLocaleDateString("pt-PT")
+                ? new Date(motorista.data_nascimento).toLocaleDateString(
+                    "pt-PT",
+                  )
                 : null
             }
           />

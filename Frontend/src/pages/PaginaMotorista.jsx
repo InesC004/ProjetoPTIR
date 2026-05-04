@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CarFront,
@@ -11,24 +11,19 @@ import {
   Square,
   MapPin,
   ChevronRight,
-  Calendar,
   Navigation,
   Timer,
   CheckCircle2,
-  ListOrdered,
-  PlusCircle,
   User,
   LogOut,
   Settings,
   ChevronDown,
 } from "lucide-react";
 import logo from "../Pictures/logo1.jpeg";
-
-// import "../global.css";
+import TurnosMotorista from "../components/TurnosMotorista";
+import ReabastecimentosMotorista from "../components/ReabastecimentosMotorista";
 import "../css/paginaMotorista.css";
-/* ═══════════════════════════════════════════════
-   NAV
-   ═══════════════════════════════════════════════ */
+
 const NAV = [
   { id: "turno", label: "Requisitar Táxi", Icon: CarFront, tag: "Turno" },
   { id: "pedidos", label: "Pedidos de Táxi", Icon: Navigation, tag: "Pedidos" },
@@ -37,14 +32,64 @@ const NAV = [
   { id: "reabastecimento", label: "Reabastecimento", Icon: Fuel, tag: "Táxi" },
 ];
 
-/* ═══════════════════════════════════════════════
-   COMPONENTE PRINCIPAL
-   ═══════════════════════════════════════════════ */
 export default function PaginaMotorista() {
   const navigate = useNavigate();
   const [active, setActive] = useState("turno");
   const [profileOpen, setProfileOpen] = useState(false);
+  const [turnoAtivo, setTurnoAtivo] = useState(null);
   const current = NAV.find((n) => n.id === active);
+
+  useEffect(() => {
+    async function fetchTurnoAtivo() {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:8080/api/turnos/meus", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
+        const lista = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.turnos)
+            ? data.turnos
+            : Array.isArray(data?.data)
+              ? data.data
+              : [];
+        const agora = new Date();
+        const ativo = lista.find((t) => {
+          if (t.estado === "cancelado" || t.status === "cancelado")
+            return false;
+          const inicio = new Date(t.data_inicio || t.inicio);
+          const fim = new Date(t.data_fim || t.fim);
+          return inicio <= agora && fim >= agora;
+        });
+        setTurnoAtivo(ativo || null);
+      } catch {
+        setTurnoAtivo(null);
+      }
+    }
+    fetchTurnoAtivo();
+    const interval = setInterval(fetchTurnoAtivo, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  function getTaxiLabel(turno) {
+    const taxi = turno?.taxi || turno?.taxi_id;
+    if (!taxi) return "Táxi não associado";
+    if (typeof taxi === "string") return taxi;
+    return (
+      [taxi.matricula, taxi.marca, taxi.modelo].filter(Boolean).join(" · ") ||
+      "Táxi"
+    );
+  }
+
+  function terminarSessao() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("cliente");
+    localStorage.removeItem("role");
+    setProfileOpen(false);
+    navigate("/");
+  }
 
   return (
     <div
@@ -55,7 +100,6 @@ export default function PaginaMotorista() {
         color: "var(--branco)",
       }}
     >
-      {/* ── Fundo decorativo ── */}
       <div className="fundo-grelha" />
       <div
         style={{
@@ -92,7 +136,6 @@ export default function PaginaMotorista() {
         />
       </div>
 
-      {/* ── HEADER ── */}
       <header
         style={{
           position: "fixed",
@@ -109,7 +152,6 @@ export default function PaginaMotorista() {
           borderBottom: "1px solid rgba(26,110,255,0.15)",
         }}
       >
-        {/* Logo */}
         <div
           style={{
             display: "flex",
@@ -155,7 +197,6 @@ export default function PaginaMotorista() {
           </div>
         </div>
 
-        {/* Lado direito: badge + avatar */}
         <div
           style={{
             display: "flex",
@@ -275,10 +316,7 @@ export default function PaginaMotorista() {
                   <div className="perfil-menu-divisor" />
                   <button
                     className="perfil-menu-item danger"
-                    onClick={() => {
-                      setProfileOpen(false);
-                      navigate("/");
-                    }}
+                    onClick={terminarSessao}
                     type="button"
                   >
                     <span className="perfil-menu-icone">
@@ -293,7 +331,6 @@ export default function PaginaMotorista() {
         </div>
       </header>
 
-      {/* ── LAYOUT ── */}
       <div
         style={{
           display: "flex",
@@ -303,7 +340,6 @@ export default function PaginaMotorista() {
           minHeight: "100vh",
         }}
       >
-        {/* ── SIDEBAR ── */}
         <aside
           style={{
             width: 290,
@@ -352,7 +388,7 @@ export default function PaginaMotorista() {
                     borderRadius: 12,
                     border: "none",
                     fontSize: "1.1rem",
-                    fontWeight: isActive ? 500 : 500,
+                    fontWeight: 500,
                     textAlign: "left",
                     cursor: "pointer",
                     transition: "all 0.2s",
@@ -389,15 +425,18 @@ export default function PaginaMotorista() {
             })}
           </nav>
 
-          {/* Turno ativo (mock) */}
           <div
             style={{
               marginTop: "auto",
               padding: 16,
               borderRadius: 16,
-              background:
-                "linear-gradient(135deg, rgba(0,232,135,0.08), rgba(26,110,255,0.05))",
-              border: "1px solid rgba(0,232,135,0.12)",
+              background: turnoAtivo
+                ? "linear-gradient(135deg, rgba(0,232,135,0.1), rgba(0,232,135,0.04))"
+                : "linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))",
+              border: turnoAtivo
+                ? "1px solid rgba(0,232,135,0.22)"
+                : "1px solid rgba(255,255,255,0.07)",
+              transition: "all 0.4s ease",
             }}
           >
             <div
@@ -405,66 +444,117 @@ export default function PaginaMotorista() {
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
-                marginBottom: 8,
+                marginBottom: 10,
               }}
             >
               <span
                 style={{
-                  width: 9,
-                  height: 9,
+                  width: 8,
+                  height: 8,
                   borderRadius: "50%",
-                  background: "var(--verde)",
-                  boxShadow: "0 0 8px var(--verde)",
-                  animation: "piscar 2s ease infinite",
+                  background: turnoAtivo ? "var(--verde)" : "var(--cinza)",
+                  boxShadow: turnoAtivo ? "0 0 8px var(--verde)" : "none",
+                  animation: turnoAtivo ? "piscar 2s ease infinite" : "none",
+                  flexShrink: 0,
                 }}
               />
               <span
                 style={{
-                  fontSize: "0.80rem",
-                  fontWeight: 700,
-                  color: "var(--verde)",
+                  fontSize: "0.72rem",
+                  fontWeight: 800,
+                  color: turnoAtivo ? "var(--verde)" : "var(--cinza)",
                   textTransform: "uppercase",
-                  letterSpacing: "0.1em",
+                  letterSpacing: "0.12em",
                 }}
               >
-                Turno Ativo
+                {turnoAtivo ? "Turno ativo" : "Sem turno ativo"}
               </span>
             </div>
-            <p
-              style={{
-                fontSize: "0.9rem",
-                fontWeight: 600,
-                color: "var(--branco)",
-              }}
-            >
-              Mercedes Classe E
-            </p>
-            <p
-              style={{
-                fontSize: "0.7rem",
-                color: "var(--cinza)",
-                marginTop: 2,
-              }}
-            >
-              AA-23-BB · Luxuoso
-            </p>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                marginTop: 10,
-                fontSize: "0.7rem",
-                color: "var(--cinza)",
-              }}
-            >
-              <Clock size={12} /> 14:00 — 22:00
-            </div>
+
+            {turnoAtivo ? (
+              <>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 6,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: 9,
+                      background: "rgba(0,232,135,0.12)",
+                      border: "1px solid rgba(0,232,135,0.22)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <CarFront size={15} style={{ color: "var(--verde)" }} />
+                  </div>
+                  <span
+                    style={{
+                      fontSize: "0.88rem",
+                      fontWeight: 700,
+                      color: "var(--branco)",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {getTaxiLabel(turnoAtivo)}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: "0.72rem",
+                    color: "var(--cinza)",
+                    marginTop: 8,
+                    paddingTop: 8,
+                    borderTop: "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
+                  <Clock size={11} style={{ flexShrink: 0 }} />
+                  {new Date(
+                    turnoAtivo.data_inicio || turnoAtivo.inicio,
+                  ).toLocaleTimeString("pt-PT", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}{" "}
+                  →{" "}
+                  {new Date(
+                    turnoAtivo.data_fim || turnoAtivo.fim,
+                  ).toLocaleTimeString("pt-PT", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
+              </>
+            ) : (
+              <p
+                style={{
+                  fontSize: "0.82rem",
+                  color: "var(--cinza)",
+                  lineHeight: 1.5,
+                  margin: 0,
+                }}
+              >
+                Nenhum turno em curso.
+                <br />
+                <span style={{ fontSize: "0.72rem", opacity: 0.7 }}>
+                  Crie um turno para começar.
+                </span>
+              </p>
+            )}
           </div>
         </aside>
 
-        {/* ── MAIN ── */}
-        <main className="motorista-main" key={active}>          {/* Cabeçalho da secção */}
+        <main className="motorista-main" key={active}>
           <div style={{ marginBottom: 32, animation: "subir 0.5s ease both" }}>
             <div
               style={{
@@ -524,7 +614,7 @@ export default function PaginaMotorista() {
           </div>
 
           <div style={{ animation: "subir 0.5s 0.08s ease both" }}>
-            {active === "turno" && <SecTurno />}
+            {active === "turno" && <TurnosMotorista />}
             {active === "pedidos" && <SecPedidos />}
             {active === "viagem" && (
               <SecPlaceholder
@@ -540,13 +630,7 @@ export default function PaginaMotorista() {
                 desc="Aqui poderá emitir e consultar as faturas das suas viagens."
               />
             )}
-            {active === "reabastecimento" && (
-              <SecPlaceholder
-                icone="⛽"
-                titulo="Reabastecimento"
-                desc="Aqui poderá registar reabastecimentos de combustível ou carregamentos elétricos."
-              />
-            )}
+            {active === "reabastecimento" && <ReabastecimentosMotorista />}
           </div>
         </main>
       </div>
@@ -554,38 +638,6 @@ export default function PaginaMotorista() {
   );
 }
 
-/* ═══════════════════════════════════════════════
-   US5 — REQUISITAR TÁXI PARA TURNO
-   ═══════════════════════════════════════════════ */
-function SecTurno() {
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-      <MotCard
-        icon={<Calendar size={18} />}
-        gradient="linear-gradient(135deg, var(--verde), #00a85e)"
-        title="Novo Turno"
-      >
-        <MotAction Icon={PlusCircle} label="Definir período do turno" accent />
-        <MotAction Icon={Clock} label="Verificar disponibilidade" />
-        <MotAction Icon={CarFront} label="Escolher táxi disponível" accent />
-      </MotCard>
-
-      <MotCard
-        icon={<ListOrdered size={18} />}
-        gradient="linear-gradient(135deg, var(--azul), var(--azul-claro))"
-        title="Os Meus Turnos"
-      >
-        <MotAction Icon={Clock} label="Ver turnos ativos" />
-        <MotAction Icon={Calendar} label="Histórico de turnos" />
-        <MotAction Icon={CarFront} label="Táxis utilizados" />
-      </MotCard>
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════
-   US7 — VER / ACEITAR PEDIDOS DE TÁXI
-   ═══════════════════════════════════════════════ */
 function SecPedidos() {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
@@ -611,9 +663,6 @@ function SecPedidos() {
   );
 }
 
-/* ═══════════════════════════════════════════════
-   PLACEHOLDER PARA SECÇÕES EM DESENVOLVIMENTO
-   ═══════════════════════════════════════════════ */
 function SecPlaceholder({ icone, titulo, desc }) {
   return (
     <div
@@ -642,13 +691,9 @@ function SecPlaceholder({ icone, titulo, desc }) {
   );
 }
 
-/* ═══════════════════════════════════════════════
-   COMPONENTES BASE
-   ═══════════════════════════════════════════════ */
 function MotCard({ icon, gradient, title, children }) {
   return (
     <div className="card-feat" style={{ padding: 24 }}>
-      {/* Linha topo */}
       <div
         style={{
           position: "absolute",

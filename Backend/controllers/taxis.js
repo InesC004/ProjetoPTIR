@@ -11,7 +11,7 @@ exports.create = async (req, res) => {
       return res.status(400).json({ message: 'Todos os campos são obrigatórios.' })
     }
 
-    const regexMatricula = /^[A-Z]{2}-\d{2}-[A-Z]{2}$|^\d{2}-\d{2}-[A-Z]{2}$|^\d{2}-[A-Z]{2}-\d{2}$/
+    const regexMatricula = /^([A-Z]{2}-\d{2}-\d{2}|[A-Z]{2}-\d{2}-[A-Z]{2}|\d{2}-\d{2}-[A-Z]{2}|\d{2}-[A-Z]{2}-\d{2})$/;
     if (!regexMatricula.test(matricula)) {
       return res.status(400).json({ message: 'Matrícula inválida.' })
     }
@@ -123,7 +123,7 @@ exports.update = async (req, res) => {
     const { matricula, modelo, marca, ano_compra, tipo_motor, nivel_conforto } = req.body
 
     if (matricula) {
-      const regexMatricula = /^[A-Z]{2}-\d{2}-[A-Z]{2}$|^\d{2}-\d{2}-[A-Z]{2}$|^\d{2}-[A-Z]{2}-\d{2}$/
+      const regexMatricula = /^([A-Z]{2}-\d{2}-\d{2}|[A-Z]{2}-\d{2}-[A-Z]{2}|\d{2}-\d{2}-[A-Z]{2}|\d{2}-[A-Z]{2}-\d{2})$/;
       if (!regexMatricula.test(matricula)) {
         return res.status(400).json({ message: 'Matrícula inválida.' })
       }
