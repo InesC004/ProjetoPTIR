@@ -12,7 +12,6 @@ const viagemSchema = new mongoose.Schema({
   km: { type: Number },
   numero_pessoas: { type: Number, required: true },
   preco_total: { type: Number },
-  estado: { type: String, enum: ['aguardando_inicio','em_curso','concluida','cancelada'], default: 'aguardando_inicio' }
 })
 
 module.exports = mongoose.model('viagem', viagemSchema)
