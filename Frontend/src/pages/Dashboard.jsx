@@ -1017,7 +1017,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="popup-motorista-acoes">
+            <div className="popup-acoes">
               <button
                 className="btn-rejeitar"
                 onClick={() => responderMotorista("rejeitar")}

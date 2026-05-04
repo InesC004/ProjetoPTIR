@@ -2210,15 +2210,43 @@ input[type="number"].input-morada {
   margin-bottom: 14px;
 }
 
-.popup-motorista-acoes {
-  grid-template-columns: 1fr 1fr;
+.popup-acoes {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
 }
 
-.btn-rejeitar,
+.btn-rejeitar {
+  flex: 1;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #ffb3b3;
+  background: #fff5f5;
+  color: #e53935;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-rejeitar:hover {
+  background: #ffe5e5;
+}
+
 .btn-aceitar {
-  height: 42px;
-  border-radius: 13px;
-  font-size: 0.82rem;
+  flex: 1;
+  height: 44px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #00c96e, #00e887);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-aceitar:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 201, 110, 0.3);
 }
 
 @media (max-width: 600px) {
