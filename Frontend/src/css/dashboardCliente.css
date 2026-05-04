@@ -4900,3 +4900,103 @@
     height: 300px;
   }
 }
+
+/* =========================
+   CARD PEDIDO ATIVO
+========================= */
+.pedido-estado-card {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 16px;
+  padding: 18px 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ffffff, #f4f7fb);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.3s ease;
+}
+
+/* topo */
+.pedido-estado-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pedido-estado-titulo {
+  font-size: 18px;
+  font-weight: 800;
+  color: #07142a;
+}
+
+/* badge */
+.pedido-estado-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+/* cores por estado */
+.pedido-estado-badge.pendente {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ff9800;
+}
+
+.pedido-estado-badge.aceite {
+  background: rgba(33, 150, 243, 0.15);
+  color: #2196f3;
+}
+
+.pedido-estado-badge.confirmado {
+  background: rgba(0, 200, 83, 0.15);
+  color: #00c853;
+}
+
+.pedido-estado-badge.cancelado {
+  background: rgba(244, 67, 54, 0.15);
+  color: #f44336;
+}
+
+/* texto */
+.pedido-estado-texto {
+  font-size: 14px;
+  color: #5b6472;
+  margin-top: 4px;
+}
+
+/* botão */
+.pedido-estado-card .btn-localizacao {
+  width: 100%;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+/* =========================
+   RESPONSIVO
+========================= */
+@media (max-width: 768px) {
+  .pedido-estado-card {
+    max-width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .pedido-estado-titulo {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pedido-estado-card {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .pedido-estado-texto {
+    font-size: 13px;
+  }
+}

@@ -327,8 +327,10 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL: Dashboard
 // ═══════════════════════════════════════════════════════════════════════════════
+
 export default function Dashboard() {
   const apiMapa = useRef(null);
+
   const [partida, setPartida] = useState(null);
   const [moradaPartida, setMoradaPartida] = useState("");
   const [destino, setDestino] = useState(null);
@@ -336,38 +338,105 @@ export default function Dashboard() {
   const [aLocalizarGPS, setALocalizarGPS] = useState(false);
   const [dadosRota, setDadosRota] = useState(null);
   const [aCalcular, setACalcular] = useState(false);
+
   const [nivelConforto, setNivelConforto] = useState("basico");
   const [numeroPessoas, setNumeroPessoas] = useState(1);
   const [pedidoAtual, setPedidoAtual] = useState(null);
   const [aPedir, setAPedir] = useState(false);
   const [erroPedido, setErroPedido] = useState("");
+
+  useEffect(() => {
+    async function carregarPedidoAtivo() {
+      try {
+        const token = localStorage.getItem("token");
+
+        const resposta = await fetch(
+          "http://localhost:8080/api/pedidos/ativo",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        const dados = await resposta.json();
+
+        if (dados.success && dados.pedido) {
+          setPedidoAtual(dados.pedido);
+        }
+      } catch {
+        console.log("Erro ao carregar pedido ativo");
+      }
+    }
+
+    carregarPedidoAtivo();
+  }, []);
+
+  useEffect(() => {
+    if (!pedidoAtual) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch(
+          `http://localhost:8080/api/pedidos/${pedidoAtual._id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        const data = await res.json();
+
+        if (data.success) {
+          setPedidoAtual(data.pedido);
+        }
+      } catch {
+        console.log("Erro ao atualizar pedido");
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [pedidoAtual]);
+
   useEffect(() => {
     if (!partida || !destino) {
       setDadosRota(null);
       return;
     }
+
     setACalcular(true);
+
     obterRota(partida[1], partida[0], destino[1], destino[0])
-      .then(({ distanciaM, duracaoS }) =>
-        setDadosRota({ distanciaM, duracaoS }),
-      )
+      .then(({ distanciaM, duracaoS }) => {
+        setDadosRota({ distanciaM, duracaoS });
+      })
       .catch(() => {
         const R = 6371;
         const dLat = ((destino[0] - partida[0]) * Math.PI) / 180;
         const dLng = ((destino[1] - partida[1]) * Math.PI) / 180;
+
         const a =
           Math.sin(dLat / 2) ** 2 +
           Math.cos((partida[0] * Math.PI) / 180) *
             Math.cos((destino[0] * Math.PI) / 180) *
             Math.sin(dLng / 2) ** 2;
+
         const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        setDadosRota({ distanciaM: km * 1000, duracaoS: km * 2.5 * 60 });
+
+        setDadosRota({
+          distanciaM: km * 1000,
+          duracaoS: km * 2.5 * 60,
+        });
       })
       .finally(() => setACalcular(false));
   }, [partida, destino]);
 
   const fmtDist = (m) =>
     m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1)} km`;
+
   const fmtTempo = (s) => {
     const m = Math.round(s / 60);
     return m < 60 ? `${m} min` : `${Math.floor(m / 60)}h ${m % 60}m`;
@@ -375,11 +444,13 @@ export default function Dashboard() {
 
   const semPartida = !moradaPartida;
   const semDestino = !moradaDestino;
+
   const textoDica = semPartida
     ? "1º clique = Partida  ·  2º clique = Destino"
     : semDestino
       ? "Clique para definir o destino"
       : "Arraste os marcadores para ajustar";
+
   const corDica = semPartida ? "#00e887" : semDestino ? "#3d8bff" : "#c64dff";
 
   function reiniciar() {
@@ -393,11 +464,15 @@ export default function Dashboard() {
 
   async function usarLocalizacaoAtual() {
     setALocalizarGPS(true);
+
     navigator.geolocation?.getCurrentPosition(
       async ({ coords: { latitude: lat, longitude: lng } }) => {
         if (moradaPartida) reiniciar();
+
         const morada = await coordenadasParaMorada(lat, lng);
+
         await apiMapa.current?.colocarPartidaNaLocalizacao(lat, lng);
+
         setPartida([lat, lng]);
         setMoradaPartida(morada);
         setALocalizarGPS(false);
@@ -405,6 +480,7 @@ export default function Dashboard() {
       () => setALocalizarGPS(false),
     );
   }
+
   async function pedirViagem() {
     setErroPedido("");
 
@@ -440,12 +516,18 @@ export default function Dashboard() {
       const dados = texto ? JSON.parse(texto) : {};
 
       if (!resposta.ok) {
-        throw new Error(dados.message || "Erro ao pedir viagem.");
+        setErroPedido(dados.message || "Erro ao pedir viagem.");
+
+        if (dados.pedido) {
+          setPedidoAtual(dados.pedido);
+        }
+
+        return;
       }
 
       setPedidoAtual(dados.pedido);
-    } catch (erro) {
-      setErroPedido(erro.message);
+    } catch {
+      setErroPedido("Erro de ligação ao servidor.");
     } finally {
       setAPedir(false);
     }
@@ -468,47 +550,11 @@ export default function Dashboard() {
 
     setPedidoAtual(null);
   }
-  const funcionalidades = [
-    {
-      n: "01",
-      icone: "📍",
-      titulo: "Rastreio em Tempo Real",
-      desc: "Acompanhe o seu motorista no mapa ao segundo. Saiba exatamente quando ele chega.",
-    },
-    {
-      n: "02",
-      icone: "✅",
-      titulo: "Motoristas Verificados",
-      desc: "Todos os motoristas passam por verificação de antecedentes e formação de qualidade.",
-    },
-    {
-      n: "03",
-      icone: "🛡️",
-      titulo: "Viagem Segura",
-      desc: "Partilhe a sua rota com alguém de confiança e viaje com total tranquilidade.",
-    },
-  ];
-  const passos = [
-    {
-      n: "1",
-      titulo: "Defina no mapa",
-      desc: "1º clique = partida · 2º clique = destino, diretamente no mapa",
-    },
-    {
-      n: "2",
-      titulo: "Encontramos motorista",
-      desc: "Ligamos ao motorista disponível mais próximo de si",
-    },
-    {
-      n: "3",
-      titulo: "Aproveite a viagem",
-      desc: "Relaxe e chegue com conforto e segurança ao destino",
-    },
-  ];
 
   return (
     <div className="dash-pagina">
       <div className="fundo-grelha" />
+
       <div className="dash-orbs">
         <div className="dash-orb-1" />
         <div className="dash-orb-2" />
@@ -523,8 +569,8 @@ export default function Dashboard() {
             <span className="linha-1">Chegue a qualquer</span>
             <br />
             <span className="titulo-gradiente">lado em minutos</span>
-            <br />
           </h1>
+
           <p className="descricao animar-2">
             Clique no mapa para marcar a partida e o destino. A rota é calculada
             por estradas reais em tempo real.
@@ -534,12 +580,17 @@ export default function Dashboard() {
             <div className="step-dots" aria-hidden="true">
               <div className={`step-dot ${partida ? "feito" : "ativo"}`}>1</div>
               <div className={`step-line ${partida ? "feito" : ""}`} />
+
               <div
-                className={`step-dot ${destino ? "feito-rosa" : partida ? "ativo" : ""}`}
+                className={`step-dot ${
+                  destino ? "feito-rosa" : partida ? "ativo" : ""
+                }`}
               >
                 2
               </div>
+
               <div className={`step-line ${destino ? "feito-2" : ""}`} />
+
               <div className={`step-dot ${partida && destino ? "ativo" : ""}`}>
                 3
               </div>
@@ -548,7 +599,7 @@ export default function Dashboard() {
             <button
               className="btn-localizacao"
               onClick={usarLocalizacaoAtual}
-              disabled={aLocalizarGPS}
+              disabled={aLocalizarGPS || pedidoAtual}
             >
               <span>{aLocalizarGPS ? "⌛" : "📡"}</span>
               {aLocalizarGPS
@@ -560,13 +611,15 @@ export default function Dashboard() {
             <div className="linha-input">
               <div className="ponto ponto-verde" />
               <input
-                className={`input-morada${moradaPartida ? " preenchido-verde" : ""}`}
+                className={`input-morada${
+                  moradaPartida ? " preenchido-verde" : ""
+                }`}
                 type="text"
                 placeholder="Clique no mapa (1º clique)…"
                 value={moradaPartida}
                 readOnly
               />
-              {moradaPartida && (
+              {moradaPartida && !pedidoAtual && (
                 <button
                   className="btn-limpar"
                   type="button"
@@ -584,7 +637,9 @@ export default function Dashboard() {
             <div className="linha-input">
               <div className="ponto ponto-azul" />
               <input
-                className={`input-morada${moradaDestino ? " preenchido-azul" : ""}`}
+                className={`input-morada${
+                  moradaDestino ? " preenchido-azul" : ""
+                }`}
                 type="text"
                 placeholder={
                   moradaPartida
@@ -594,7 +649,7 @@ export default function Dashboard() {
                 value={moradaDestino}
                 readOnly
               />
-              {moradaDestino && (
+              {moradaDestino && !pedidoAtual && (
                 <button
                   className="btn-limpar"
                   type="button"
@@ -615,6 +670,7 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+
             {dadosRota && !aCalcular && (
               <div className="faixa-rota">
                 <div className="faixa-item">
@@ -623,6 +679,7 @@ export default function Dashboard() {
                   </div>
                   <div className="faixa-label">Distância</div>
                 </div>
+
                 <div className="faixa-item">
                   <div className="faixa-valor ciano">
                     {fmtTempo(dadosRota.duracaoS)}
@@ -639,6 +696,7 @@ export default function Dashboard() {
                 value={nivelConforto}
                 onChange={(e) => setNivelConforto(e.target.value)}
                 style={{ paddingLeft: 16 }}
+                disabled={pedidoAtual}
               >
                 <option value="basico">Básico</option>
                 <option value="luxuoso">Luxuoso</option>
@@ -655,6 +713,7 @@ export default function Dashboard() {
                 value={numeroPessoas}
                 onChange={(e) => setNumeroPessoas(Number(e.target.value))}
                 style={{ paddingLeft: 16 }}
+                disabled={pedidoAtual}
               />
             </div>
 
@@ -674,7 +733,7 @@ export default function Dashboard() {
                     : aPedir
                       ? "A pedir viagem..."
                       : pedidoAtual
-                        ? "Pedido enviado"
+                        ? "Pedido ativo"
                         : "→ Pedir Viagem"}
             </button>
 
@@ -685,17 +744,23 @@ export default function Dashboard() {
             )}
 
             {pedidoAtual && (
-              <div style={{ marginTop: 14 }}>
-                <p style={{ color: "#07142a", fontWeight: 800 }}>
-                  Pedido enviado. A aguardar motorista...
+              <div className="pedido-estado-card">
+                <div className="pedido-estado-topo">
+                  <div className="pedido-estado-titulo">Pedido ativo</div>
+
+                  <div className={`pedido-estado-badge ${pedidoAtual.estado}`}>
+                    {pedidoAtual.estado}
+                  </div>
+                </div>
+
+                <p className="pedido-estado-texto">
+                  {pedidoAtual.estado === "pendente" &&
+                    "A aguardar motorista..."}
+                  {pedidoAtual.estado === "aceite" && "Motorista encontrado!"}
+                  {pedidoAtual.estado === "confirmado" && "Viagem confirmada"}
                 </p>
 
-                <button
-                  type="button"
-                  className="btn-localizacao"
-                  onClick={cancelarPedido}
-                  style={{ marginTop: 8 }}
-                >
+                <button className="btn-localizacao" onClick={cancelarPedido}>
                   Cancelar pedido
                 </button>
               </div>
@@ -716,6 +781,7 @@ export default function Dashboard() {
                 setMoradaDestino(m);
               }}
             />
+
             <div className="barra-topo-mapa">
               <div className="dica-mapa">
                 <div
@@ -727,44 +793,55 @@ export default function Dashboard() {
                 />
                 {textoDica}
               </div>
-              {(moradaPartida || moradaDestino) && (
+
+              {(moradaPartida || moradaDestino) && !pedidoAtual && (
                 <button className="btn-recomecar" onClick={reiniciar}>
                   ↺ Recomeçar
                 </button>
               )}
             </div>
+
             {aCalcular && (
               <div className="a-calcular">
                 <div className="spinner" />A calcular rota…
               </div>
             )}
+
             {dadosRota && !aCalcular && (
               <div className="card-rota">
                 <div className="rc-label">Tempo de viagem</div>
                 <div className="rc-valor">{fmtTempo(dadosRota.duracaoS)}</div>
+
                 <div className="rc-label" style={{ marginTop: 8 }}>
                   Distância
                 </div>
                 <div className="rc-valor2">{fmtDist(dadosRota.distanciaM)}</div>
               </div>
             )}
+
             <div className="barra-inferior-mapa">
               <div className="barra-esq">
                 <div className="barra-icone">
                   {partida && destino ? "🗺" : partida ? "🏁" : "📍"}
                 </div>
+
                 <div>
                   <div className="barra-titulo">
-                    {partida && destino
-                      ? "Rota calculada · OpenRouteService"
-                      : partida
-                        ? "Defina o destino no mapa"
-                        : "1º clique = Partida · 2º clique = Destino"}
+                    {pedidoAtual
+                      ? `Pedido ${pedidoAtual.estado}`
+                      : partida && destino
+                        ? "Rota calculada · OpenRouteService"
+                        : partida
+                          ? "Defina o destino no mapa"
+                          : "1º clique = Partida · 2º clique = Destino"}
                   </div>
+
                   <div className="barra-sub">
-                    {partida && destino
-                      ? "Rota real por estradas · Arraste os marcadores para ajustar"
-                      : "OpenStreetMap · Leaflet · ORS"}
+                    {pedidoAtual
+                      ? "Tem um pedido ativo. Cancele ou termine a viagem para pedir outra."
+                      : partida && destino
+                        ? "Rota real por estradas · Arraste os marcadores para ajustar"
+                        : "OpenStreetMap · Leaflet · ORS"}
                   </div>
                 </div>
               </div>
@@ -772,84 +849,6 @@ export default function Dashboard() {
           </div>
         </div>
       </section>
-
-      <section className="secao">
-        <div className="secao-centro">
-          <span className="secao-rotulo">Porquê TakeCab</span>
-          <h2 className="secao-titulo">
-            A forma mais inteligente
-            <br />
-            de se mover.
-          </h2>
-        </div>
-        <div className="grelha-3">
-          {funcionalidades.map((f) => (
-            <div key={f.n} className="card-feat">
-              <div className="feat-num">{f.n}</div>
-              <div className="feat-icone">{f.icone}</div>
-              <div className="feat-titulo">{f.titulo}</div>
-              <div className="feat-desc">{f.desc}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="secao" style={{ paddingTop: 0 }}>
-        <div className="secao-centro">
-          <span className="secao-rotulo" style={{ color: "var(--verde)" }}>
-            Processo simples
-          </span>
-          <h2 className="secao-titulo">Como funciona</h2>
-        </div>
-        <div className="grelha-3">
-          {passos.map((p) => (
-            <div key={p.n} className="card-passo">
-              <div className="passo-num">{p.n}</div>
-              <div className="passo-titulo">{p.titulo}</div>
-              <div className="passo-desc">{p.desc}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <div className="cta-wrap">
-        <div className="cta-box">
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              right: 0,
-              width: 240,
-              height: 240,
-              background: "rgba(26,110,255,.16)",
-              borderRadius: "50%",
-              filter: "blur(80px)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              width: 200,
-              height: 200,
-              background: "rgba(198,77,255,.13)",
-              borderRadius: "50%",
-              filter: "blur(60px)",
-            }}
-          />
-          <div style={{ position: "relative" }}>
-            <h2 className="cta-titulo">Pronto para partir?</h2>
-            <p className="cta-desc">
-              A sua próxima viagem está a um toque de distância. Peça uma
-              viagem!
-            </p>
-            <div className="cta-botoes">
-              <button className="btn-branco">Pedir Viagem</button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
