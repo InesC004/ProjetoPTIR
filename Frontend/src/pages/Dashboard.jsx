@@ -383,7 +383,16 @@ export default function Dashboard() {
         const data = await res.json();
 
         if (data.success) {
-          setPedidoAtual(data.pedido);
+          setPedidoAtual({
+            ...data.pedido,
+            motorista_distancia_km: data.motorista_distancia_km,
+            motorista_tempo_chegada_min: data.motorista_tempo_chegada_min,
+            viagem_distancia_km: data.viagem_distancia_km,
+            viagem_tempo_estimado_min: data.viagem_tempo_estimado_min,
+            custo_estimado: data.viagem_tempo_estimado_min
+              ? (Number(data.viagem_tempo_estimado_min) * 0.75).toFixed(2)
+              : null,
+          });
         }
       } catch {
         console.log("Erro ao atualizar pedido");
@@ -516,13 +525,20 @@ export default function Dashboard() {
 
     const token = localStorage.getItem("token");
 
-    await fetch(
+    const res = await fetch(
       `http://localhost:8080/api/pedidos/${pedidoAtual._id}/cancelar`,
       {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
       },
     );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setErroPedido(data.message || "Erro ao cancelar pedido.");
+      return;
+    }
 
     setPedidoAtual(null);
   }
@@ -791,7 +807,9 @@ export default function Dashboard() {
                   {pedidoAtual.estado === "confirmado" && "Viagem confirmada"}
                 </p>
 
-                {pedidoAtual.estado !== "confirmado" && (
+                {["pendente", "aceite", "confirmado"].includes(
+                  pedidoAtual.estado,
+                ) && (
                   <button className="btn-localizacao" onClick={cancelarPedido}>
                     Cancelar pedido
                   </button>

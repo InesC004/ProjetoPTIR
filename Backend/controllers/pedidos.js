@@ -112,7 +112,7 @@ exports.cancelar = async (req, res) => {
       });
     }
 
-    if (!["pendente", "aceite"].includes(pedido.estado)) {
+    if (!["pendente", "aceite", "confirmado"].includes(pedido.estado)) {
       return res.status(400).json({
         success: false,
         message: "Pedido não pode ser cancelado neste estado.",
