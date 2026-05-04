@@ -135,7 +135,11 @@ export default function PedidosMotorista() {
 
     try {
       const data = await api.pedidos.aceitar(id);
-      const pedidoAceite = data?.pedido || { ...pedido, estado: "aceite" };
+      const pedidoAceite = {
+        ...(data?.pedido || {}),
+        ...pedido,
+        estado: data?.pedido?.estado || "aceite",
+        };
 
       setPedidos((prev) => prev.filter((p) => getId(p) !== id));
       setAceites((prev) => [
