@@ -82,12 +82,18 @@ const auth = {
 
   /** Registo de novo cliente. */
   async registarCliente(payload) {
-    return request("/api/clientes/register", { method: "POST", body: payload });
+    return request("/api/clientes/register", {
+      method: "POST",
+      body: payload,
+    });
   },
 
   /** Completar perfil Auth0 de cliente. */
   async completarPerfilCliente(payload) {
-    return request("/api/clientes/completar", { method: "PUT", body: payload });
+    return request("/api/clientes/completar", {
+      method: "PUT",
+      body: payload,
+    });
   },
 };
 
@@ -98,7 +104,9 @@ const auth = {
 const clientes = {
   /** Obter perfil do cliente autenticado. */
   async obterPerfil() {
-    return request("/api/clientes/perfil", { auth: true });
+    return request("/api/clientes/perfil", {
+      auth: true,
+    });
   },
 
   /** Atualizar perfil do cliente autenticado. */
@@ -118,7 +126,9 @@ const clientes = {
 const motoristas = {
   /** Listar todos os motoristas (requer token de gestor). */
   async listar() {
-    return request("/api/motoristas/todos", { auth: true });
+    return request("/api/motoristas/todos", {
+      auth: true,
+    });
   },
 
   /** Criar motorista (requer token de gestor). */
@@ -151,9 +161,12 @@ const motoristas = {
 // =============================================================================
 // Táxis
 // =============================================================================
+
 const taxis = {
   async listar() {
-    return request("/api/taxis/todos", { auth: true });
+    return request("/api/taxis/todos", {
+      auth: true,
+    });
   },
 
   async criar(payload) {
@@ -180,7 +193,6 @@ const taxis = {
   },
 };
 
-
 // =============================================================================
 // Preços
 // =============================================================================
@@ -193,12 +205,18 @@ const precos = {
 
   /** Criar novo preço. */
   async criar(payload) {
-    return request("/api/precos", { method: "POST", body: payload });
+    return request("/api/precos", {
+      method: "POST",
+      body: payload,
+    });
   },
 
   /** Atualizar preço por ID. */
   async atualizar(id, payload) {
-    return request(`/api/precos/${id}`, { method: "PUT", body: payload });
+    return request(`/api/precos/${id}`, {
+      method: "PUT",
+      body: payload,
+    });
   },
 };
 
@@ -238,6 +256,13 @@ const pedidos = {
       auth: true,
     });
   },
+
+  /** Obter um pedido específico pelo ID. */
+  async obter(id) {
+    return request(`/api/pedido/${id}`, {
+      auth: true,
+    });
+  },
 };
 
 // =============================================================================
@@ -252,8 +277,11 @@ const externos = {
   async resolverCodigoPostal(codigoPostal) {
     const [cp4, cp3] = codigoPostal.split("-");
     if (!cp4 || !cp3) throw new Error("Código postal inválido.");
+
     const res = await fetch(`https://json.geoapi.pt/cp/${cp4}-${cp3}`);
+
     if (!res.ok) throw new Error("Código postal não encontrado.");
+
     return res.json(); // { concelho, distrito, ... }
   },
 
@@ -263,8 +291,11 @@ const externos = {
    */
   async geocodificarInverso(lat, lng) {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`;
+
     const res = await fetch(url);
+
     if (!res.ok) throw new Error("Erro ao obter morada.");
+
     return res.json();
   },
 
@@ -276,8 +307,11 @@ const externos = {
     const url =
       `https://api.openrouteservice.org/v2/directions/driving-car` +
       `?api_key=${apiKey}&start=${lngOrigem},${latOrigem}&end=${lngDestino},${latDestino}`;
+
     const res = await fetch(url);
+
     if (!res.ok) throw new Error("Erro ao calcular rota.");
+
     return res.json();
   },
 };
@@ -298,7 +332,9 @@ const gestores = {
 
   /** Listar todos os gestores. */
   async listar() {
-    return request("/api/gestores/todos", { auth: true });
+    return request("/api/gestores/todos", {
+      auth: true,
+    });
   },
 };
 

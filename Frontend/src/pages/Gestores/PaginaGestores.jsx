@@ -12,7 +12,6 @@ import {
   Trash2,
   DollarSign,
   Calculator,
-  ChevronRight,
 } from "lucide-react";
 
 import logo from "../../Pictures/logo1.jpeg";
@@ -133,16 +132,12 @@ export default function PaginaGestores() {
               />
             )}
 
-
-
             {active === "relatorios" && (
               <PageHead
                 t="Relatórios"
                 s="Visualização de relatórios da empresa."
               />
             )}
-
-
           </div>
 
           <div className="pg-content">
@@ -171,14 +166,39 @@ export default function PaginaGestores() {
       </div>
 
       <RegistarTaxi aberto={modalTaxi} onFechar={() => setModalTaxi(false)} />
-      <RegistarMotorista aberto={modalMotorista} onFechar={() => setModalMotorista(false)} />
-      <EditarTaxi aberto={modalEditTaxi} onFechar={() => setModalEditTaxi(false)} />
-      <EditarMotorista aberto={modalEditMotorista} onFechar={() => setModalEditMotorista(false)} />
-      <RemoverTaxi aberto={modalRemoverTaxi} onFechar={() => setModalRemoverTaxi(false)} />
-      <RemoverMotorista aberto={modalRemoverMotorista} onFechar={() => setModalRemoverMotorista(false)} />
-      <DefinirPrecos aberto={modalPrecos} onFechar={() => setModalPrecos(false)} />
-      <ListarPrecos aberto={modalListarPrecos} onFechar={() => setModalListarPrecos(false)} onEditar={() => setModalPrecos(true)} />
-      <SimularViagem aberto={modalSimular} onFechar={() => setModalSimular(false)} />
+      <RegistarMotorista
+        aberto={modalMotorista}
+        onFechar={() => setModalMotorista(false)}
+      />
+      <EditarTaxi
+        aberto={modalEditTaxi}
+        onFechar={() => setModalEditTaxi(false)}
+      />
+      <EditarMotorista
+        aberto={modalEditMotorista}
+        onFechar={() => setModalEditMotorista(false)}
+      />
+      <RemoverTaxi
+        aberto={modalRemoverTaxi}
+        onFechar={() => setModalRemoverTaxi(false)}
+      />
+      <RemoverMotorista
+        aberto={modalRemoverMotorista}
+        onFechar={() => setModalRemoverMotorista(false)}
+      />
+      <DefinirPrecos
+        aberto={modalPrecos}
+        onFechar={() => setModalPrecos(false)}
+      />
+      <ListarPrecos
+        aberto={modalListarPrecos}
+        onFechar={() => setModalListarPrecos(false)}
+        onEditar={() => setModalPrecos(true)}
+      />
+      <SimularViagem
+        aberto={modalSimular}
+        onFechar={() => setModalSimular(false)}
+      />
     </div>
   );
 }
@@ -196,15 +216,43 @@ function SecDados(props) {
   return (
     <div className="pg-grid">
       <Card Icon={Car} color="blue" title="Táxis">
-        <Action Icon={Plus} label="Registar táxi" accent onClick={props.onRegistarTaxi} />
-        <Action Icon={Pencil} label="Editar táxi" onClick={props.onEditarTaxi} />
-        <Action Icon={Trash2} label="Remover táxi" danger onClick={props.onRemoverTaxi} />
+        <Action
+          Icon={Plus}
+          label="Registar táxi"
+          accent
+          onClick={props.onRegistarTaxi}
+        />
+        <Action
+          Icon={Pencil}
+          label="Editar táxi"
+          onClick={props.onEditarTaxi}
+        />
+        <Action
+          Icon={Trash2}
+          label="Remover táxi"
+          danger
+          onClick={props.onRemoverTaxi}
+        />
       </Card>
 
       <Card Icon={Users} color="green" title="Motoristas">
-        <Action Icon={Plus} label="Registar motorista" accent onClick={props.onRegistarMotorista} />
-        <Action Icon={Pencil} label="Editar motorista" onClick={props.onEditarMotorista} />
-        <Action Icon={Trash2} label="Remover motorista" danger onClick={props.onRemoverMotorista} />
+        <Action
+          Icon={Plus}
+          label="Registar motorista"
+          accent
+          onClick={props.onRegistarMotorista}
+        />
+        <Action
+          Icon={Pencil}
+          label="Editar motorista"
+          onClick={props.onEditarMotorista}
+        />
+        <Action
+          Icon={Trash2}
+          label="Remover motorista"
+          danger
+          onClick={props.onRemoverMotorista}
+        />
       </Card>
     </div>
   );
@@ -214,12 +262,26 @@ function SecConfig({ onDefinirPrecos, onListarPrecos, onSimularViagem }) {
   return (
     <div className="pg-grid">
       <Card Icon={DollarSign} color="blue" title="Preços por minuto">
-        <Action Icon={DollarSign} label="Definir preços" accent onClick={onDefinirPrecos} />
-        <Action Icon={DollarSign} label="Ver preços atuais" onClick={onListarPrecos} />
+        <Action
+          Icon={DollarSign}
+          label="Definir preços"
+          accent
+          onClick={onDefinirPrecos}
+        />
+        <Action
+          Icon={DollarSign}
+          label="Ver preços atuais"
+          onClick={onListarPrecos}
+        />
       </Card>
 
       <Card Icon={Calculator} color="green" title="Simulação de viagem">
-        <Action Icon={Calculator} label="Simular custo de viagem" accent onClick={onSimularViagem} />
+        <Action
+          Icon={Calculator}
+          label="Simular custo de viagem"
+          accent
+          onClick={onSimularViagem}
+        />
       </Card>
     </div>
   );
@@ -255,52 +317,43 @@ function Action({ Icon, label, accent, danger, onClick }) {
     </button>
   );
 }
-
-
-
-
-
 function SecRelatorios() {
   const [tipo, setTipo] = useState("taxi");
   const [total, setTotal] = useState("viagens");
   const [sub, setSub] = useState(null);
   const [pesquisa, setPesquisa] = useState("");
+
   const [turnos, setTurnos] = useState([]);
   const [loadingTurnos, setLoadingTurnos] = useState(false);
+
+  const [resumo, setResumo] = useState(null);
+  const [lista, setLista] = useState([]);
+  const [detalhes, setDetalhes] = useState([]);
+  const [loadingRelatorios, setLoadingRelatorios] = useState(false);
 
   const hoje = new Date().toISOString().slice(0, 10);
   const [dataInicio, setDataInicio] = useState(hoje);
   const [dataFim, setDataFim] = useState(hoje);
 
   useEffect(() => {
+    carregarRelatorio();
+  }, [tipo, total, dataInicio, dataFim]);
+
+  useEffect(() => {
     async function carregarTurnos() {
       try {
         setLoadingTurnos(true);
-
         const token = localStorage.getItem("token");
 
         const res = await fetch("http://localhost:8080/api/turnos/todos", {
-          method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
-     
-
-        if (!res.ok) {
-          throw new Error("Erro HTTP: " + res.status);
-        }
-
-        const contentType = res.headers.get("content-type");
-
-        if (!contentType || !contentType.includes("application/json")) {
-          throw new Error("A resposta não é JSON. Verifica a rota do backend.");
-        }
 
         const dados = await res.json();
         setTurnos(Array.isArray(dados) ? dados : []);
-
       } catch (err) {
         console.error("Erro ao carregar turnos:", err);
         setTurnos([]);
@@ -311,6 +364,105 @@ function SecRelatorios() {
 
     carregarTurnos();
   }, []);
+
+  async function carregarRelatorio() {
+    if (tipo === "turnos") return;
+
+    try {
+      setLoadingRelatorios(true);
+
+      const token = localStorage.getItem("token");
+      const params = `?data_inicio=${dataInicio}&data_fim=${dataFim}`;
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      };
+
+      let urlTotais = "";
+      let urlLista = "";
+
+      if (tipo === "taxi") {
+        urlTotais = `http://localhost:8080/api/relatorios/viagens/totais${params}`;
+        urlLista =
+          total === "km"
+            ? `http://localhost:8080/api/relatorios/viagens/por-taxi${params}&tipo=km`
+            : `http://localhost:8080/api/relatorios/viagens/por-motorista${params}&tipo=${total}`;
+      }
+
+      if (tipo === "clientes") {
+        urlTotais = `http://localhost:8080/api/relatorios/faturacao/totais${params}`;
+        urlLista = `http://localhost:8080/api/relatorios/faturacao/por-cliente${params}`;
+      }
+
+      if (tipo === "reabastecimentos") {
+        urlTotais = `http://localhost:8080/api/relatorios/reabastecimentos/totais${params}`;
+        urlLista = `http://localhost:8080/api/relatorios/reabastecimentos/por-tipo-motor${params}&tipo=${total}`;
+      }
+
+      const [resTotais, resLista] = await Promise.all([
+        fetch(urlTotais, { headers }),
+        fetch(urlLista, { headers }),
+      ]);
+
+      const dadosTotais = await resTotais.json();
+      const dadosLista = await resLista.json();
+
+      setResumo(dadosTotais);
+      setLista(dadosLista.subtotais || []);
+      setDetalhes([]);
+      setSub(null);
+    } catch (err) {
+      console.error("Erro ao carregar relatório:", err);
+      setResumo(null);
+      setLista([]);
+    } finally {
+      setLoadingRelatorios(false);
+    }
+  }
+
+  async function carregarDetalhes(item) {
+    if (!item) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const params = `?data_inicio=${dataInicio}&data_fim=${dataFim}`;
+
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      };
+
+      let url = "";
+
+      if (tipo === "taxi") {
+        if (item.motorista) {
+          url = `http://localhost:8080/api/relatorios/viagens/motorista/${item.motorista._id}${params}`;
+        }
+
+        if (item.taxi) {
+          url = `http://localhost:8080/api/relatorios/viagens/taxi/${item.taxi._id}${params}`;
+        }
+      }
+
+      if (tipo === "clientes") {
+        url = `http://localhost:8080/api/relatorios/faturacao/cliente/${item.cliente._id}${params}`;
+      }
+
+      if (tipo === "reabastecimentos") {
+        url = `http://localhost:8080/api/relatorios/reabastecimentos/${item.tipo_motor}${params}&tipo=${total}`;
+      }
+
+      if (!url) return;
+
+      const res = await fetch(url, { headers });
+      const dados = await res.json();
+
+      setDetalhes(dados.viagens || dados.detalhes || []);
+    } catch (err) {
+      console.error("Erro ao carregar detalhes:", err);
+      setDetalhes([]);
+    }
+  }
 
   function formatarData(data) {
     return new Date(data).toLocaleString("pt-PT", {
@@ -337,17 +489,15 @@ function SecRelatorios() {
     return "Ainda não começou";
   }
 
-  
-
   function mesmoDiaOuPeriodo(turno) {
     const inicioTurno = new Date(turno.data_inicio);
     const fimTurno = new Date(turno.data_fim);
-
     const inicio = new Date(`${dataInicio}T00:00:00`);
     const fim = new Date(`${dataFim}T23:59:59`);
 
     return inicioTurno <= fim && fimTurno >= inicio;
   }
+
   const turnosFiltrados = turnos.filter(mesmoDiaOuPeriodo);
 
   const turnosPesquisa = turnosFiltrados.filter((turno) => {
@@ -357,6 +507,21 @@ function SecRelatorios() {
       ${turno.taxi?.matricula || ""}
       ${turno.taxi?.marca || ""}
       ${turno.taxi?.modelo || ""}
+    `.toLowerCase();
+
+    return texto.includes(pesquisa.toLowerCase());
+  });
+
+  const listaPesquisa = lista.filter((item) => {
+    const entidade = item.motorista || item.taxi || item.cliente || {};
+    const texto = `
+      ${entidade.nome || ""}
+      ${entidade.nif || ""}
+      ${entidade.email || ""}
+      ${entidade.matricula || ""}
+      ${entidade.marca || ""}
+      ${entidade.modelo || ""}
+      ${item.tipo_motor || ""}
     `.toLowerCase();
 
     return texto.includes(pesquisa.toLowerCase());
@@ -381,14 +546,14 @@ function SecRelatorios() {
 
   const totais = {
     taxi: [
-      ["viagens", "Total de viagens", "00"],
-      ["horas", "Total de horas", "00h"],
-      ["km", "Total de quilómetros", "000km"],
+      ["viagens", "Total de viagens"],
+      ["horas", "Total de horas"],
+      ["km", "Total de quilómetros"],
     ],
-    clientes: [["euros", "Total cobrado", "000€"]],
+    clientes: [["euros", "Total cobrado"]],
     reabastecimentos: [
-      ["euros", "Total pago", "00€"],
-      ["horas", "Horas gastas", "00h"],
+      ["euros", "Total pago"],
+      ["horas", "Horas gastas"],
     ],
     turnos: [
       ["ativos", "A trabalhar agora", aTrabalhar.length],
@@ -417,18 +582,28 @@ function SecRelatorios() {
     },
   };
 
-  const subtotaisMock = [
-    ["Motorista João Silva", "12 viagens", "86h", "1 240 km"],
-    ["Motorista Ana Costa", "9 viagens", "61h", "920 km"],
-  ];
-
-  const viagensMock = [
-    ["Viagem #1024", "AA-23-BB", "14:20 → 15:05", "45 min", "18 km"],
-    ["Viagem #1018", "AA-23-BB", "10:10 → 10:42", "32 min", "11 km"],
-    ["Viagem #1007", "CC-45-DD", "19:00 → 19:31", "31 min", "9 km"],
-  ];
-
   const atual = dados[tipo];
+
+  function valorResumo(id, valorTurnos) {
+    if (tipo === "turnos") return valorTurnos;
+
+    if (tipo === "taxi") {
+      if (id === "viagens") return resumo?.total_viagens ?? 0;
+      if (id === "horas") return `${resumo?.total_horas ?? 0}h`;
+      if (id === "km") return `${resumo?.total_km ?? 0}km`;
+    }
+
+    if (tipo === "clientes") {
+      return `${resumo?.total_euros ?? 0}€`;
+    }
+
+    if (tipo === "reabastecimentos") {
+      if (id === "euros") return `${resumo?.total_euros ?? 0}€`;
+      if (id === "horas") return `${resumo?.total_horas ?? 0}h`;
+    }
+
+    return "—";
+  }
 
   return (
     <div className="pg-relatorios">
@@ -508,7 +683,7 @@ function SecRelatorios() {
       <div className="pg-busca-wrap">
         <input
           type="text"
-          placeholder="Pesquisar motorista, táxi, matrícula ou NIF..."
+          placeholder="Pesquisar motorista, táxi, matrícula, cliente ou NIF..."
           value={pesquisa}
           onChange={(e) => setPesquisa(e.target.value)}
           className="pg-busca"
@@ -523,10 +698,11 @@ function SecRelatorios() {
             onClick={() => {
               setTotal(id);
               setSub(null);
+              setDetalhes([]);
             }}
           >
             <span>{label}</span>
-            <strong>{valor}</strong>
+            <strong>{valorResumo(id, valor)}</strong>
             <small>Clique para ver detalhes</small>
           </button>
         ))}
@@ -535,33 +711,107 @@ function SecRelatorios() {
       {tipo !== "turnos" && (
         <div className="pg-sub">
           <div className="pg-panel">
-            <h4>Motoristas e táxis</h4>
+            <h4>
+              {tipo === "taxi" && (total === "km" ? "Táxis" : "Motoristas")}
+              {tipo === "clientes" && "Clientes"}
+              {tipo === "reabastecimentos" && "Tipos de motor"}
+            </h4>
 
-            {subtotaisMock.map(([nome, viagens, horas, km]) => (
-              <button
-                key={nome}
-                className={sub === nome ? "pg-row active" : "pg-row"}
-                onClick={() => setSub(nome)}
-              >
-                <span>{nome}</span>
-                <strong>
-                  {viagens} · {horas} · {km}
-                </strong>
-              </button>
-            ))}
+            {loadingRelatorios && (
+              <p className="pg-empty">A carregar relatório...</p>
+            )}
+
+            {!loadingRelatorios && listaPesquisa.length === 0 && (
+              <p className="pg-empty">Sem dados neste período.</p>
+            )}
+
+            {!loadingRelatorios &&
+              listaPesquisa.map((item) => {
+                const entidade =
+                  item.motorista || item.taxi || item.cliente || {};
+                const id = entidade._id || item.tipo_motor;
+
+                const nome =
+                  entidade.nome ||
+                  entidade.matricula ||
+                  item.tipo_motor ||
+                  "Sem nome";
+
+                return (
+                  <button
+                    key={id}
+                    className={sub === id ? "pg-row active" : "pg-row"}
+                    onClick={() => {
+                      setSub(id);
+                      carregarDetalhes(item);
+                    }}
+                  >
+                    <span>
+                      {nome}
+                      <small>
+                        {entidade.nif ||
+                          entidade.email ||
+                          entidade.marca ||
+                          item.tipo_motor ||
+                          ""}
+                      </small>
+                    </span>
+
+                    <strong>
+                      {item.total_viagens
+                        ? `${item.total_viagens} viagens · `
+                        : ""}
+                      {item.total_km ? `${item.total_km} km · ` : ""}
+                      {item.total_horas ? `${item.total_horas}h · ` : ""}
+                      {item.total_euros ? `${item.total_euros}€` : ""}
+                    </strong>
+                  </button>
+                );
+              })}
           </div>
 
           <div className="pg-panel">
-            <h4>Viagens</h4>
+            <h4>Detalhes</h4>
 
-            {viagensMock.map(([viagem, matricula, periodo, horas, km]) => (
-              <button key={viagem} className="pg-row">
+            {!sub && (
+              <p className="pg-empty">
+                Selecione um item para ver os detalhes.
+              </p>
+            )}
+
+            {sub && detalhes.length === 0 && (
+              <p className="pg-empty">Sem detalhes para apresentar.</p>
+            )}
+
+            {detalhes.map((item) => (
+              <button key={item._id || item.taxi?._id} className="pg-row">
                 <span>
-                  {viagem}
-                  <small>{matricula} · {periodo}</small>
+                  {tipo === "reabastecimentos"
+                    ? item.taxi?.matricula || "Táxi"
+                    : `Viagem ${item._id?.slice(-5) || ""}`}
+
+                  <small>
+                    {tipo === "clientes" &&
+                      `${item.taxi?.matricula || "Sem matrícula"} · ${
+                        item.motorista?.nome || "Sem motorista"
+                      }`}
+
+                    {tipo === "taxi" &&
+                      `${item.taxi?.matricula || item.motorista?.nome || ""} · ${
+                        item.cliente?.nome || "Sem cliente"
+                      }`}
+
+                    {tipo === "reabastecimentos" &&
+                      `${item.taxi?.marca || ""} ${item.taxi?.modelo || ""}`}
+                  </small>
                 </span>
+
                 <strong>
-                  {horas} · {km}
+                  {item.preco_total ? `${item.preco_total}€ · ` : ""}
+                  {item.total_euros ? `${item.total_euros}€ · ` : ""}
+                  {item.km ? `${item.km} km · ` : ""}
+                  {item.horas ? `${item.horas}h` : ""}
+                  {item.total_horas ? `${item.total_horas}h` : ""}
                 </strong>
               </button>
             ))}

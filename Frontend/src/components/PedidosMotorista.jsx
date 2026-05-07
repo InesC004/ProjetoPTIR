@@ -8,7 +8,7 @@ import {
   Loader2,
   MapPin,
   Navigation,
-  RefreshCw,
+  PlayCircle,
   Route,
   Timer,
   Users,
@@ -59,6 +59,7 @@ function getConforto(pedido) {
 export default function PedidosMotorista() {
   const [pedidos, setPedidos] = useState([]);
   const [aceites, setAceites] = useState([]);
+  const [confirmacoes, setConfirmacoes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
@@ -75,8 +76,21 @@ export default function PedidosMotorista() {
     [pedidos],
   );
 
-  async function carregarPedidos(posicaoAtual = posicao) {
-    setLoading(true);
+  useEffect(() => {
+    if (!sucesso) return;
+
+    const timeout = setTimeout(() => {
+      setSucesso("");
+    }, 3500);
+
+    return () => clearTimeout(timeout);
+  }, [sucesso]);
+
+  async function carregarPedidos(posicaoAtual = posicao, mostrarLoading = true) {
+    if (mostrarLoading) {
+      setLoading(true);
+    }
+
     setErro("");
 
     try {
@@ -84,11 +98,22 @@ export default function PedidosMotorista() {
       const lista = normalizarLista(data, "pedidos");
 
       const idsAceites = new Set(aceites.map(getId));
-      setPedidos(lista.filter((p) => !idsAceites.has(getId(p))));
+      const idsConfirmacoes = new Set(confirmacoes.map(getId));
+
+      setPedidos(
+        lista.filter(
+          (p) =>
+            !idsAceites.has(getId(p)) &&
+            !idsConfirmacoes.has(getId(p)) &&
+            !foiCanceladoPeloCliente(p),
+        ),
+      );
     } catch (err) {
       setErro(err.message || "Não foi possível carregar os pedidos.");
     } finally {
-      setLoading(false);
+      if (mostrarLoading) {
+        setLoading(false);
+      }
     }
   }
 
@@ -125,6 +150,40 @@ export default function PedidosMotorista() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      verificarPedidosAceites();
+    }, 5000);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aceites.length]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      carregarPedidos(posicao, false);
+    }, 1000);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [posicao, aceites.length, confirmacoes.length]);
+
+  useEffect(() => {
+    carregarConfirmacoes();
+
+    window.addEventListener(
+      "confirmacoesAceitesAtualizadas",
+      carregarConfirmacoes,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "confirmacoesAceitesAtualizadas",
+        carregarConfirmacoes,
+      );
+    };
+  }, []);
+
   async function aceitarPedido(pedido) {
     const id = getId(pedido);
     if (!id) return;
@@ -139,7 +198,7 @@ export default function PedidosMotorista() {
         ...(data?.pedido || {}),
         ...pedido,
         estado: data?.pedido?.estado || "aceite",
-        };
+      };
 
       setPedidos((prev) => prev.filter((p) => getId(p) !== id));
       setAceites((prev) => [
@@ -184,6 +243,125 @@ export default function PedidosMotorista() {
     }
   }
 
+  async function verificarPedidosAceites() {
+    if (aceites.length === 0) return;
+
+    try {
+      const atualizados = await Promise.all(
+        aceites.map(async (pedido) => {
+          const id = getId(pedido);
+
+          try {
+            const data = await api.pedidos.obter(id);
+            const pedidoAtualizado = data?.pedido || data;
+
+            return {
+              ...pedido,
+              ...pedidoAtualizado,
+              distancia_km:
+                pedido.distancia_km ??
+                pedido.distancia ??
+                pedidoAtualizado?.distancia_km ??
+                pedidoAtualizado?.distancia,
+              tempo_estimado_min:
+                pedido.tempo_estimado_min ??
+                pedido.tempo_estimado ??
+                pedidoAtualizado?.tempo_estimado_min ??
+                pedidoAtualizado?.tempo_estimado,
+            };
+          } catch {
+            return {
+              ...pedido,
+              estado: "cancelado_cliente",
+            };
+          }
+          //} catch (err) {
+            //console.error("Erro ao obter pedido aceite:", err);
+            //return pedido;
+          //}
+        }),
+      );
+
+      const confirmados = atualizados.filter(foiConfirmadoPeloCliente);
+      const rejeitados = atualizados.filter(foiRejeitadoPeloCliente);
+
+      confirmados.forEach(guardarConfirmacaoAceite);
+
+      if (confirmados.length > 0) {
+        carregarConfirmacoes();
+        setSucesso(
+          "Cliente confirmou o pedido. Clique em Iniciar viagem para criar a viagem.",
+        );
+      }
+
+      if (rejeitados.length > 0) {
+        setSucesso("");
+        await carregarPedidos(posicao, false);
+      }
+
+      setAceites(
+        atualizados.filter(
+          (pedido) =>
+            !foiConfirmadoPeloCliente(pedido) &&
+            !foiCanceladoPeloCliente(pedido) &&
+            !foiRejeitadoPeloCliente(pedido),
+        ),
+      );
+    } catch (err) {
+        console.error("Erro ao verificar pedidos aceites:", err);
+    }
+  }
+
+  function carregarConfirmacoes() {
+    const guardadas = JSON.parse(
+      localStorage.getItem("confirmacoesAceitesMotorista") || "[]",
+    );
+
+    setConfirmacoes(guardadas);
+  }
+
+  function iniciarViagemConfirmada(pedido) {
+    const id = getId(pedido);
+    if (!id) return;
+
+    setProcessingId(id);
+
+    const confirmacoesAtuais = JSON.parse(
+      localStorage.getItem("confirmacoesAceitesMotorista") || "[]",
+    );
+
+    const viagensAtuais = JSON.parse(
+      localStorage.getItem("viagensConfirmadasMotorista") || "[]",
+    );
+
+    const jaExiste = viagensAtuais.some((v) => getId(v) === id);
+
+    const novaViagem = {
+      ...pedido,
+      estadoViagem: "em_curso",
+    };
+
+    if (!jaExiste) {
+      localStorage.setItem(
+        "viagensConfirmadasMotorista",
+        JSON.stringify([novaViagem, ...viagensAtuais]),
+      );
+    }
+
+    localStorage.setItem(
+      "confirmacoesAceitesMotorista",
+      JSON.stringify(confirmacoesAtuais.filter((p) => getId(p) !== id)),
+    );
+
+    setConfirmacoes((prev) => prev.filter((p) => getId(p) !== id));
+    setProcessingId(null);
+
+    window.dispatchEvent(new Event("viagensConfirmadasAtualizadas"));
+    window.dispatchEvent(new Event("confirmacoesAceitesAtualizadas"));
+
+    setSucesso("Viagem iniciada. Consulte a secção Viagens.");
+  }
+
   return (
     <div className="pm-wrap">
       <div className="pm-toolbar">
@@ -195,16 +373,6 @@ export default function PedidosMotorista() {
             cliente e apenas quando ainda cabem no turno ativo.
           </p>
         </div>
-
-        <button
-          className="pm-refresh"
-          onClick={() => carregarPedidos(posicao)}
-          disabled={loading}
-          type="button"
-        >
-          <RefreshCw size={17} className={loading ? "pm-spin" : ""} />
-          Atualizar
-        </button>
       </div>
 
       {erro && (
@@ -308,6 +476,47 @@ export default function PedidosMotorista() {
             )}
           </div>
         </section>
+
+        <section className="pm-card pm-confirmados-card">
+            <div className="pm-card-head">
+                <div className="pm-title-left">
+                <span className="pm-icon pm-icon-green">
+                    <CheckCircle2 size={20} />
+                </span>
+
+                <div>
+                    <p className="pm-title">Confirmação aceite</p>
+                    <p className="pm-sub">Clientes que confirmaram o motorista</p>
+                </div>
+                </div>
+
+                <span className="pm-count">{confirmacoes.length}</span>
+            </div>
+
+            <div className="pm-card-body">
+                {confirmacoes.length === 0 ? (
+                <EmptyState
+                    icon={<CheckCircle2 size={26} />}
+                    title="Nenhuma confirmação aceite"
+                    text="Quando o cliente confirmar o motorista, o pedido aparece aqui para iniciar a viagem."
+                />
+                ) : (
+                <div className="pm-list">
+                    {confirmacoes.map((pedido) => (
+                    <PedidoCard
+                        key={getId(pedido)}
+                        pedido={pedido}
+                        waiting
+                        primaryLabel="Iniciar viagem"
+                        primaryIcon={<PlayCircle size={16} />}
+                        onPrimary={() => iniciarViagemConfirmada(pedido)}
+                        disabled={processingId === getId(pedido)}
+                    />
+                    ))}
+                </div>
+                )}
+            </div>
+            </section>
       </div>
     </div>
   );
@@ -334,12 +543,18 @@ function PedidoCard({
 
         <span
           className={
-            waiting
-              ? "pm-status pm-status-wait"
-              : "pm-status pm-status-open"
+            foiCanceladoPeloCliente(pedido)
+              ? "pm-status pm-status-cancelled"
+              : waiting
+                ? "pm-status pm-status-wait"
+                : "pm-status pm-status-open"
           }
         >
-          {waiting ? "A aguardar" : "Pendente"}
+          {foiCanceladoPeloCliente(pedido)
+            ? "Cancelado pelo cliente"
+            : waiting
+              ? "A aguardar"
+              : "Pendente"}
         </span>
       </div>
 
@@ -384,7 +599,7 @@ function PedidoCard({
       <button
         className={danger ? "pm-action pm-action-danger" : "pm-action"}
         onClick={onPrimary}
-        disabled={disabled}
+        disabled={disabled || foiCanceladoPeloCliente(pedido)}
         type="button"
       >
         {disabled ? <Loader2 size={16} className="pm-spin" /> : primaryIcon}
@@ -415,4 +630,51 @@ function EmptyState({ icon, title, text }) {
       <p>{text}</p>
     </div>
   );
+}
+
+function foiCanceladoPeloCliente(pedido) {
+  return [
+    "cancelado",
+    "cancelada",
+    "cancelado_cliente",
+    "canceladoPorCliente",
+    "cancelado_pelo_cliente",
+  ].includes(pedido?.estado);
+}
+
+function foiConfirmadoPeloCliente(pedido) {
+  return [
+    "confirmado",
+    "confirmada",
+    "aceite",
+    "aceita",
+    "aceite_cliente",
+    "aceita_cliente",
+    "aceite_pelo_cliente",
+    "confirmado_cliente",
+    "cliente_confirmou",
+    "em_viagem",
+  ].includes(pedido?.estado);
+}
+
+function foiRejeitadoPeloCliente(pedido) {
+  return [
+    "rejeitado",
+    "rejeitada",
+    "rejeitado_cliente",
+    "cliente_rejeitou",
+  ].includes(pedido?.estado);
+}
+
+function guardarConfirmacaoAceite(pedido) {
+  const chave = "confirmacoesAceitesMotorista";
+  const atuais = JSON.parse(localStorage.getItem(chave) || "[]");
+  const id = getId(pedido);
+
+  const jaExiste = atuais.some((v) => getId(v) === id);
+
+  if (!jaExiste) {
+    localStorage.setItem(chave, JSON.stringify([pedido, ...atuais]));
+    window.dispatchEvent(new Event("confirmacoesAceitesAtualizadas"));
+  }
 }

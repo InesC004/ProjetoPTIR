@@ -423,3 +423,11 @@
     grid-template-columns: 1fr;
   }
 }
+.pm-status-cancelled {
+  background: rgba(239, 68, 68, 0.09);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #dc2626;
+}
+.pm-confirmados-card {
+  grid-column: 1 / -1;
+}

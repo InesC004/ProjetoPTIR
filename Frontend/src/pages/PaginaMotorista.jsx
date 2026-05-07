@@ -18,6 +18,7 @@ import TurnosMotorista from "../components/TurnosMotorista";
 import ReabastecimentosMotorista from "../components/ReabastecimentosMotorista";
 import "../css/paginaMotorista.css";
 import PedidosMotorista from "../components/PedidosMotorista";
+import ViagensMotorista from "../components/ViagensMotorista";
 
 const NAV = [
   { id: "turno", label: "Requisitar Táxi", Icon: CarFront, tag: "Turno" },
@@ -611,13 +612,7 @@ export default function PaginaMotorista() {
           <div style={{ animation: "subir 0.5s 0.08s ease both" }}>
             {active === "turno" && <TurnosMotorista />}
             {active === "pedidos" && <PedidosMotorista />}
-            {active === "viagem" && (
-              <SecPlaceholder
-                icone="🚗"
-                titulo="Viagens"
-                desc="Aqui poderá registar e consultar as suas viagens com clientes."
-              />
-            )}
+            {active === "viagem" && <ViagensMotorista />}
             {active === "fatura" && (
               <SecPlaceholder
                 icone="🧾"

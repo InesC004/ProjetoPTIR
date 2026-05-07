@@ -1,5 +1,6 @@
 const Pedido = require("../models/pedido");
 const Turno = require("../models/turno");
+const Preco = require("../models/preco");
 
 // função que calcula distância entre 2 pontos geográficos
 function haversine(lat1, lng1, lat2, lng2) {
@@ -57,22 +58,8 @@ exports.create = async (req, res) => {
       });
     }
 
-    const pedidoAtivo = await Pedido.findOne({
-      cliente_id: req.user.id,
-      estado: { $in: ["pendente", "aceite", "confirmado"] },
-    });
-
-    if (pedidoAtivo) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Já tens um pedido ativo. Cancela ou termina a viagem antes de pedir outra.",
-        pedido: pedidoAtivo,
-      });
-    }
-
     const pedido = new Pedido({
-      cliente_id: req.user.id,
+      cliente: req.user.id,
       origem_morada,
       origem_lat,
       origem_lng,
@@ -105,14 +92,14 @@ exports.cancelar = async (req, res) => {
         .json({ success: false, message: "Pedido não encontrado." });
     }
 
-    if (pedido.cliente_id.toString() !== req.user.id) {
+    if (pedido.cliente.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: "Sem permissão para cancelar este pedido.",
       });
     }
 
-    if (!["pendente", "aceite", "confirmado"].includes(pedido.estado)) {
+    if (!["pendente", "aceite"].includes(pedido.estado)) {
       return res.status(400).json({
         success: false,
         message: "Pedido não pode ser cancelado neste estado.",
@@ -153,7 +140,7 @@ exports.responderMotorista = async (req, res) => {
         .json({ success: false, message: "Pedido não encontrado." });
     }
 
-    if (pedido.cliente_id.toString() !== req.user.id) {
+    if (pedido.cliente.toString() !== req.user.id) {
       return res
         .status(403)
         .json({ success: false, message: "Sem permissão. pedidos" });
@@ -170,7 +157,7 @@ exports.responderMotorista = async (req, res) => {
     } else {
       // rejeita - volta a pendente para outros motoristas poderem ver
       pedido.estado = "pendente";
-      pedido.motorista_id = null;
+      pedido.motorista = null;
     }
 
     await pedido.save();
@@ -185,32 +172,11 @@ exports.responderMotorista = async (req, res) => {
   }
 };
 
-// Ver pedido ativo do cliente
-exports.getAtivoCliente = async (req, res) => {
-  try {
-    const pedido = await Pedido.findOne({
-      cliente_id: req.user.id,
-      estado: { $in: ["pendente", "aceite", "confirmado"] },
-    }).populate("motorista_id", "nome nif");
-
-    res.status(200).json({
-      success: true,
-      pedido,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      success: false,
-      message: "Erro no servidor.",
-    });
-  }
-};
-
 // Ver estado atual do pedido (cliente aguarda resposta)
 exports.getById = async (req, res) => {
   try {
     const pedido = await Pedido.findById(req.params.id).populate(
-      "motorista_id",
+      "motorista",
       "nome nif",
     );
 
@@ -220,14 +186,14 @@ exports.getById = async (req, res) => {
         .json({ success: false, message: "Pedido não encontrado." });
     }
 
-    if (pedido.cliente_id.toString() !== req.user.id) {
+    if (pedido.cliente.toString() !== req.user.id) {
       return res
         .status(403)
         .json({ success: false, message: "Sem permissão." });
     }
     // se o pedido está aceite, calcular distância, tempo e custo estimado
     let extra = {};
-    if (pedido.estado === "aceite" && pedido.motorista_id) {
+    if (pedido.estado === "aceite" && pedido.motorista) {
       // buscar turno ativo do motorista para saber a posição — por agora usamos a localização da FC como default
       const motoristaLat = 38.756734;
       const motoristaLng = -9.155412;
@@ -239,6 +205,29 @@ exports.getById = async (req, res) => {
         pedido.origem_lng,
       );
       const tempoChegada = distancia * 4; // 4 minutos por km
+
+      // buscar preço do nível de conforto do pedido
+      const preco = await Preco.findOne({
+        nivel_conforto: pedido.nivel_conforto,
+      });
+
+      let custoEstimado = null;
+      if (preco) {
+        // hora estimada de início da viagem = agora + tempo de chegada do motorista
+        const agora = new Date();
+        const inicioViagem = new Date(agora.getTime() + tempoChegada * 60000);
+        const fimViagem = new Date(
+          inicioViagem.getTime() + tempoViagem * 60000,
+        );
+
+        // calcular custo minuto a minuto
+        custoEstimado = calcularCusto(
+          inicioViagem,
+          fimViagem,
+          preco.preco_minuto,
+          preco.acrescimo_noturno,
+        );
+      }
 
       const distanciaViagem = haversine(
         pedido.origem_lat,
@@ -360,7 +349,7 @@ exports.aceitar = async (req, res) => {
     }
 
     pedido.estado = "aceite";
-    pedido.motorista_id = req.user.id;
+    pedido.motorista = req.user.id;
     await pedido.save();
 
     res
@@ -383,7 +372,7 @@ exports.cancelarAceitacao = async (req, res) => {
         .json({ success: false, message: "Pedido não encontrado." });
     }
 
-    if (pedido.motorista_id?.toString() !== req.user.id) {
+    if (pedido.motorista?.toString() !== req.user.id) {
       return res
         .status(403)
         .json({ success: false, message: "Sem permissão." });
@@ -396,12 +385,135 @@ exports.cancelarAceitacao = async (req, res) => {
     }
 
     pedido.estado = "pendente";
-    pedido.motorista_id = null;
+    pedido.motorista = null;
     await pedido.save();
 
     res.status(200).json({
       success: true,
       message: "Aceitação cancelada, pedido voltou a pendente.",
+      pedido,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Erro no servidor." });
+  }
+};
+
+// Cliente vê o seu pedido ativo (não cancelado/concluído)
+exports.getAtivoCliente = async (req, res) => {
+  try {
+    const pedido = await Pedido.findOne({
+      cliente: req.user.id,
+      estado: { $nin: ["cancelado", "concluido"] },
+    }).populate("motorista", "nome nif");
+
+    if (!pedido) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Não tens nenhum pedido ativo." });
+    }
+
+    res.status(200).json({ success: true, pedido });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Erro no servidor." });
+  }
+};
+
+// Motorista inicia a viagem (cria registro de viagem)
+exports.iniciarViagem = async (req, res) => {
+  try {
+    const pedido = await Pedido.findById(req.params.id)
+      .populate("cliente", "nome")
+      .populate("motorista", "nome");
+
+    if (!pedido) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Pedido não encontrado." });
+    }
+
+    if (pedido.motorista.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Sem permissão para iniciar esta viagem.",
+      });
+    }
+
+    if (pedido.estado !== "confirmado") {
+      return res.status(400).json({
+        success: false,
+        message: "Pedido deve estar confirmado para iniciar viagem.",
+      });
+    }
+
+    // verificar turno ativo
+    const agora = new Date();
+    const turno = await Turno.findOne({
+      motorista: req.user.id,
+      data_inicio: { $lte: agora },
+      data_fim: { $gte: agora },
+    });
+
+    if (!turno) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Não tens nenhum turno ativo." });
+    }
+
+    // buscar táxi do turno
+    const taxi = turno.taxi;
+
+    // calcular distância da viagem
+    const distanciaKm = haversine(
+      pedido.origem_lat,
+      pedido.origem_lng,
+      pedido.destino_lat,
+      pedido.destino_lng,
+    );
+
+    // buscar preço baseado no nível de conforto
+    const preco = await Preco.findOne({
+      nivel_conforto: pedido.nivel_conforto,
+    });
+    if (!preco) {
+      return res.status(400).json({
+        success: false,
+        message: "Preço não encontrado para este nível de conforto.",
+      });
+    }
+
+    // estimativa simples: preço por minuto * tempo estimado
+    const tempoEstimadoMin = distanciaKm * 4; // 4 min/km
+    const precoTotal = preco.preco_minuto * tempoEstimadoMin;
+
+    // criar viagem
+    const viagem = new Viagem({
+      pedido_id: pedido._id,
+      turno_id: turno._id,
+      cliente_id: pedido.cliente._id,
+      motorista_id: pedido.motorista._id,
+      taxi_id: taxi,
+      data_inicio: agora,
+      morada_entrada: pedido.origem_morada,
+      morada_saida: pedido.destino_morada,
+      km: distanciaKm,
+      numero_pessoas: pedido.numero_pessoas,
+      preco_total: precoTotal,
+      estado: "em_curso",
+    });
+
+    await viagem.save();
+
+    // associar viagem ao pedido
+    pedido.viagem_id = viagem._id;
+    pedido.estado = "em_viagem";
+    await pedido.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Viagem iniciada com sucesso.",
+      viagem,
       pedido,
     });
   } catch (err) {
