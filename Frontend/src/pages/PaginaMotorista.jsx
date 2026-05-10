@@ -16,7 +16,7 @@ import {
 import logo from "../Pictures/logo1.jpeg";
 import TurnosMotorista from "../components/TurnosMotorista";
 import ReabastecimentosMotorista from "../components/ReabastecimentosMotorista";
-import "../css/paginaMotorista.css";
+import "../css/PaginaMotorista.css";
 import PedidosMotorista from "../components/PedidosMotorista";
 import ViagensMotorista from "../components/ViagensMotorista";
 

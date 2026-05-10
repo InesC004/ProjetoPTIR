@@ -11,7 +11,7 @@ import {
   RefreshCw,
   Euro,
 } from "lucide-react";
-import "../css/reabastecimentosMotorista.css";
+import "../css/ReabastecimentosMotorista.css";
 
 const API_URL = "http://localhost:8080/api";
 const TURNOS_URL = `${API_URL}/turnos`;

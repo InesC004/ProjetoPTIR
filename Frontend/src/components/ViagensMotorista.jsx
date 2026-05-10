@@ -7,7 +7,7 @@ import {
   Route,
   Users,
 } from "lucide-react";
-import "../css/viagensMotorista.css";
+import "../css/ViagensMotorista.css";
 
 function getId(pedido) {
   return pedido?._id || pedido?.id;
@@ -98,9 +98,7 @@ export default function ViagensMotorista() {
             <Clock size={28} />
           </span>
           <strong>Nenhuma viagem em curso</strong>
-          <p>
-            Quando iniciar uma confirmação aceite, a viagem aparece aqui.
-          </p>
+          <p>Quando iniciar uma confirmação aceite, a viagem aparece aqui.</p>
         </div>
       ) : (
         <div className="vm-list">

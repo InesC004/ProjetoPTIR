@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useRef } from "react";
 import Header from "../components/Header2";
-import "../css/dashboardCliente.css";
+import "../css/DashboardCliente.css";
 // ═══════════════════════════════════════════════════════════════════════════════
 // UTILITÁRIOS
 // ═══════════════════════════════════════════════════════════════════════════════

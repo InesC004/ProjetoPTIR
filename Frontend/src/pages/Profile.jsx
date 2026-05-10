@@ -11,7 +11,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import api from "../Api";
-import "../css/profile.css";
+import "../css/Profile.css";
 import Header from "../components/Header2";
 
 function formatDate(isoString) {
@@ -93,10 +93,30 @@ export default function Profile() {
               </div>
 
               <div className="perfil-lista">
-                <Field icon={<User size={18} />} label="Nome" field="nome" data={data} />
-                <Field icon={<Hash size={18} />} label="NIF" field="nif" data={data} />
-                <Field icon={<User size={18} />} label="Género" field="genero" data={data} />
-                <Field icon={<Calendar size={18} />} label="Nascimento" field="data_nascimento" data={data} />
+                <Field
+                  icon={<User size={18} />}
+                  label="Nome"
+                  field="nome"
+                  data={data}
+                />
+                <Field
+                  icon={<Hash size={18} />}
+                  label="NIF"
+                  field="nif"
+                  data={data}
+                />
+                <Field
+                  icon={<User size={18} />}
+                  label="Género"
+                  field="genero"
+                  data={data}
+                />
+                <Field
+                  icon={<Calendar size={18} />}
+                  label="Nascimento"
+                  field="data_nascimento"
+                  data={data}
+                />
               </div>
             </div>
 
@@ -112,14 +132,29 @@ export default function Profile() {
               </div>
 
               <div className="perfil-lista">
-                <Field icon={<Mail size={18} />} label="Email" field="email" data={data} />
-                <Field icon={<MapPin size={18} />} label="Morada" field="morada" data={data} />
-                <Field icon={<MapPin size={18} />} label="Código postal" field="codigo_postal" data={data} />
+                <Field
+                  icon={<Mail size={18} />}
+                  label="Email"
+                  field="email"
+                  data={data}
+                />
+                <Field
+                  icon={<MapPin size={18} />}
+                  label="Morada"
+                  field="morada"
+                  data={data}
+                />
+                <Field
+                  icon={<MapPin size={18} />}
+                  label="Código postal"
+                  field="codigo_postal"
+                  data={data}
+                />
               </div>
             </div>
           </section>
         </main>
-    </div>
+      </div>
     </>
   );
 }
