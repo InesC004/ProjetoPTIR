@@ -1,3 +1,5 @@
+// models/pedido.js
+
 const mongoose = require("mongoose");
 
 const pedidoSchema = new mongoose.Schema(
@@ -7,21 +9,50 @@ const pedidoSchema = new mongoose.Schema(
       ref: "cliente",
       required: true,
     },
+
     motorista_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "motorista",
       default: null,
     },
 
-    origem_morada: { type: String, required: true },
-    origem_lat: { type: Number },
-    origem_lng: { type: Number },
+    origem_morada: {
+      type: String,
+      required: true,
+    },
 
-    destino_morada: { type: String },
-    destino_lat: { type: Number },
-    destino_lng: { type: Number },
+    origem_lat: {
+      type: Number,
+      required: true,
+    },
 
-    numero_pessoas: { type: Number, required: true, min: 1, max: 4 },
+    origem_lng: {
+      type: Number,
+      required: true,
+    },
+
+    destino_morada: {
+      type: String,
+      required: true,
+    },
+
+    destino_lat: {
+      type: Number,
+      required: true,
+    },
+
+    destino_lng: {
+      type: Number,
+      required: true,
+    },
+
+    numero_pessoas: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 4,
+    },
+
     nivel_conforto: {
       type: String,
       enum: ["basico", "luxuoso"],
@@ -34,15 +65,17 @@ const pedidoSchema = new mongoose.Schema(
         "pendente",
         "aceite",
         "confirmado",
-        "rejeitado",
-        "cancelado",
+        "em_viagem",
         "concluido",
+        "cancelado",
       ],
       default: "pendente",
     },
+
     viagem_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Viagem",
+      ref: "viagem",
+      default: null,
     },
   },
   { timestamps: true },

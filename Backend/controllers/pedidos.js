@@ -1,21 +1,29 @@
+// controllers/pedidos.js
+
 const Pedido = require("../models/pedido");
 const Turno = require("../models/turno");
 const Preco = require("../models/preco");
 
-// função que calcula distância entre 2 pontos geográficos
 function haversine(lat1, lng1, lat2, lng2) {
-  const R = 6371; // raio da terra em km
+  const R = 6371;
+
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
+
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
       Math.cos((lat2 * Math.PI) / 180) *
       Math.sin(dLng / 2) *
       Math.sin(dLng / 2);
+
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
-// Criar pedido de táxi (cliente autenticado)
+
+// ════════════════════════════════════════
+// criar pedido
+// ════════════════════════════════════════
+
 exports.create = async (req, res) => {
   try {
     const {
@@ -29,495 +37,473 @@ exports.create = async (req, res) => {
       nivel_conforto,
     } = req.body;
 
-    // requisitos de validação
-    if (!origem_morada || !origem_lat || !origem_lng) {
+    if (
+      !origem_morada ||
+      origem_lat == null ||
+      origem_lng == null
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Localização de origem é obrigatória.",
+        message: "Origem inválida.",
       });
     }
 
-    if (!destino_morada || !destino_lat || !destino_lng) {
+    if (
+      !destino_morada ||
+      destino_lat == null ||
+      destino_lng == null
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Localização de destino é obrigatória.",
+        message: "Destino inválido.",
       });
     }
 
-    if (!numero_pessoas || numero_pessoas < 1 || numero_pessoas > 4) {
+    if (
+      !numero_pessoas ||
+      numero_pessoas < 1 ||
+      numero_pessoas > 4
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Número de pessoas deve ser entre 1 e 4.",
+        message: "Número de pessoas inválido.",
       });
     }
 
-    if (!nivel_conforto || !["basico", "luxuoso"].includes(nivel_conforto)) {
+    if (
+      !["basico", "luxuoso"].includes(nivel_conforto)
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Nível de conforto deve ser básico ou luxuoso.",
+        message: "Nível de conforto inválido.",
+      });
+    }
+
+    // impedir múltiplos pedidos ativos
+    const pedidoAtivo = await Pedido.findOne({
+      cliente_id: req.user.id,
+      estado: {
+        $nin: ["cancelado", "concluido"],
+      },
+    });
+
+    if (pedidoAtivo) {
+      return res.status(409).json({
+        success: false,
+        message: "Já tens um pedido ativo.",
       });
     }
 
     const pedido = new Pedido({
-      cliente: req.user.id,
+      cliente_id: req.user.id,
+
       origem_morada,
       origem_lat,
       origem_lng,
+
       destino_morada,
       destino_lat,
       destino_lng,
+
       numero_pessoas,
       nivel_conforto,
+
       estado: "pendente",
     });
 
     await pedido.save();
-    res
-      .status(201)
-      .json({ success: true, message: "Pedido criado com sucesso.", pedido });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor." });
-  }
-};
 
-// Cliente cancela pedido enquanto aguarda
-exports.cancelar = async (req, res) => {
-  try {
-    const pedido = await Pedido.findById(req.params.id);
-
-    if (!pedido) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Pedido não encontrado." });
-    }
-
-    if (pedido.cliente.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: "Sem permissão para cancelar este pedido.",
-      });
-    }
-
-    if (!["pendente", "aceite"].includes(pedido.estado)) {
-      return res.status(400).json({
-        success: false,
-        message: "Pedido não pode ser cancelado neste estado.",
-      });
-    }
-
-    pedido.estado = "cancelado";
-    await pedido.save();
-
-    res.status(200).json({
+    res.status(201).json({
       success: true,
-      message: "Pedido cancelado com sucesso.",
+      message: "Pedido criado com sucesso.",
       pedido,
     });
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor." });
+
+    res.status(500).json({
+      success: false,
+      message: "Erro no servidor.",
+    });
   }
 };
 
-// Cliente confirma ou rejeita o motorista que aceitou
-exports.responderMotorista = async (req, res) => {
-  try {
-    const { resposta } = req.body; // 'confirmar' ou 'rejeitar'
+// ════════════════════════════════════════
+// listar pedidos disponíveis
+// ════════════════════════════════════════
 
-    if (!resposta || !["confirmar", "rejeitar"].includes(resposta)) {
+exports.listarDisponiveis = async (req, res) => {
+  try {
+
+    const agora = new Date();
+
+    const turno = await Turno.findOne({
+      motorista: req.user.id,
+      data_inicio: { $lte: agora },
+      data_fim: { $gte: agora },
+    });
+
+    if (!turno) {
       return res.status(400).json({
         success: false,
-        message: "Resposta deve ser confirmar ou rejeitar.",
+        message: "Não tens turno ativo.",
       });
     }
+
+    const pedidos = await Pedido.find({
+      estado: "pendente",
+    });
+
+    const motoristaLat = req.query.lat
+      ? Number(req.query.lat)
+      : 38.756734;
+
+    const motoristaLng = req.query.lng
+      ? Number(req.query.lng)
+      : -9.155412;
+
+    const pedidosFiltrados = pedidos
+      .map((pedido) => {
+
+        const distancia = haversine(
+          motoristaLat,
+          motoristaLng,
+          pedido.origem_lat,
+          pedido.origem_lng
+        );
+
+        return {
+          ...pedido.toObject(),
+          distancia_km: distancia.toFixed(2),
+        };
+      })
+      .sort(
+        (a, b) =>
+          Number(a.distancia_km) -
+          Number(b.distancia_km)
+      );
+
+    res.json({
+      success: true,
+      pedidos: pedidosFiltrados,
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Erro no servidor.",
+    });
+  }
+};
+
+// ════════════════════════════════════════
+// motorista aceita pedido
+// ════════════════════════════════════════
+
+exports.aceitar = async (req, res) => {
+  try {
+
+    const agora = new Date();
+
+    const turno = await Turno.findOne({
+      motorista: req.user.id,
+      data_inicio: { $lte: agora },
+      data_fim: { $gte: agora },
+    });
+
+    if (!turno) {
+      return res.status(400).json({
+        success: false,
+        message: "Não tens turno ativo.",
+      });
+    }
+
+    // evitar race condition
+    const pedido = await Pedido.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        estado: "pendente",
+      },
+      {
+        estado: "aceite",
+        motorista_id: req.user.id,
+      },
+      {
+        new: true,
+      }
+    );
+
+    if (!pedido) {
+      return res.status(409).json({
+        success: false,
+        message: "Pedido já não disponível.",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Pedido aceite.",
+      pedido,
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Erro no servidor.",
+    });
+  }
+};
+
+// ════════════════════════════════════════
+// cancelar aceitação
+// ════════════════════════════════════════
+
+exports.cancelarAceitacao = async (req, res) => {
+  try {
 
     const pedido = await Pedido.findById(req.params.id);
 
     if (!pedido) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Pedido não encontrado." });
+      return res.status(404).json({
+        success: false,
+        message: "Pedido não encontrado.",
+      });
     }
 
-    if (pedido.cliente.toString() !== req.user.id) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Sem permissão. pedidos" });
+    if (
+      pedido.motorista_id?.toString() !== req.user.id
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Sem permissão.",
+      });
     }
 
     if (pedido.estado !== "aceite") {
-      return res
-        .status(400)
-        .json({ success: false, message: "Pedido não está em estado aceite." });
+      return res.status(400).json({
+        success: false,
+        message: "Pedido não está aceite.",
+      });
+    }
+
+    pedido.estado = "pendente";
+    pedido.motorista_id = null;
+
+    await pedido.save();
+
+    res.json({
+      success: true,
+      message: "Aceitação cancelada.",
+      pedido,
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Erro no servidor.",
+    });
+  }
+};
+
+// ════════════════════════════════════════
+// cliente responde ao motorista
+// ════════════════════════════════════════
+
+exports.responderMotorista = async (req, res) => {
+  try {
+
+    const { resposta } = req.body;
+
+    if (
+      !["confirmar", "rejeitar"].includes(resposta)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Resposta inválida.",
+      });
+    }
+
+    const pedido = await Pedido.findById(req.params.id);
+
+    if (!pedido) {
+      return res.status(404).json({
+        success: false,
+        message: "Pedido não encontrado.",
+      });
+    }
+
+    if (
+      pedido.cliente_id.toString() !== req.user.id
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Sem permissão.",
+      });
+    }
+
+    if (pedido.estado !== "aceite") {
+      return res.status(400).json({
+        success: false,
+        message: "Pedido não está aceite.",
+      });
     }
 
     if (resposta === "confirmar") {
       pedido.estado = "confirmado";
     } else {
-      // rejeita - volta a pendente para outros motoristas poderem ver
       pedido.estado = "pendente";
-      pedido.motorista = null;
+      pedido.motorista_id = null;
     }
 
     await pedido.save();
-    res.status(200).json({
+
+    res.json({
       success: true,
-      message: `Pedido ${resposta === "confirmar" ? "confirmado" : "rejeitado"} com sucesso.`,
+      message: `Motorista ${resposta} com sucesso.`,
       pedido,
     });
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor." });
+
+    res.status(500).json({
+      success: false,
+      message: "Erro no servidor.",
+    });
   }
 };
 
-// Ver estado atual do pedido (cliente aguarda resposta)
-exports.getById = async (req, res) => {
+// ════════════════════════════════════════
+// cancelar pedido
+// ════════════════════════════════════════
+
+exports.cancelar = async (req, res) => {
   try {
-    const pedido = await Pedido.findById(req.params.id).populate(
-      "motorista",
-      "nome nif",
-    );
+
+    const pedido = await Pedido.findById(req.params.id);
 
     if (!pedido) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Pedido não encontrado." });
-    }
-
-    if (pedido.cliente.toString() !== req.user.id) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Sem permissão." });
-    }
-    // se o pedido está aceite, calcular distância, tempo e custo estimado
-    let extra = {};
-    if (pedido.estado === "aceite" && pedido.motorista) {
-      // buscar turno ativo do motorista para saber a posição — por agora usamos a localização da FC como default
-      const motoristaLat = 38.756734;
-      const motoristaLng = -9.155412;
-
-      const distancia = haversine(
-        motoristaLat,
-        motoristaLng,
-        pedido.origem_lat,
-        pedido.origem_lng,
-      );
-      const tempoChegada = distancia * 4; // 4 minutos por km
-
-      // buscar preço do nível de conforto do pedido
-      const preco = await Preco.findOne({
-        nivel_conforto: pedido.nivel_conforto,
+      return res.status(404).json({
+        success: false,
+        message: "Pedido não encontrado.",
       });
-
-      let custoEstimado = null;
-      if (preco) {
-        // hora estimada de início da viagem = agora + tempo de chegada do motorista
-        const agora = new Date();
-        const inicioViagem = new Date(agora.getTime() + tempoChegada * 60000);
-        const fimViagem = new Date(
-          inicioViagem.getTime() + tempoViagem * 60000,
-        );
-
-        // calcular custo minuto a minuto
-        custoEstimado = calcularCusto(
-          inicioViagem,
-          fimViagem,
-          preco.preco_minuto,
-          preco.acrescimo_noturno,
-        );
-      }
-
-      const distanciaViagem = haversine(
-        pedido.origem_lat,
-        pedido.origem_lng,
-        pedido.destino_lat,
-        pedido.destino_lng,
-      );
-      const tempoViagem = distanciaViagem * 4;
-
-      extra = {
-        motorista_distancia_km: distancia.toFixed(2),
-        motorista_tempo_chegada_min: tempoChegada.toFixed(0),
-        viagem_distancia_km: distanciaViagem.toFixed(2),
-        viagem_tempo_estimado_min: tempoViagem.toFixed(0),
-      };
     }
 
-    res.status(200).json({ success: true, pedido, ...extra });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor." });
-  }
-};
-
-//lista os pedidos disponíveis para o motorista aceitar
-exports.listarDisponiveis = async (req, res) => {
-  try {
-    // buscar turno ativo do motorista
-    const agora = new Date();
-    const turno = await Turno.findOne({
-      motorista: req.user.id,
-      data_inicio: { $lte: agora },
-      data_fim: { $gte: agora },
-    });
-
-    if (!turno) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Não tens nenhum turno ativo." });
-    }
-
-    // buscar pedidos pendentes
-    const pedidos = await Pedido.find({ estado: "pendente" });
-
-    // filtrar pedidos que cabem no tempo restante do turno
-    // estimativa: 4 minutos por km, usando haversine
-    //deafult localizaçã do motorista, faculdade de ciências
-    const VELOCIDADE_MIN_POR_KM = 4;
-    const motoristaLat = req.query.lat ? Number(req.query.lat) : 38.756734;
-    const motoristaLng = req.query.lng ? Number(req.query.lng) : -9.155412;
-
-    const pedidosFiltrados = pedidos
-      .map((pedido) => {
-        const distancia = haversine(
-          motoristaLat,
-          motoristaLng,
-          pedido.origem_lat,
-          pedido.origem_lng,
-        );
-        const distanciaDestino = haversine(
-          pedido.origem_lat,
-          pedido.origem_lng,
-          pedido.destino_lat,
-          pedido.destino_lng,
-        );
-        const tempoEstimado =
-          (distancia + distanciaDestino) * VELOCIDADE_MIN_POR_KM;
-        const minutosRestantes = (turno.data_fim - agora) / 60000;
-
-        return { pedido, distancia, tempoEstimado, minutosRestantes };
-      })
-      .filter(
-        ({ tempoEstimado, minutosRestantes }) =>
-          tempoEstimado <= minutosRestantes,
-      )
-      .sort((a, b) => a.distancia - b.distancia)
-      .map(({ pedido, distancia, tempoEstimado }) => ({
-        ...pedido.toObject(),
-        distancia_km: distancia.toFixed(2),
-        tempo_estimado_min: tempoEstimado.toFixed(0),
-      }));
-
-    res.status(200).json({ success: true, pedidos: pedidosFiltrados });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor." });
-  }
-};
-
-// Motorista aceita pedido
-exports.aceitar = async (req, res) => {
-  try {
-    const pedido = await Pedido.findById(req.params.id);
-
-    if (!pedido) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Pedido não encontrado." });
-    }
-
-    if (pedido.estado !== "pendente") {
-      return res
-        .status(400)
-        .json({ success: false, message: "Pedido já não está disponível." });
-    }
-
-    // verificar turno ativo
-    const agora = new Date();
-    const turno = await Turno.findOne({
-      motorista: req.user.id,
-      data_inicio: { $lte: agora },
-      data_fim: { $gte: agora },
-    });
-
-    if (!turno) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Não tens nenhum turno ativo." });
-    }
-
-    pedido.estado = "aceite";
-    pedido.motorista = req.user.id;
-    await pedido.save();
-
-    res
-      .status(200)
-      .json({ success: true, message: "Pedido aceite com sucesso.", pedido });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor." });
-  }
-};
-
-// Motorista cancela aceitação
-exports.cancelarAceitacao = async (req, res) => {
-  try {
-    const pedido = await Pedido.findById(req.params.id);
-
-    if (!pedido) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Pedido não encontrado." });
-    }
-
-    if (pedido.motorista?.toString() !== req.user.id) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Sem permissão." });
-    }
-
-    if (pedido.estado !== "aceite") {
-      return res
-        .status(400)
-        .json({ success: false, message: "Pedido não está em estado aceite." });
-    }
-
-    pedido.estado = "pendente";
-    pedido.motorista = null;
-    await pedido.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Aceitação cancelada, pedido voltou a pendente.",
-      pedido,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor." });
-  }
-};
-
-// Cliente vê o seu pedido ativo (não cancelado/concluído)
-exports.getAtivoCliente = async (req, res) => {
-  try {
-    const pedido = await Pedido.findOne({
-      cliente: req.user.id,
-      estado: { $nin: ["cancelado", "concluido"] },
-    }).populate("motorista", "nome nif");
-
-    if (!pedido) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Não tens nenhum pedido ativo." });
-    }
-
-    res.status(200).json({ success: true, pedido });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor." });
-  }
-};
-
-// Motorista inicia a viagem (cria registro de viagem)
-exports.iniciarViagem = async (req, res) => {
-  try {
-    const pedido = await Pedido.findById(req.params.id)
-      .populate("cliente", "nome")
-      .populate("motorista", "nome");
-
-    if (!pedido) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Pedido não encontrado." });
-    }
-
-    if (pedido.motorista.toString() !== req.user.id) {
+    if (
+      pedido.cliente_id.toString() !== req.user.id
+    ) {
       return res.status(403).json({
         success: false,
-        message: "Sem permissão para iniciar esta viagem.",
+        message: "Sem permissão.",
       });
     }
 
-    if (pedido.estado !== "confirmado") {
+    if (
+      !["pendente", "aceite", "confirmado"].includes(
+        pedido.estado
+      )
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Pedido deve estar confirmado para iniciar viagem.",
+        message: "Pedido não pode ser cancelado.",
       });
     }
 
-    // verificar turno ativo
-    const agora = new Date();
-    const turno = await Turno.findOne({
-      motorista: req.user.id,
-      data_inicio: { $lte: agora },
-      data_fim: { $gte: agora },
-    });
+    pedido.estado = "cancelado";
 
-    if (!turno) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Não tens nenhum turno ativo." });
-    }
-
-    // buscar táxi do turno
-    const taxi = turno.taxi;
-
-    // calcular distância da viagem
-    const distanciaKm = haversine(
-      pedido.origem_lat,
-      pedido.origem_lng,
-      pedido.destino_lat,
-      pedido.destino_lng,
-    );
-
-    // buscar preço baseado no nível de conforto
-    const preco = await Preco.findOne({
-      nivel_conforto: pedido.nivel_conforto,
-    });
-    if (!preco) {
-      return res.status(400).json({
-        success: false,
-        message: "Preço não encontrado para este nível de conforto.",
-      });
-    }
-
-    // estimativa simples: preço por minuto * tempo estimado
-    const tempoEstimadoMin = distanciaKm * 4; // 4 min/km
-    const precoTotal = preco.preco_minuto * tempoEstimadoMin;
-
-    // criar viagem
-    const viagem = new Viagem({
-      pedido_id: pedido._id,
-      turno_id: turno._id,
-      cliente_id: pedido.cliente._id,
-      motorista_id: pedido.motorista._id,
-      taxi_id: taxi,
-      data_inicio: agora,
-      morada_entrada: pedido.origem_morada,
-      morada_saida: pedido.destino_morada,
-      km: distanciaKm,
-      numero_pessoas: pedido.numero_pessoas,
-      preco_total: precoTotal,
-      estado: "em_curso",
-    });
-
-    await viagem.save();
-
-    // associar viagem ao pedido
-    pedido.viagem_id = viagem._id;
-    pedido.estado = "em_viagem";
     await pedido.save();
 
-    res.status(201).json({
+    res.json({
       success: true,
-      message: "Viagem iniciada com sucesso.",
-      viagem,
+      message: "Pedido cancelado.",
       pedido,
     });
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor." });
+
+    res.status(500).json({
+      success: false,
+      message: "Erro no servidor.",
+    });
+  }
+};
+
+// ════════════════════════════════════════
+// obter pedido por id
+// ════════════════════════════════════════
+
+exports.getById = async (req, res) => {
+  try {
+
+    const pedido = await Pedido.findById(req.params.id)
+      .populate("cliente_id", "nome nif")
+      .populate("motorista_id", "nome nif")
+      .populate("viagem_id");
+
+    if (!pedido) {
+      return res.status(404).json({
+        success: false,
+        message: "Pedido não encontrado.",
+      });
+    }
+
+    res.json({
+      success: true,
+      pedido,
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Erro no servidor.",
+    });
+  }
+};
+
+// ════════════════════════════════════════
+// pedido ativo cliente
+// ════════════════════════════════════════
+
+exports.getAtivoCliente = async (req, res) => {
+  try {
+
+    const pedido = await Pedido.findOne({
+      cliente_id: req.user.id,
+      estado: {
+        $nin: ["cancelado", "concluido"],
+      },
+    })
+      .populate("motorista_id", "nome nif")
+      .populate("viagem_id");
+
+    if (!pedido) {
+      return res.status(404).json({
+        success: false,
+        message: "Não tens pedido ativo.",
+      });
+    }
+
+    res.json({
+      success: true,
+      pedido,
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Erro no servidor.",
+    });
   }
 };
