@@ -51,7 +51,8 @@ Resposta:
 
 Use a bibliotequea Stripe.js:
 ```javascript
-const stripe = Stripe('pk_test_xxx'); // Publishable key (pública)
+const stripe = Stripe('
+pk_test_51TbOhzAE5vMlFiarAvdNF5DyQ8MfbB3Mbco8uoEiM0FrWkoVELQOjYk2lJ7iDRGyH4DxmQtXCEPIdwxIMYeB9dC400BRR8hyzH'); // Publishable key (pública)
 const elements = stripe.elements();
 const cardElement = elements.create('card');
 cardElement.mount('#card-element');
@@ -89,9 +90,9 @@ Resposta (se bem-sucedido):
 ## Métodos de Pagamento
 
 - **cartao** → Via Stripe (fluxo acima)
-- **dinheiro** → Sem Stripe (registro direto)
-- **multibanco** → Sem Stripe (registro direto)
-- **mbway** → Sem Stripe (registro direto)
+- **dinheiro** → Sem Stripe (registo direto)
+- **multibanco** → Sem Stripe (registo direto)
+- **mbway** → Sem Stripe (registo direto)
 
 ## Ver Histórico de Pagamentos
 
@@ -108,7 +109,6 @@ curl http://localhost:8080/api/pagamentos/ID_DO_PAGAMENTO
 
 ## Para Relatórios
 
-Seu colega pode usar qualquer um desses endpoints para extrair dados:
 - `GET /api/pagamentos` → Todos os dados
 - `GET /api/pagamentos/historico/:cliente_id` → Por cliente
 - Filtrar por `estado` (pendente, confirmado, falhado)
