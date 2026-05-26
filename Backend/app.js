@@ -16,6 +16,7 @@ const precosRoutes = require("./routes/precos");
 const pedidosRoutes = require("./routes/pedidos");
 const viagensRoutes = require("./routes/viagens");
 const pagamentosRoutes = require("./routes/pagamentos");
+const webhooksRoutes = require("./routes/webhooks");
 const relatoriosRoutes = require('./routes/relatorios')
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -42,6 +43,11 @@ mongoose
 // ===========================
 app.use(cors());
 app.use(express.json());
+
+// ===========================
+// Webhooks (comentado por enquanto - usar confirmação manual)
+// ===========================
+// app.use('/api/webhooks', webhooksRoutes);
 
 // ===========================
 // Rotas
