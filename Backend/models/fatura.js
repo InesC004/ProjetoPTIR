@@ -1,14 +1,20 @@
 const mongoose = require('mongoose')
 
 const faturaSchema = new mongoose.Schema({
-  numero_sequencial: { type: Number, required: true },
-  ano: { type: Number, required: true },
+  id_fatura: { type: String, required: true },
+  numero_sequencial: { type: mongoose.Schema.Types.Int32, required: true },
+  ano: { type: Number },
   data: { type: Date, default: Date.now },
-  nome_cliente: { type: String, required: true },
-  nif_cliente: { type: String, required: true },
-  genero_cliente: { type: String, required: true },
   valor: { type: Number, required: true },
-  viagem_id: { type: mongoose.Schema.Types.ObjectId, ref: 'viagem', required: true },
+  viagem_id: { type: String, required: true },
+  cliente_nif: { type: String, required: true },
+  cliente_nome: { type: String, required: true },
+  cliente_genero: { type: String, enum: ['feminino', 'masculino'], required: true },
+  nome_cliente: { type: String },
+  nif_cliente: { type: String },
+  genero_cliente: { type: String },
+  valor_total: { type: Number },
+  data_emissao: { type: Date },
   motorista_id: { type: mongoose.Schema.Types.ObjectId, ref: 'motorista', required: true }
 }, { timestamps: true })
 

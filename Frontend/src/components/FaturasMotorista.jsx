@@ -33,6 +33,24 @@ function formatEuros(valor) {
   return `${Number(valor).toFixed(2)} €`;
 }
 
+function getMongoId(valor) {
+  if (!valor) return null;
+  if (typeof valor === "string") return valor;
+  return valor._id || valor.id || null;
+}
+
+function getViagemId(pedido) {
+  return getMongoId(pedido?.viagem_id) || getMongoId(pedido?.viagem) || null;
+}
+
+function getFaturaNumero(fatura) {
+  if (fatura.numero_fatura) return fatura.numero_fatura;
+  if (fatura.numero_sequencial && fatura.ano) {
+    return `${fatura.ano}/${String(fatura.numero_sequencial).padStart(4, "0")}`;
+  }
+  return fatura._id?.slice(-6) || "—";
+}
+
 // ---------------------------------------------------------------------------
 // Componente principal
 // ---------------------------------------------------------------------------
@@ -52,11 +70,7 @@ export default function FaturasMotorista() {
     setLoading(true);
     setErro(null);
     try {
-      const motoristaId = localStorage.getItem("motorista_id");
-      if (!motoristaId)
-        throw new Error("Sessão expirada. Faça login novamente.");
-
-      const data = await api.faturas.listarPorMotorista(motoristaId);
+      const data = await api.faturas.listarMinhas();
       setFaturas(data.faturas || []);
     } catch (e) {
       setErro(e.message || "Não foi possível carregar as faturas.");
@@ -93,7 +107,7 @@ export default function FaturasMotorista() {
 
   // Emitir fatura para uma viagem
   async function emitirFatura(pedido) {
-    const viagemId = pedido?.viagem_id || pedido?._id || pedido?.id;
+    const viagemId = getViagemId(pedido);
     if (!viagemId) {
       setFeedback({ tipo: "erro", msg: "ID de viagem inválido." });
       return;
@@ -105,7 +119,22 @@ export default function FaturasMotorista() {
     try {
       await api.faturas.emitir(viagemId);
       setFeedback({ tipo: "ok", msg: "Fatura emitida com sucesso!" });
+
+      const terminadas = JSON.parse(
+        localStorage.getItem("viagensTerminadasMotorista") || "[]",
+      );
+      const atualizadas = terminadas.map((viagem) =>
+        getViagemId(viagem) === viagemId
+          ? { ...viagem, fatura_emitida: true }
+          : viagem,
+      );
+      localStorage.setItem(
+        "viagensTerminadasMotorista",
+        JSON.stringify(atualizadas),
+      );
+      carregarPendentes();
       await carregarFaturas();
+      window.dispatchEvent(new Event("viagensConfirmadasAtualizadas"));
     } catch (e) {
       setFeedback({ tipo: "erro", msg: e.message || "Erro ao emitir fatura." });
     } finally {
@@ -169,7 +198,7 @@ export default function FaturasMotorista() {
         ) : (
           <div className="ft-list">
             {pendentes.map((pedido, idx) => {
-              const vid = pedido?.viagem_id || pedido?._id || pedido?.id || idx;
+              const vid = getViagemId(pedido) || pedido?._id || pedido?.id || idx;
               const isLoading = emitindoId === vid;
               return (
                 <article className="ft-card ft-card--pendente" key={vid}>
@@ -258,7 +287,7 @@ export default function FaturasMotorista() {
                 {/* Número */}
                 <div className="ft-card-badge">
                   <Hash size={13} />
-                  {f.numero_fatura}
+                  {getFaturaNumero(f)}
                 </div>
 
                 <div className="ft-card-body">
@@ -267,7 +296,7 @@ export default function FaturasMotorista() {
                       <Calendar size={13} /> Data
                     </span>
                     <span className="ft-meta-value">
-                      {formatData(f.data_emissao)}
+                      {formatData(f.data_emissao || f.data || f.createdAt)}
                     </span>
                   </div>
 
@@ -294,7 +323,7 @@ export default function FaturasMotorista() {
                       <Euro size={13} /> Total
                     </span>
                     <span className="ft-price">
-                      {formatEuros(f.valor_total)}
+                      {formatEuros(f.valor_total ?? f.valor)}
                     </span>
                   </div>
                 </div>

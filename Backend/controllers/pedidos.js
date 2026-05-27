@@ -286,10 +286,31 @@ exports.cancelarAceitacao = async (req, res) => {
       });
     }
 
+    if (resposta === "confirmar" && pedido.estado === "confirmado") {
+      return res.json({
+        success: true,
+        message: "Motorista confirmado com sucesso.",
+        pedido,
+      });
+    }
+
+    if (
+      resposta === "rejeitar" &&
+      pedido.estado === "pendente" &&
+      !pedido.motorista_id
+    ) {
+      return res.json({
+        success: true,
+        message: "Motorista rejeitado com sucesso.",
+        pedido,
+      });
+    }
+
     if (pedido.estado !== "aceite") {
       return res.status(400).json({
         success: false,
-        message: "Pedido não está aceite.",
+        message: "Este pedido já foi atualizado. Recarregue o estado do pedido.",
+        pedido,
       });
     }
 

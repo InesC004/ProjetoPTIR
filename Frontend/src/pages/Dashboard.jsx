@@ -454,6 +454,7 @@ export default function Dashboard() {
   const [mostrarPopupPagamento, setMostrarPopupPagamento] = useState(false);
   const [aPagar, setAPagar] = useState(false);
   const [erroPagamento, setErroPagamento] = useState("");
+  const [aResponderMotorista, setAResponderMotorista] = useState(false);
 
   useEffect(() => {
     async function carregarPedidoAtivo() {
@@ -714,8 +715,11 @@ export default function Dashboard() {
 
   async function responderMotorista(respostaCliente) {
     if (!pedidoAtual) return;
+    if (getEstadoVisivel(pedidoAtual) !== "aceite") return;
 
     const token = localStorage.getItem("token");
+    setAResponderMotorista(true);
+    setErroPedido("");
 
     try {
       const res = await fetch(
@@ -733,12 +737,17 @@ export default function Dashboard() {
       const data = await res.json();
 
       if (data.success) {
-        setPedidoAtual(data.pedido);
+        setPedidoAtual(aplicarEstadoFrontend(data.pedido));
       } else {
+        if (data.pedido) {
+          setPedidoAtual(aplicarEstadoFrontend(data.pedido));
+        }
         setErroPedido(data.message || "Erro ao responder ao motorista.");
       }
     } catch {
       setErroPedido("Erro de ligação ao servidor.");
+    } finally {
+      setAResponderMotorista(false);
     }
   }
 
@@ -1282,15 +1291,17 @@ export default function Dashboard() {
               <button
                 className="btn-rejeitar"
                 onClick={() => responderMotorista("rejeitar")}
+                disabled={aResponderMotorista}
               >
-                Rejeitar
+                {aResponderMotorista ? "A responder..." : "Rejeitar"}
               </button>
 
               <button
                 className="btn-aceitar"
                 onClick={() => responderMotorista("confirmar")}
+                disabled={aResponderMotorista}
               >
-                Aceitar motorista
+                {aResponderMotorista ? "A responder..." : "Aceitar motorista"}
               </button>
             </div>
           </div>

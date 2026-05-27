@@ -22,6 +22,16 @@ function getId(pedido) {
   return pedido?._id || pedido?.id;
 }
 
+function getMongoId(valor) {
+  if (!valor) return null;
+  if (typeof valor === "string") return valor;
+  return valor._id || valor.id || null;
+}
+
+function getViagemId(pedido) {
+  return getMongoId(pedido?.viagem_id) || null;
+}
+
 function getMorada(valor) {
   return valor || "Morada não indicada";
 }
@@ -164,7 +174,7 @@ export default function ViagensMotorista() {
   // ── Emitir fatura ────────────────────────────────────────────────────────
   async function emitirFatura(pedido) {
     const id = getId(pedido);
-    const viagemId = pedido?.viagem_id || id;
+    const viagemId = getViagemId(pedido);
     if (!viagemId) return;
 
     setFaturaEstado((prev) => ({ ...prev, [id]: "loading" }));
@@ -176,7 +186,9 @@ export default function ViagensMotorista() {
         localStorage.getItem("viagensTerminadasMotorista") || "[]",
       );
       const atualizadas = terminadasAtuais.map((v) =>
-        getId(v) === id ? { ...v, fatura_emitida: true } : v,
+        getId(v) === id || getViagemId(v) === viagemId
+          ? { ...v, fatura_emitida: true }
+          : v,
       );
       localStorage.setItem(
         "viagensTerminadasMotorista",
@@ -387,9 +399,14 @@ export default function ViagensMotorista() {
                   <>
                     <button
                       type="button"
-                      className="vm-btn vm-btn-fatura"
+                      className={`vm-btn vm-btn-fatura ${!pagamentoOk ? "vm-btn-disabled" : ""}`}
                       onClick={() => emitirFatura(pedido)}
-                      disabled={faturaLoading}
+                      disabled={!pagamentoOk || faturaLoading}
+                      title={
+                        !pagamentoOk
+                          ? "Aguarda confirmação do pagamento para emitir a fatura"
+                          : "Emitir fatura desta viagem"
+                      }
                     >
                       {faturaLoading ? (
                         <Loader2 size={15} className="vm-spin" />

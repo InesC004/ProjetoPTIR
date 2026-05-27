@@ -299,6 +299,12 @@ const faturas = {
       auth: true,
     });
   },
+
+  async listarMinhas() {
+    return request("/api/faturas/motorista/me", {
+      auth: true,
+    });
+  },
 };
 
 // =============================================================================
