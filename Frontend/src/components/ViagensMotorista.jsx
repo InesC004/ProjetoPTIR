@@ -2,14 +2,21 @@ import { useEffect, useState } from "react";
 import {
   CheckCircle2,
   Clock,
+  FileText,
   Loader2,
   MapPin,
+  Receipt,
   Route,
   Users,
+  Euro,
+  AlertCircle,
 } from "lucide-react";
 import api from "../Api";
 import "../css/ViagensMotorista.css";
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 function getId(pedido) {
   return pedido?._id || pedido?.id;
@@ -21,135 +28,153 @@ function getMorada(valor) {
 
 function getDistancia(pedido) {
   const distancia = pedido?.distancia_km ?? pedido?.distancia;
-
-  if (distancia === undefined || distancia === null || distancia === "") {
+  if (distancia === undefined || distancia === null || distancia === "")
     return "—";
-  }
-
   return `${Number(distancia).toFixed(2)} km`;
 }
 
 function getTempo(pedido) {
   const tempo = pedido?.tempo_estimado_min ?? pedido?.tempo_estimado;
-
-  if (tempo === undefined || tempo === null || tempo === "") {
-    return "—";
-  }
-
+  if (tempo === undefined || tempo === null || tempo === "") return "—";
   return `${Math.round(Number(tempo))} min`;
 }
 
-function temDistancia(pedido) {
-  return (
-    pedido?.quilometros_percorridos ||
-    pedido?.distancia_km ||
-    pedido?.viagem_distancia_km ||
-    pedido?.distancia
-  );
+function getPreco(pedido) {
+  const preco = pedido?.preco ?? pedido?.valor ?? pedido?.preco_viagem;
+  if (preco === undefined || preco === null) return null;
+  return `${Number(preco).toFixed(2)} €`;
 }
 
-function temTempo(pedido) {
-  return (
-    pedido?.duracao_minutos ||
-    pedido?.tempo_estimado_min ||
-    pedido?.viagem_tempo_estimado_min ||
-    pedido?.tempo_estimado
-  );
-}
+// ---------------------------------------------------------------------------
+// Componente principal
+// ---------------------------------------------------------------------------
 
 export default function ViagensMotorista() {
   const [viagens, setViagens] = useState([]);
   const [viagensTerminadas, setViagensTerminadas] = useState([]);
   const [processingId, setProcessingId] = useState(null);
 
+  // Estado para emissão de faturas: { [id]: 'loading' | 'ok' | 'erro' | msg }
+  const [faturaEstado, setFaturaEstado] = useState({});
+
   function carregarViagens() {
     const guardadas = JSON.parse(
       localStorage.getItem("viagensConfirmadasMotorista") || "[]",
     );
-
     const terminadas = JSON.parse(
       localStorage.getItem("viagensTerminadasMotorista") || "[]",
     );
-
     setViagens(guardadas);
     setViagensTerminadas(terminadas);
   }
 
   useEffect(() => {
     carregarViagens();
-
     window.addEventListener("viagensConfirmadasAtualizadas", carregarViagens);
-
-    return () => {
+    return () =>
       window.removeEventListener(
         "viagensConfirmadasAtualizadas",
         carregarViagens,
       );
-    };
   }, []);
 
+  // ── Terminar viagem ──────────────────────────────────────────────────────
   async function terminarViagem(pedido) {
     const id = getId(pedido);
     if (!id) return;
 
     setProcessingId(id);
 
-     try {
-    const data = await api.pedidos.terminarViagem(id);
+    try {
+      await api.pedidos.terminarViagem(id);
 
-    const atualizadas = viagens.filter((v) => getId(v) !== id);
+      const atualizadas = viagens.filter((v) => getId(v) !== id);
+      const terminadasAtuais = JSON.parse(
+        localStorage.getItem("viagensTerminadasMotorista") || "[]",
+      );
 
-    const terminadasAtuais = JSON.parse(
-      localStorage.getItem("viagensTerminadasMotorista") || "[]",
-    );
+      const terminada = {
+        ...pedido,
+        estado: "concluido",
+        estadoViagem: "terminada",
+        data_fim: new Date().toISOString(),
+        // pagamento_confirmado virá a true quando o colega confirmar o pagamento
+      };
 
-    const terminada = {
-      ...(data?.pedido || pedido),
-      estado: "concluido",
-      estadoViagem: "terminada",
-      data_fim: new Date().toISOString(),
-    };
+      localStorage.setItem(
+        "viagensConfirmadasMotorista",
+        JSON.stringify(atualizadas),
+      );
+      localStorage.setItem(
+        "viagensTerminadasMotorista",
+        JSON.stringify([terminada, ...terminadasAtuais]),
+      );
 
-    localStorage.setItem(
-      "viagensConfirmadasMotorista",
-      JSON.stringify(atualizadas),
-    );
+      setViagens(atualizadas);
+      setViagensTerminadas([terminada, ...terminadasAtuais]);
+      window.dispatchEvent(new Event("viagensConfirmadasAtualizadas"));
+    } catch (err) {
+      alert(err.message || "Não foi possível terminar a viagem.");
+    } finally {
+      setProcessingId(null);
+    }
+  }
 
+  // ── Emitir fatura ────────────────────────────────────────────────────────
+  async function emitirFatura(pedido) {
+    const id = getId(pedido);
+    // O backend espera o viagem_id — pode estar em viagem_id ou no próprio _id do pedido
+    const viagemId = pedido?.viagem_id || id;
+    if (!viagemId) return;
+
+    setFaturaEstado((prev) => ({ ...prev, [id]: "loading" }));
+
+    try {
+      await api.faturas.emitir(viagemId);
+
+      // Marcar no localStorage que esta viagem já tem fatura emitida
+      const terminadasAtuais = JSON.parse(
+        localStorage.getItem("viagensTerminadasMotorista") || "[]",
+      );
+      const atualizadas = terminadasAtuais.map((v) =>
+        getId(v) === id ? { ...v, fatura_emitida: true } : v,
+      );
+      localStorage.setItem(
+        "viagensTerminadasMotorista",
+        JSON.stringify(atualizadas),
+      );
+      setViagensTerminadas(atualizadas);
+
+      setFaturaEstado((prev) => ({ ...prev, [id]: "ok" }));
+    } catch (err) {
+      setFaturaEstado((prev) => ({
+        ...prev,
+        [id]: err.message || "Erro ao emitir fatura.",
+      }));
+    }
+  }
+
+  // ── Eliminar ─────────────────────────────────────────────────────────────
+  function eliminarViagemTerminada(pedido) {
+    const id = getId(pedido);
+    if (!id) return;
+    const atualizadas = viagensTerminadas.filter((v) => getId(v) !== id);
     localStorage.setItem(
       "viagensTerminadasMotorista",
-      JSON.stringify([terminada, ...terminadasAtuais]),
+      JSON.stringify(atualizadas),
     );
+    setViagensTerminadas(atualizadas);
+  }
 
-    setViagens(atualizadas);
-    setViagensTerminadas([terminada, ...terminadasAtuais]);
+  function eliminarTodasViagensTerminadas() {
+    localStorage.removeItem("viagensTerminadasMotorista");
+    setViagensTerminadas([]);
+  }
 
-    window.dispatchEvent(new Event("viagensConfirmadasAtualizadas"));
-  } catch (err) {
-    alert(err.message || "Não foi possível terminar a viagem.");
-  } finally {
-    setProcessingId(null);
-  }}
-  function eliminarViagemTerminada(pedido) {
-  const id = getId(pedido);
-  if (!id) return;
-
-  const atualizadas = viagensTerminadas.filter((v) => getId(v) !== id);
-
-  localStorage.setItem(
-    "viagensTerminadasMotorista",
-    JSON.stringify(atualizadas),
-  );
-
-  setViagensTerminadas(atualizadas);
-}
-
-function eliminarTodasViagensTerminadas() {
-  localStorage.removeItem("viagensTerminadasMotorista");
-  setViagensTerminadas([]);
-}
-
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="vm-wrap">
+      {/* ══ Viagens em curso ══ */}
       <div className="vm-toolbar">
         <div>
           <p className="vm-eyebrow">Viagens</p>
@@ -176,7 +201,6 @@ function eliminarTodasViagensTerminadas() {
                     <Clock size={14} />
                     Em curso
                   </span>
-
                   <h4>{getMorada(pedido.origem_morada)}</h4>
                   <p>Destino: {getMorada(pedido.destino_morada)}</p>
                 </div>
@@ -187,18 +211,18 @@ function eliminarTodasViagensTerminadas() {
                   <Users size={15} />
                   <span>{pedido.numero_pessoas || "—"} pessoa(s)</span>
                 </div>
-
-                {temDistancia(pedido) && (
+                <div>
+                  <MapPin size={15} />
+                  <span>{getDistancia(pedido)}</span>
+                </div>
+                <div>
+                  <Route size={15} />
+                  <span>{getTempo(pedido)}</span>
+                </div>
+                {getPreco(pedido) && (
                   <div>
-                    <MapPin size={15} />
-                    <span>{getDistancia(pedido)}</span>
-                  </div>
-                )}
-
-                {temTempo(pedido) && (
-                  <div>
-                    <Route size={15} />
-                    <span>{getTempo(pedido)}</span>
+                    <Euro size={15} />
+                    <span>{getPreco(pedido)}</span>
                   </div>
                 )}
               </div>
@@ -221,6 +245,7 @@ function eliminarTodasViagensTerminadas() {
         </div>
       )}
 
+      {/* ══ Viagens terminadas ══ */}
       <div className="vm-toolbar vm-toolbar-history">
         <div>
           <p className="vm-eyebrow">Histórico</p>
@@ -248,53 +273,116 @@ function eliminarTodasViagensTerminadas() {
         </div>
       ) : (
         <div className="vm-list">
-          {viagensTerminadas.map((pedido) => (
-            <article
-              className="vm-card vm-card-ended"
-              key={`${getId(pedido)}-terminada`}
-            >
-              <div className="vm-card-top">
-                <div>
-                  <span className="vm-badge vm-badge-ended">
-                    <CheckCircle2 size={14} />
-                    Terminada
-                  </span>
+          {viagensTerminadas.map((pedido) => {
+            const id = getId(pedido);
+            const faturaOk = pedido.fatura_emitida || faturaEstado[id] === "ok";
+            const faturaLoading = faturaEstado[id] === "loading";
+            const faturaErro =
+              faturaEstado[id] &&
+              faturaEstado[id] !== "loading" &&
+              faturaEstado[id] !== "ok";
+            // Pagamento confirmado: o colega vai pôr pagamento_confirmado: true
+            const pagamentoOk = !!pedido.pagamento_confirmado;
 
-                  <h4>{getMorada(pedido.origem_morada)}</h4>
-                  <p>Destino: {getMorada(pedido.destino_morada)}</p>
+            return (
+              <article
+                className="vm-card vm-card-ended"
+                key={`${id}-terminada`}
+              >
+                <div className="vm-card-top">
+                  <div>
+                    <span className="vm-badge vm-badge-ended">
+                      <CheckCircle2 size={14} />
+                      Terminada
+                    </span>
+                    <h4>{getMorada(pedido.origem_morada)}</h4>
+                    <p>Destino: {getMorada(pedido.destino_morada)}</p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="vm-metrics">
-                <div>
-                  <Users size={15} />
-                  <span>{pedido.numero_pessoas || "—"} pessoa(s)</span>
+                <div className="vm-metrics">
+                  <div>
+                    <Users size={15} />
+                    <span>{pedido.numero_pessoas || "—"} pessoa(s)</span>
+                  </div>
+                  <div>
+                    <MapPin size={15} />
+                    <span>{getDistancia(pedido)}</span>
+                  </div>
+                  <div>
+                    <Route size={15} />
+                    <span>{getTempo(pedido)}</span>
+                  </div>
+                  {getPreco(pedido) && (
+                    <div>
+                      <Euro size={15} />
+                      <span className="vm-price">{getPreco(pedido)}</span>
+                    </div>
+                  )}
                 </div>
 
-                <div>
-                  <MapPin size={15} />
-                  <span>{getDistancia(pedido)}</span>
+                {/* ── Estado do pagamento ── */}
+                <div className="vm-payment-status">
+                  {pagamentoOk ? (
+                    <span className="vm-payment-ok">
+                      <CheckCircle2 size={13} />
+                      Pagamento confirmado
+                    </span>
+                  ) : (
+                    <span className="vm-payment-pending">
+                      <Clock size={13} />A aguardar pagamento do cliente…
+                    </span>
+                  )}
                 </div>
 
-                <div>
-                  <Route size={15} />
-                  <span>{getTempo(pedido)}</span>
+                {/* ── Botão emitir fatura (só aparece após pagamento) ── */}
+                {faturaOk ? (
+                  <div className="vm-fatura-ok">
+                    <Receipt size={14} />
+                    Fatura emitida
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className={`vm-btn vm-btn-fatura ${!pagamentoOk ? "vm-btn-disabled" : ""}`}
+                      onClick={() => emitirFatura(pedido)}
+                      disabled={!pagamentoOk || faturaLoading}
+                      title={
+                        !pagamentoOk
+                          ? "Aguarda confirmação do pagamento para emitir a fatura"
+                          : "Emitir fatura desta viagem"
+                      }
+                    >
+                      {faturaLoading ? (
+                        <Loader2 size={15} className="vm-spin" />
+                      ) : (
+                        <FileText size={15} />
+                      )}
+                      {faturaLoading ? "A emitir…" : "Emitir fatura"}
+                    </button>
+
+                    {faturaErro && (
+                      <p className="vm-fatura-erro">
+                        <AlertCircle size={13} />
+                        {faturaEstado[id]}
+                      </p>
+                    )}
+                  </>
+                )}
+
+                <div className="vm-ended-actions">
+                  <button
+                    type="button"
+                    className="vm-ended-delete"
+                    onClick={() => eliminarViagemTerminada(pedido)}
+                  >
+                    Eliminar
+                  </button>
                 </div>
-              </div>
-
-              <div className="vm-ended-actions">
-                <p className="vm-ended-note">Concluída</p>
-
-                <button
-                  type="button"
-                  className="vm-ended-delete"
-                  onClick={() => eliminarViagemTerminada(pedido)}
-                >
-                  Eliminar
-                </button>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       )}
     </div>
