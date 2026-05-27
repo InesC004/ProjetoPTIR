@@ -48,6 +48,9 @@ export default function Header({ isDashboard = false }) {
     { icon: "⚙️", label: "Definições", path: "/settings" },
   ];
 
+  const primeiroNome = cliente.nome ? cliente.nome.split(" ")[0] : "Eu";
+  const inicial = primeiroNome.charAt(0).toUpperCase();
+
   return (
     <>
       <header className={`header${scrolled ? " scrolled" : ""}`}>
@@ -83,18 +86,107 @@ export default function Header({ isDashboard = false }) {
               className="perfil-btn"
               onClick={() => setProfileOpen((p) => !p)}
               aria-label="Menu de perfil"
+              style={{
+                all: "unset",
+                display: "flex",
+                alignItems: "center",
+                gap: "9px",
+                padding: "6px 13px 6px 7px",
+                background: profileOpen
+                  ? "rgba(255,255,255,0.1)"
+                  : "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: "999px",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                boxShadow: profileOpen
+                  ? "0 0 0 2.5px rgba(61,139,255,0.4), inset 0 1px 0 rgba(255,255,255,0.08)"
+                  : "inset 0 1px 0 rgba(255,255,255,0.05)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255,255,255,0.1)";
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = profileOpen
+                  ? "rgba(255,255,255,0.1)"
+                  : "rgba(255,255,255,0.06)";
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+              }}
             >
+              {/* Bolinha com inicial */}
+              <span
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: "50%",
+                  background:
+                    "linear-gradient(135deg, #3d8bff 0%, #6c4dff 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.7rem",
+                  fontWeight: 700,
+                  color: "#fff",
+                  flexShrink: 0,
+                  letterSpacing: 0,
+                  boxShadow: "0 2px 8px rgba(61,139,255,0.45)",
+                }}
+              >
+                {inicial}
+              </span>
+
+              {/* Nome */}
+              <span
+                style={{
+                  color: "#f0f4ff",
+                  fontSize: "0.83rem",
+                  fontWeight: 600,
+                  letterSpacing: "0.015em",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {primeiroNome}
+              </span>
+
+              {/* Chevron SVG */}
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="rgba(255,255,255,0.5)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{
+                  flexShrink: 0,
+                  transition: "transform 0.25s ease",
+                  transform: profileOpen ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
             </button>
-            <span className="perfil-btn-online" />
 
             {profileOpen && (
               <div className="perfil-menu">
                 <div className="perfil-menu-topo">
-                  <div className="perfil-menu-avatar">
-                    <img
-                      src={`https://api.dicebear.com/7.x/thumbs/svg?seed=${cliente.nome || "user"}`}
-                      alt="Avatar"
-                    />
+                  <div
+                    className="perfil-menu-avatar"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #3d8bff 0%, #6c4dff 100%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "1.1rem",
+                      fontWeight: 700,
+                      color: "#fff",
+                      boxShadow: "0 2px 10px rgba(61,139,255,0.45)",
+                    }}
+                  >
+                    {inicial}
                   </div>
                   <div>
                     <div className="perfil-menu-nome">
@@ -142,7 +234,6 @@ export default function Header({ isDashboard = false }) {
         )}
       </header>
 
-      {/* Sidebar só nas páginas de landing */}
       {!isDashboard && (
         <Sidebar isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
       )}
