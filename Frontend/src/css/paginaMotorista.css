@@ -399,3 +399,137 @@ header {
   border-color: rgba(0, 232, 135, 0.25);
   color: #30f0a0;
 }
+
+.viagem-flutuante {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 420;
+  width: min(360px, calc(100vw - 32px));
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(7, 26, 53, 0.96);
+  border: 1px solid rgba(48, 240, 160, 0.28);
+  box-shadow:
+    0 24px 70px rgba(6, 17, 42, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: #f6fbff;
+  backdrop-filter: blur(18px);
+}
+
+.vf-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.vf-topo svg {
+  color: #30f0a0;
+}
+
+.vf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #30f0a0;
+}
+
+.vf-ponto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #30f0a0;
+  box-shadow: 0 0 10px #30f0a0;
+  animation: piscar 2s ease infinite;
+}
+
+.vf-rota {
+  display: grid;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.vf-rota div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  color: rgba(246, 251, 255, 0.86);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.vf-rota svg {
+  color: #63a3ff;
+  flex-shrink: 0;
+}
+
+.vf-rota span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vf-preco {
+  display: inline-flex;
+  margin-bottom: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f6fbff;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.vf-btn {
+  width: 100%;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #10d98a, #14b8a6);
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: "DM Sans", sans-serif;
+  font-weight: 900;
+}
+
+.vf-btn:disabled {
+  opacity: 0.72;
+  cursor: wait;
+}
+
+.vf-erro {
+  margin: 0 0 10px !important;
+  color: #fecaca !important;
+  font-size: 0.8rem !important;
+  font-weight: 800;
+}
+
+.vf-spin {
+  animation: vf-spin 1s linear infinite;
+}
+
+@keyframes vf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 720px) {
+  .viagem-flutuante {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    width: auto;
+  }
+}

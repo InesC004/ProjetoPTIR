@@ -12,10 +12,14 @@ import {
   LogOut,
   Settings,
   ChevronDown,
+  Loader2,
+  CheckCircle2,
+  MapPin,
 } from "lucide-react";
 import logo from "../Pictures/logo1.jpeg";
 import TurnosMotorista from "../components/TurnosMotorista";
 import ReabastecimentosMotorista from "../components/ReabastecimentosMotorista";
+import api from "../Api";
 import "../css/PaginaMotorista.css";
 import PedidosMotorista from "../components/PedidosMotorista";
 import ViagensMotorista from "../components/ViagensMotorista";
@@ -624,7 +628,137 @@ export default function PaginaMotorista() {
           </div>
         </main>
       </div>
+      <ViagemAtivaFlutuante />
     </div>
+  );
+}
+
+function getId(item) {
+  return item?._id || item?.id;
+}
+
+function getMorada(valor) {
+  return valor || "Morada não indicada";
+}
+
+function getPreco(pedido) {
+  const preco =
+    pedido?.preco_final ?? pedido?.preco ?? pedido?.valor ?? pedido?.preco_viagem;
+  if (preco === undefined || preco === null) return null;
+  return `${Number(preco).toFixed(2)} €`;
+}
+
+function ViagemAtivaFlutuante() {
+  const [viagem, setViagem] = useState(null);
+  const [aTerminar, setATerminar] = useState(false);
+  const [erro, setErro] = useState("");
+
+  function carregarViagemAtiva() {
+    const emCurso = JSON.parse(
+      localStorage.getItem("viagensConfirmadasMotorista") || "[]",
+    );
+    setViagem(emCurso[0] || null);
+  }
+
+  useEffect(() => {
+    carregarViagemAtiva();
+
+    const interval = setInterval(carregarViagemAtiva, 2000);
+    window.addEventListener("viagensConfirmadasAtualizadas", carregarViagemAtiva);
+    window.addEventListener("storage", carregarViagemAtiva);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener(
+        "viagensConfirmadasAtualizadas",
+        carregarViagemAtiva,
+      );
+      window.removeEventListener("storage", carregarViagemAtiva);
+    };
+  }, []);
+
+  async function terminarViagem() {
+    const id = getId(viagem);
+    if (!id) return;
+
+    setATerminar(true);
+    setErro("");
+
+    try {
+      const data = await api.pedidos.terminarViagem(id);
+      const pedidoAtualizado = data?.pedido || viagem;
+      const emCurso = JSON.parse(
+        localStorage.getItem("viagensConfirmadasMotorista") || "[]",
+      );
+      const terminadas = JSON.parse(
+        localStorage.getItem("viagensTerminadasMotorista") || "[]",
+      );
+
+      const atualizadas = emCurso.filter((item) => getId(item) !== id);
+      const terminada = {
+        ...viagem,
+        ...pedidoAtualizado,
+        estado: "pagamento_pendente",
+        estadoViagem: "terminada",
+        data_fim: new Date().toISOString(),
+        pagamento_estado: pedidoAtualizado.pagamento_estado || "pendente",
+        pagamento_confirmado: false,
+      };
+
+      localStorage.setItem(
+        "viagensConfirmadasMotorista",
+        JSON.stringify(atualizadas),
+      );
+      localStorage.setItem(
+        "viagensTerminadasMotorista",
+        JSON.stringify([terminada, ...terminadas]),
+      );
+
+      setViagem(null);
+      window.dispatchEvent(new Event("viagensConfirmadasAtualizadas"));
+    } catch (err) {
+      setErro(err.message || "Não foi possível terminar a viagem.");
+    } finally {
+      setATerminar(false);
+    }
+  }
+
+  if (!viagem) return null;
+
+  return (
+    <aside className="viagem-flutuante" aria-live="polite">
+      <div className="vf-topo">
+        <span className="vf-badge">
+          <span className="vf-ponto" />
+          Viagem em curso
+        </span>
+        <Route size={18} />
+      </div>
+
+      <div className="vf-rota">
+        <div>
+          <MapPin size={14} />
+          <span>{getMorada(viagem.origem_morada)}</span>
+        </div>
+        <div>
+          <CheckCircle2 size={14} />
+          <span>{getMorada(viagem.destino_morada)}</span>
+        </div>
+      </div>
+
+      {getPreco(viagem) && <div className="vf-preco">{getPreco(viagem)}</div>}
+      {erro && <p className="vf-erro">{erro}</p>}
+
+      <button
+        type="button"
+        className="vf-btn"
+        onClick={terminarViagem}
+        disabled={aTerminar}
+      >
+        {aTerminar ? <Loader2 size={16} className="vf-spin" /> : <CheckCircle2 size={16} />}
+        {aTerminar ? "A terminar..." : "Terminar viagem"}
+      </button>
+    </aside>
   );
 }
 
