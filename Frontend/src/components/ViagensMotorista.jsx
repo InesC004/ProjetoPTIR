@@ -39,6 +39,24 @@ function getTempo(pedido) {
   return `${Math.round(Number(tempo))} min`;
 }
 
+function temDistancia(pedido) {
+  return (
+    pedido?.quilometros_percorridos ||
+    pedido?.distancia_km ||
+    pedido?.viagem_distancia_km ||
+    pedido?.distancia
+  );
+}
+
+function temTempo(pedido) {
+  return (
+    pedido?.duracao_minutos ||
+    pedido?.tempo_estimado_min ||
+    pedido?.viagem_tempo_estimado_min ||
+    pedido?.tempo_estimado
+  );
+}
+
 export default function ViagensMotorista() {
   const [viagens, setViagens] = useState([]);
   const [viagensTerminadas, setViagensTerminadas] = useState([]);
@@ -77,7 +95,7 @@ export default function ViagensMotorista() {
     setProcessingId(id);
 
      try {
-    await api.pedidos.terminarViagem(id);
+    const data = await api.pedidos.terminarViagem(id);
 
     const atualizadas = viagens.filter((v) => getId(v) !== id);
 
@@ -86,7 +104,7 @@ export default function ViagensMotorista() {
     );
 
     const terminada = {
-      ...pedido,
+      ...(data?.pedido || pedido),
       estado: "concluido",
       estadoViagem: "terminada",
       data_fim: new Date().toISOString(),
@@ -170,15 +188,19 @@ function eliminarTodasViagensTerminadas() {
                   <span>{pedido.numero_pessoas || "—"} pessoa(s)</span>
                 </div>
 
-                <div>
-                  <MapPin size={15} />
-                  <span>{getDistancia(pedido)}</span>
-                </div>
+                {temDistancia(pedido) && (
+                  <div>
+                    <MapPin size={15} />
+                    <span>{getDistancia(pedido)}</span>
+                  </div>
+                )}
 
-                <div>
-                  <Route size={15} />
-                  <span>{getTempo(pedido)}</span>
-                </div>
+                {temTempo(pedido) && (
+                  <div>
+                    <Route size={15} />
+                    <span>{getTempo(pedido)}</span>
+                  </div>
+                )}
               </div>
 
               <button

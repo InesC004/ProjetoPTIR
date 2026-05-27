@@ -2295,3 +2295,35 @@ input[type="number"].input-morada {
 .step-line.feito-2 {
   background: linear-gradient(90deg, #2563eb, #1e3a8a) !important;
 }
+.popup-motorista-acoes {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+.popup-motorista-acoes .btn-rejeitar,
+.popup-motorista-acoes .btn-aceitar {
+  min-width: 170px;
+  height: 48px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  padding: 0 20px;
+}
+
+.popup-motorista-acoes .btn-rejeitar {
+  background: white;
+  color: #ef4444;
+  border: 1.5px solid #fca5a5;
+}
+
+.popup-motorista-acoes .btn-aceitar {
+  background: linear-gradient(135deg, #10d98a, #14b8a6);
+  color: white;
+  border: none;
+}

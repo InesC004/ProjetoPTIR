@@ -396,6 +396,7 @@ export default function Dashboard() {
             custo_estimado: data.viagem_tempo_estimado_min
               ? (Number(data.viagem_tempo_estimado_min) * 0.75).toFixed(2)
               : null,
+              taxi: data.taxi,
           });
 
           setPedidoAtual(pedidoAtualizado);
@@ -1045,7 +1046,9 @@ useEffect(() => {
               <div className="popup-linha">
                 <span>Táxi</span>
                 <strong>
-                  {pedidoAtual.taxi?.matricula || "Detalhes indisponíveis"}
+                  {pedidoAtual.taxi
+                    ? `${pedidoAtual.taxi.matricula} · ${pedidoAtual.taxi.marca || ""} ${pedidoAtual.taxi.modelo || ""}`
+                    : "Detalhes indisponíveis"}
                 </strong>
               </div>
             </div>

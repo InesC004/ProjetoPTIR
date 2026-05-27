@@ -443,7 +443,6 @@ exports.cancelar = async (req, res) => {
 
 exports.getById = async (req, res) => {
   try {
-
     const pedido = await Pedido.findById(req.params.id)
       .populate("cliente_id", "nome nif")
       .populate("motorista_id", "nome nif")
@@ -456,11 +455,67 @@ exports.getById = async (req, res) => {
       });
     }
 
+    let viagem_distancia_km = null;
+    let viagem_tempo_estimado_min = null;
+    let custo_estimado = null;
+    //
+    let taxi = null;
+
+    if (pedido.motorista_id) {
+      const turno = await Turno.findOne({
+        motorista: pedido.motorista_id._id || pedido.motorista_id,
+      })
+        .populate("taxi", "matricula marca modelo nivel_conforto")
+        .sort({ data_inicio: -1 });
+
+      if (turno?.taxi) {
+        taxi = turno.taxi;
+      }
+    }//
+
+    if (
+      pedido.origem_lat &&
+      pedido.origem_lng &&
+      pedido.destino_lat &&
+      pedido.destino_lng
+    ) {
+      viagem_distancia_km = Number(
+        haversine(
+          pedido.origem_lat,
+          pedido.origem_lng,
+          pedido.destino_lat,
+          pedido.destino_lng,
+        ).toFixed(2),
+      );
+
+      viagem_tempo_estimado_min = Math.max(
+        1,
+        Math.round(viagem_distancia_km * 2.5),
+      );
+    }
+
+    const preco = await Preco.findOne({
+      nivel_conforto: pedido.nivel_conforto,
+    });
+
+    if (preco && viagem_tempo_estimado_min) {
+      custo_estimado = Number(
+        (
+          viagem_tempo_estimado_min * Number(preco.preco_minuto || 0)
+        ).toFixed(2),
+      );
+    }
+
     res.json({
       success: true,
       pedido,
+      motorista_distancia_km: viagem_distancia_km,
+      motorista_tempo_chegada_min: viagem_tempo_estimado_min,
+      viagem_distancia_km,
+      viagem_tempo_estimado_min,
+      custo_estimado,
+      taxi,
     });
-
   } catch (err) {
     console.error(err);
 
@@ -595,7 +650,7 @@ exports.terminarViagem = async (req, res) => {
     const preco = await Preco.findOne({
       nivel_conforto: pedido.nivel_conforto,
     });
-
+    
     if (!preco) {
       return res.status(400).json({
         success: false,
