@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useRef } from "react";
 import Header from "../components/Header2";
+import api from "../Api";
 import "../css/DashboardCliente.css";
 // ═══════════════════════════════════════════════════════════════════════════════
 // UTILITÁRIOS
@@ -324,14 +325,77 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
   return <div ref={divRef} style={{ position: "absolute", inset: 0 }} />;
 }
 
+const PEDIDO_PAGAMENTO_PENDENTE_KEY = "pedidoPagamentoPendenteCliente";
+
+function getMongoId(valor) {
+  if (!valor) return null;
+  if (typeof valor === "string") return valor;
+  return valor._id || valor.id || null;
+}
+
+function getEstadoVisivel(pedido) {
+  if (!pedido) return "";
+  if (
+    pedido.estado === "concluido" &&
+    pedido.pagamento_estado !== "pago" &&
+    !pedido.pagamento_confirmado
+  ) {
+    return "pagamento_pendente";
+  }
+  return pedido.estado;
+}
+
 function aplicarEstadoFrontend(pedido) {
-  return pedido;
+  if (!pedido) return pedido;
+  return {
+    ...pedido,
+    estado_visivel: getEstadoVisivel(pedido),
+  };
+}
+
+function guardarPedidoPagamentoPendente(pedido) {
+  if (!pedido) return;
+  if (getEstadoVisivel(pedido) === "pagamento_pendente") {
+    localStorage.setItem(PEDIDO_PAGAMENTO_PENDENTE_KEY, JSON.stringify(pedido));
+  }
+}
+
+function limparPedidoPagamentoPendente() {
+  localStorage.removeItem(PEDIDO_PAGAMENTO_PENDENTE_KEY);
+}
+
+function atualizarViagemMotoristaComoPaga(pedido) {
+  const pedidoId = getMongoId(pedido);
+  const viagemId = getMongoId(pedido?.viagem_id);
+  const terminadas = JSON.parse(
+    localStorage.getItem("viagensTerminadasMotorista") || "[]",
+  );
+
+  const atualizadas = terminadas.map((viagem) => {
+    const id = getMongoId(viagem);
+    const idViagem = getMongoId(viagem?.viagem_id);
+    const corresponde =
+      id === pedidoId || id === viagemId || idViagem === pedidoId || idViagem === viagemId;
+
+    return corresponde
+      ? {
+          ...viagem,
+          pagamento_confirmado: true,
+          pagamento_estado: "pago",
+          estado: "concluido",
+        }
+      : viagem;
+  });
+
+  localStorage.setItem("viagensTerminadasMotorista", JSON.stringify(atualizadas));
+  window.dispatchEvent(new Event("viagensConfirmadasAtualizadas"));
 }
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL: Dashboard
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function Dashboard() {
   const apiMapa = useRef(null);
+  const popupPagamentoAbertoParaPedidoRef = useRef(null);
   const [partida, setPartida] = useState(null);
   const [moradaPartida, setMoradaPartida] = useState("");
   const [destino, setDestino] = useState(null);
@@ -346,6 +410,8 @@ export default function Dashboard() {
   const [aPedir, setAPedir] = useState(false);
   const [erroPedido, setErroPedido] = useState("");
   const [mostrarPopupPagamento, setMostrarPopupPagamento] = useState(false);
+  const [aPagar, setAPagar] = useState(false);
+  const [erroPagamento, setErroPagamento] = useState("");
 
   useEffect(() => {
     async function carregarPedidoAtivo() {
@@ -365,10 +431,25 @@ export default function Dashboard() {
         const dados = await resposta.json();
 
         if (dados.success && dados.pedido) {
-          setPedidoAtual(aplicarEstadoFrontend(dados.pedido));
+          const pedido = aplicarEstadoFrontend(dados.pedido);
+          setPedidoAtual(pedido);
+          guardarPedidoPagamentoPendente(pedido);
+          return;
         }
+
+        const pendente = JSON.parse(
+          localStorage.getItem(PEDIDO_PAGAMENTO_PENDENTE_KEY) || "null",
+        );
+        if (pendente) setPedidoAtual(aplicarEstadoFrontend(pendente));
       } catch {
-        console.log("Erro ao carregar pedido ativo");
+        const pendente = JSON.parse(
+          localStorage.getItem(PEDIDO_PAGAMENTO_PENDENTE_KEY) || "null",
+        );
+        if (pendente) {
+          setPedidoAtual(aplicarEstadoFrontend(pendente));
+        } else {
+          console.log("Erro ao carregar pedido ativo");
+        }
       }
     }
 
@@ -403,6 +484,12 @@ export default function Dashboard() {
           });
 
           setPedidoAtual(pedidoAtualizado);
+          if (getEstadoVisivel(pedidoAtualizado) === "pagamento_pendente") {
+            guardarPedidoPagamentoPendente(pedidoAtualizado);
+          } else if (getEstadoVisivel(pedidoAtualizado) === "concluido") {
+            limparPedidoPagamentoPendente();
+          }
+
         }
       } catch {
         console.log("Erro ao atualizar pedido");
@@ -430,10 +517,22 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (pedidoAtual?.estado === "concluido") {
-      setMostrarPopupPagamento(true);
-    }
-  }, [pedidoAtual?.estado]);
+    const estadoAtual = getEstadoVisivel(pedidoAtual);
+    if (estadoAtual !== "pagamento_pendente") return;
+
+    guardarPedidoPagamentoPendente(pedidoAtual);
+
+    const pedidoId = getMongoId(pedidoAtual);
+    if (popupPagamentoAbertoParaPedidoRef.current === pedidoId) return;
+
+    popupPagamentoAbertoParaPedidoRef.current = pedidoId;
+    setMostrarPopupPagamento(true);
+  }, [
+    pedidoAtual?._id,
+    pedidoAtual?.estado,
+    pedidoAtual?.pagamento_estado,
+    pedidoAtual?.pagamento_confirmado,
+  ]);
 
   useEffect(() => {
     if (!partida || !destino) {
@@ -606,6 +705,50 @@ export default function Dashboard() {
     }
   }
 
+  async function efetuarPagamento() {
+    if (!pedidoAtual) return;
+
+    const viagemId = getMongoId(pedidoAtual.viagem_id) || getMongoId(pedidoAtual);
+    const clienteId = getMongoId(pedidoAtual.cliente_id);
+    const valor = Number(
+      pedidoAtual.preco_final || pedidoAtual.custo_estimado || pedidoAtual.preco || 0,
+    );
+
+    if (!viagemId || !clienteId || valor <= 0) {
+      setErroPagamento("Não foi possível obter os dados do pagamento.");
+      return;
+    }
+
+    setAPagar(true);
+    setErroPagamento("");
+
+    try {
+      await api.pagamentos.criar({
+        viagem_id: viagemId,
+        cliente_id: clienteId,
+        metodo: "dinheiro",
+        valor,
+      });
+
+      const pedidoPago = aplicarEstadoFrontend({
+        ...pedidoAtual,
+        estado: "concluido",
+        estado_visivel: "concluido",
+        pagamento_estado: "pago",
+        pagamento_confirmado: true,
+      });
+
+      limparPedidoPagamentoPendente();
+      atualizarViagemMotoristaComoPaga(pedidoPago);
+      setPedidoAtual(pedidoPago);
+      setMostrarPopupPagamento(false);
+    } catch (err) {
+      setErroPagamento(err.message || "Não foi possível efetuar o pagamento.");
+    } finally {
+      setAPagar(false);
+    }
+  }
+
   const funcionalidades = [
     {
       n: "01",
@@ -643,11 +786,15 @@ export default function Dashboard() {
       desc: "Relaxe e chegue com conforto e segurança ao destino",
     },
   ];
+  const estadoPedido = getEstadoVisivel(pedidoAtual);
+  const pedidoBloqueiaNovaViagem = Boolean(
+    pedidoAtual && estadoPedido !== "concluido",
+  );
   const passoAtual = !pedidoAtual
     ? 1
-    : pedidoAtual.estado === "em_viagem"
+    : estadoPedido === "em_viagem"
       ? 3
-      : pedidoAtual.estado === "concluido"
+      : ["pagamento_pendente", "concluido"].includes(estadoPedido)
         ? 4
         : 2;
   return (
@@ -707,7 +854,7 @@ export default function Dashboard() {
             <button
               className="btn-localizacao"
               onClick={usarLocalizacaoAtual}
-              disabled={aLocalizarGPS || pedidoAtual}
+              disabled={aLocalizarGPS || pedidoBloqueiaNovaViagem}
             >
               <span>{aLocalizarGPS ? "⌛" : "📡"}</span>
               {aLocalizarGPS
@@ -725,7 +872,7 @@ export default function Dashboard() {
                 value={moradaPartida}
                 readOnly
               />
-              {moradaPartida && !pedidoAtual && (
+              {moradaPartida && !pedidoBloqueiaNovaViagem && (
                 <button
                   className="btn-limpar"
                   type="button"
@@ -753,7 +900,7 @@ export default function Dashboard() {
                 value={moradaDestino}
                 readOnly
               />
-              {moradaDestino && !pedidoAtual && (
+              {moradaDestino && !pedidoBloqueiaNovaViagem && (
                 <button
                   className="btn-limpar"
                   type="button"
@@ -798,7 +945,7 @@ export default function Dashboard() {
                 value={nivelConforto}
                 onChange={(e) => setNivelConforto(e.target.value)}
                 style={{ paddingLeft: 16 }}
-                disabled={pedidoAtual}
+                disabled={pedidoBloqueiaNovaViagem}
               >
                 <option value="basico">Básico</option>
                 <option value="luxuoso">Luxuoso</option>
@@ -815,7 +962,7 @@ export default function Dashboard() {
                 value={numeroPessoas}
                 onChange={(e) => setNumeroPessoas(Number(e.target.value))}
                 style={{ paddingLeft: 16 }}
-                disabled={pedidoAtual}
+                disabled={pedidoBloqueiaNovaViagem}
               />
             </div>
 
@@ -823,7 +970,7 @@ export default function Dashboard() {
               className="btn-pedir"
               onClick={pedirViagem}
               disabled={
-                !partida || !destino || aCalcular || aPedir || pedidoAtual
+                !partida || !destino || aCalcular || aPedir || pedidoBloqueiaNovaViagem
               }
             >
               {!partida
@@ -834,7 +981,7 @@ export default function Dashboard() {
                     ? "A calcular rota…"
                     : aPedir
                       ? "A pedir viagem..."
-                      : pedidoAtual
+                      : pedidoBloqueiaNovaViagem
                         ? "Pedido ativo"
                         : "→ Pedir Viagem"}
             </button>
@@ -849,22 +996,40 @@ export default function Dashboard() {
               <div className="pedido-estado-card">
                 <div className="pedido-estado-topo">
                   <div className="pedido-estado-titulo">Pedido ativo</div>
-                  <div className={`pedido-estado-badge ${pedidoAtual.estado}`}>
-                    {pedidoAtual.estado}
+                  <div className={`pedido-estado-badge ${estadoPedido}`}>
+                    {estadoPedido}
                   </div>
                 </div>
 
                 <p className="pedido-estado-texto">
-                  {pedidoAtual.estado === "pendente" &&
+                  {estadoPedido === "pendente" &&
                     "A aguardar motorista..."}
-                  {pedidoAtual.estado === "aceite" && "Motorista encontrado!"}
-                  {pedidoAtual.estado === "confirmado" && "Viagem confirmada"}
-                  {pedidoAtual.estado === "em_viagem" &&
+                  {estadoPedido === "aceite" && "Motorista encontrado!"}
+                  {estadoPedido === "confirmado" && "Viagem confirmada"}
+                  {estadoPedido === "em_viagem" &&
                     "A viagem está em curso. Aguarde o motorista terminar."}
+                  {estadoPedido === "pagamento_pendente" && "A viagem terminou. O pagamento está pendente."}
+                  {estadoPedido === "concluido" && "Viagem concluída e paga."}
                 </p>
 
+                {estadoPedido === "pagamento_pendente" && (
+                  <button
+                    className="btn-localizacao"
+                    type="button"
+                    onClick={() => setMostrarPopupPagamento(true)}
+                  >
+                    Efetuar pagamento
+                  </button>
+                )}
+
+                {estadoPedido === "concluido" && (
+                  <button className="btn-localizacao" type="button" onClick={reiniciar}>
+                    Nova viagem
+                  </button>
+                )}
+
                 {["pendente", "aceite", "confirmado"].includes(
-                  pedidoAtual.estado,
+                  estadoPedido,
                 ) && (
                   <button className="btn-localizacao" onClick={cancelarPedido}>
                     Cancelar pedido
@@ -898,7 +1063,7 @@ export default function Dashboard() {
                 />
                 {textoDica}
               </div>
-              {(moradaPartida || moradaDestino) && !pedidoAtual && (
+              {(moradaPartida || moradaDestino) && !pedidoBloqueiaNovaViagem && (
                 <button className="btn-recomecar" onClick={reiniciar}>
                   ↺ Recomeçar
                 </button>
@@ -927,7 +1092,7 @@ export default function Dashboard() {
                 <div>
                   <div className="barra-titulo">
                     {pedidoAtual
-                      ? `Pedido ${pedidoAtual.estado}`
+                      ? `Pedido ${estadoPedido}`
                       : partida && destino
                         ? "Rota calculada · OpenRouteService"
                         : partida
@@ -935,7 +1100,7 @@ export default function Dashboard() {
                           : "1º clique = Partida · 2º clique = Destino"}
                   </div>
                   <div className="barra-sub">
-                    {pedidoAtual
+                    {pedidoBloqueiaNovaViagem
                       ? "Tem um pedido ativo. Cancele ou termine a viagem para pedir outra."
                       : partida && destino
                         ? "Rota real por estradas · Arraste os marcadores para ajustar"
@@ -1026,7 +1191,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {pedidoAtual?.estado === "aceite" && (
+      {estadoPedido === "aceite" && (
         <div className="popup-motorista-fundo">
           <div className="popup-motorista">
             <div className="popup-motorista-header">
@@ -1092,7 +1257,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-      {mostrarPopupPagamento && pedidoAtual?.estado === "concluido" && (
+      {mostrarPopupPagamento && estadoPedido === "pagamento_pendente" && (
         <div className="popup-motorista-fundo">
           <div className="popup-motorista">
             <div className="popup-motorista-header">
@@ -1149,23 +1314,28 @@ export default function Dashboard() {
                 className="btn-rejeitar"
                 type="button"
                 onClick={() => setMostrarPopupPagamento(false)}
-              >
+                disabled={aPagar}
+        >
                 Fechar
               </button>
 
-              <button
-                className="btn-aceitar"
-                type="button"
-                onClick={() => {
-                  setMostrarPopupPagamento(false);
-                }}
-              >
-                Fazer pagamento
-              </button>
-            </div>
-          </div>
-        </div>
+        <button
+          className="btn-aceitar"
+          type="button"
+          onClick={efetuarPagamento}
+          disabled={aPagar}
+        >
+          {aPagar ? "A processar..." : "Fazer pagamento"}
+        </button>
+      </div>
+      {erroPagamento && (
+        <p style={{ color: "#e53935", marginTop: 12, fontWeight: 700 }}>
+          {erroPagamento}
+        </p>
       )}
+    </div>
+  </div>
+)}
     </div>
   );
 }

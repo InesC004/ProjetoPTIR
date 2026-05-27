@@ -70,7 +70,13 @@ export default function FaturasMotorista() {
     const terminadas = JSON.parse(
       localStorage.getItem("viagensTerminadasMotorista") || "[]",
     );
-    setPendentes(terminadas);
+    setPendentes(
+      terminadas.filter(
+        (viagem) =>
+          !viagem.fatura_emitida &&
+          (viagem.pagamento_confirmado || viagem.pagamento_estado === "pago"),
+      ),
+    );
   }, []);
 
   useEffect(() => {
@@ -180,11 +186,11 @@ export default function FaturasMotorista() {
                         {pedido.destino_morada || "—"}
                       </span>
                     </div>
-                    {pedido.preco !== undefined && (
+                    {(pedido.preco_final ?? pedido.preco) !== undefined && (
                       <div className="ft-row">
                         <span className="ft-meta-label">Valor</span>
                         <span className="ft-meta-value ft-price">
-                          {formatEuros(pedido.preco)}
+                          {formatEuros(pedido.preco_final ?? pedido.preco)}
                         </span>
                       </div>
                     )}

@@ -302,6 +302,36 @@ const faturas = {
 };
 
 // =============================================================================
+// Pagamentos
+// =============================================================================
+
+const pagamentos = {
+  async criar(payload) {
+    return request("/api/pagamentos", {
+      method: "POST",
+      body: payload,
+      auth: true,
+    });
+  },
+
+  async criarStripeIntent(payload) {
+    return request("/api/pagamentos/stripe/create-intent", {
+      method: "POST",
+      body: payload,
+      auth: true,
+    });
+  },
+
+  async confirmarStripe(payload) {
+    return request("/api/pagamentos/stripe/confirm", {
+      method: "POST",
+      body: payload,
+      auth: true,
+    });
+  },
+};
+
+// =============================================================================
 // Serviços externos
 // =============================================================================
 
@@ -388,6 +418,7 @@ const api = {
   pedidos,
   externos,
   faturas,
+  pagamentos,
 };
 
 export default api;

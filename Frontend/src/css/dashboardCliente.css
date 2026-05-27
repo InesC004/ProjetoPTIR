@@ -941,6 +941,21 @@ input[type="number"].input-morada {
   color: #0044cc;
   border: 1px solid rgba(26, 110, 255, 0.3);
 }
+.pedido-estado-badge.em_viagem {
+  background: rgba(26, 110, 255, 0.1);
+  color: #0044cc;
+  border: 1px solid rgba(26, 110, 255, 0.3);
+}
+.pedido-estado-badge.pagamento_pendente {
+  background: rgba(245, 158, 11, 0.14);
+  color: #9a5b00;
+  border: 1px solid rgba(245, 158, 11, 0.32);
+}
+.pedido-estado-badge.concluido {
+  background: rgba(0, 201, 110, 0.12);
+  color: #006f3e;
+  border: 1px solid rgba(0, 201, 110, 0.3);
+}
 .pedido-estado-texto {
   font-size: 0.84rem;
   color: var(--texto-sub);

@@ -40,7 +40,8 @@ function getTempo(pedido) {
 }
 
 function getPreco(pedido) {
-  const preco = pedido?.preco ?? pedido?.valor ?? pedido?.preco_viagem;
+  const preco =
+    pedido?.preco_final ?? pedido?.preco ?? pedido?.valor ?? pedido?.preco_viagem;
   if (preco === undefined || preco === null) return null;
   return `${Number(preco).toFixed(2)} €`;
 }
@@ -86,7 +87,8 @@ export default function ViagensMotorista() {
     setProcessingId(id);
 
     try {
-      await api.pedidos.terminarViagem(id);
+      const data = await api.pedidos.terminarViagem(id);
+      const pedidoAtualizado = data?.pedido || pedido;
 
       const atualizadas = viagens.filter((v) => getId(v) !== id);
       const terminadasAtuais = JSON.parse(
@@ -95,9 +97,12 @@ export default function ViagensMotorista() {
 
       const terminada = {
         ...pedido,
-        estado: "concluido",
+        ...pedidoAtualizado,
+        estado: "pagamento_pendente",
         estadoViagem: "terminada",
         data_fim: new Date().toISOString(),
+        pagamento_estado: pedidoAtualizado.pagamento_estado || "pendente",
+        pagamento_confirmado: false,
       };
 
       localStorage.setItem(
@@ -278,9 +283,8 @@ export default function ViagensMotorista() {
               faturaEstado[id] &&
               faturaEstado[id] !== "loading" &&
               faturaEstado[id] !== "ok";
-
-            // TODO: descomentar quando o pagamento estiver implementado
-            // const pagamentoOk = !!pedido.pagamento_confirmado;
+            const pagamentoOk =
+              !!pedido.pagamento_confirmado || pedido.pagamento_estado === "pago";
 
             return (
               <article
@@ -291,7 +295,7 @@ export default function ViagensMotorista() {
                   <div>
                     <span className="vm-badge vm-badge-ended">
                       <CheckCircle2 size={14} />
-                      Terminada
+                      {pagamentoOk ? "Concluída" : "Pagamento pendente"}
                     </span>
                     <h4>{getMorada(pedido.origem_morada)}</h4>
                     <p>Destino: {getMorada(pedido.destino_morada)}</p>
