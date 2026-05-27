@@ -55,64 +55,6 @@ function getConforto(pedido) {
   if (!pedido?.nivel_conforto) return "—";
   return pedido.nivel_conforto === "luxuoso" ? "Luxuoso" : "Básico";
 }
-function normalizarConforto(valor) {
-  if (!valor) return "";
-
-  const texto = String(valor).toLowerCase();
-
-  if (texto.includes("lux")) return "luxuoso";
-  if (texto.includes("basic") || texto.includes("básic")) return "basico";
-
-  return texto;
-}
-
-function getTipoMotoristaAtual() {
-  const possiveisChaves = [ "turnoAtivoMotorista",
-    "turnoMotorista",
-    "turnoAtivo",
-    "turno","utilizador", "user", "motorista", "authUser"];
-
-  for (const chave of possiveisChaves) {
-    try {
-      const dados = JSON.parse(localStorage.getItem(chave) || "null");
-
-      const tipo =
-        dados?.tipo_viatura ||
-        dados?.tipo_carro ||
-        dados?.tipo_carro_turno ||
-        dados?.nivel_conforto ||
-        dados?.conforto ||
-        dados?.categoria ||
-        dados?.viatura?.tipo ||
-        dados?.veiculo?.tipo ||
-        dados?.veiculo?.tipo_viatura ||
-        dados?.carro?.tipo ||
-        dados?.carro?.tipo_viatura ||
-        dados?.viatura?.tipo ||
-        dados?.viatura?.nivel_conforto;
-
-      if (tipo) return normalizarConforto(tipo);
-    } catch {
-      // ignora
-    }
-  }
-
-  return "";
-}
-
-function pedidoCompativelComMotorista(pedido) {
-  const tipoMotorista = getTipoMotoristaAtual();
-
-  if (!tipoMotorista) return false;
-
-  const tipoPedido = normalizarConforto(
-    pedido?.nivel_conforto || pedido?.tipo_viatura || pedido?.tipo_carro,
-  );
-
-  if (!tipoPedido) return false;
-
-  return tipoPedido === tipoMotorista;
-}
 export default function PedidosMotorista() {
   const [pedidos, setPedidos] = useState([]);
   const [aceites, setAceites] = useState([]);
@@ -226,19 +168,25 @@ export default function PedidosMotorista() {
   }, [posicao, aceites.length, confirmacoes.length]);
 
   useEffect(() => {
+    carregarAceites();
     carregarConfirmacoes();
 
+    window.addEventListener("pedidosAceitesAtualizados", carregarAceites);
     window.addEventListener(
       "confirmacoesAceitesAtualizadas",
       carregarConfirmacoes,
     );
+    window.addEventListener("pedidosMotoristaAtualizados", carregarPedidos);
 
     return () => {
+      window.removeEventListener("pedidosAceitesAtualizados", carregarAceites);
       window.removeEventListener(
         "confirmacoesAceitesAtualizadas",
         carregarConfirmacoes,
       );
+      window.removeEventListener("pedidosMotoristaAtualizados", carregarPedidos);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function aceitarPedido(pedido) {
@@ -262,6 +210,8 @@ export default function PedidosMotorista() {
         pedidoAceite,
         ...prev.filter((p) => getId(p) !== id),
       ]);
+      guardarPedidoAceite(pedidoAceite);
+      window.dispatchEvent(new Event("pedidosMotoristaAtualizados"));
 
       setSucesso(
         data?.message || "Pedido aceite. Aguarde a confirmação do cliente.",
@@ -286,6 +236,7 @@ export default function PedidosMotorista() {
       const pedidoPendente = data?.pedido || { ...pedido, estado: "pendente" };
 
       setAceites((prev) => prev.filter((p) => getId(p) !== id));
+      removerPedidoAceite(id);
       setPedidos((prev) => [
         pedidoPendente,
         ...prev.filter((p) => getId(p) !== id),
@@ -364,6 +315,14 @@ export default function PedidosMotorista() {
             !foiRejeitadoPeloCliente(pedido),
         ),
       );
+      guardarPedidosAceites(
+        atualizados.filter(
+          (pedido) =>
+            !foiConfirmadoPeloCliente(pedido) &&
+            !foiCanceladoPeloCliente(pedido) &&
+            !foiRejeitadoPeloCliente(pedido),
+        ),
+      );
     } catch (err) {
         console.error("Erro ao verificar pedidos aceites:", err);
     }
@@ -375,6 +334,14 @@ export default function PedidosMotorista() {
     );
 
     setConfirmacoes(guardadas);
+  }
+
+  function carregarAceites() {
+    const guardados = JSON.parse(
+      localStorage.getItem("pedidosAceitesMotorista") || "[]",
+    );
+
+    setAceites(guardados);
   }
 
   async function iniciarViagemConfirmada(pedido) {
@@ -743,4 +710,25 @@ function guardarConfirmacaoAceite(pedido) {
     localStorage.setItem(chave, JSON.stringify([pedido, ...atuais]));
     window.dispatchEvent(new Event("confirmacoesAceitesAtualizadas"));
   }
+}
+
+function guardarPedidosAceites(pedidos) {
+  localStorage.setItem("pedidosAceitesMotorista", JSON.stringify(pedidos));
+  window.dispatchEvent(new Event("pedidosAceitesAtualizados"));
+}
+
+function guardarPedidoAceite(pedido) {
+  const atuais = JSON.parse(
+    localStorage.getItem("pedidosAceitesMotorista") || "[]",
+  );
+  const id = getId(pedido);
+  const atualizados = [pedido, ...atuais.filter((p) => getId(p) !== id)];
+  guardarPedidosAceites(atualizados);
+}
+
+function removerPedidoAceite(id) {
+  const atuais = JSON.parse(
+    localStorage.getItem("pedidosAceitesMotorista") || "[]",
+  );
+  guardarPedidosAceites(atuais.filter((p) => getId(p) !== id));
 }

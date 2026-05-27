@@ -15,6 +15,7 @@ import {
   Loader2,
   CheckCircle2,
   MapPin,
+  Users,
 } from "lucide-react";
 import logo from "../Pictures/logo1.jpeg";
 import TurnosMotorista from "../components/TurnosMotorista";
@@ -630,6 +631,7 @@ export default function PaginaMotorista() {
           </div>
         </main>
       </div>
+      <PedidoNovoFlutuante />
       <ViagemAtivaFlutuante />
     </div>
   );
@@ -648,6 +650,174 @@ function getPreco(pedido) {
     pedido?.preco_final ?? pedido?.preco ?? pedido?.valor ?? pedido?.preco_viagem;
   if (preco === undefined || preco === null) return null;
   return `${Number(preco).toFixed(2)} €`;
+}
+
+function getDistancia(pedido) {
+  const distancia = pedido?.distancia_km ?? pedido?.distancia;
+  if (distancia === undefined || distancia === null || distancia === "") return "—";
+  return `${Number(distancia).toFixed(2)} km`;
+}
+
+function getConforto(pedido) {
+  if (!pedido?.nivel_conforto) return "—";
+  return pedido.nivel_conforto === "luxuoso" ? "Luxuoso" : "Básico";
+}
+
+function getPedidosIgnorados() {
+  return JSON.parse(localStorage.getItem("pedidosIgnoradosMotorista") || "[]");
+}
+
+function guardarPedidoIgnorado(id) {
+  const ignorados = new Set(getPedidosIgnorados());
+  ignorados.add(id);
+  localStorage.setItem("pedidosIgnoradosMotorista", JSON.stringify([...ignorados]));
+}
+
+function PedidoNovoFlutuante() {
+  const [pedido, setPedido] = useState(null);
+  const [aAceitar, setAAceitar] = useState(false);
+  const [erro, setErro] = useState("");
+
+  async function procurarPedido() {
+    const emCurso = JSON.parse(
+      localStorage.getItem("viagensConfirmadasMotorista") || "[]",
+    );
+    const aceites = JSON.parse(
+      localStorage.getItem("pedidosAceitesMotorista") || "[]",
+    );
+
+    if (pedido && aceites.some((item) => getId(item) === getId(pedido))) {
+      setPedido(null);
+      return;
+    }
+
+    if (emCurso.length > 0) {
+      setPedido(null);
+      return;
+    }
+
+    try {
+      const data = await api.pedidos.listarDisponiveis();
+      const lista = Array.isArray(data?.pedidos) ? data.pedidos : [];
+      const ignorados = new Set(getPedidosIgnorados());
+      const proximo = lista.find((item) => !ignorados.has(getId(item)));
+      setPedido((atual) => {
+        if (!atual) return proximo || null;
+        const atualAindaDisponivel = lista.some((item) => getId(item) === getId(atual));
+        return atualAindaDisponivel ? atual : proximo || null;
+      });
+    } catch {
+      setPedido(null);
+    }
+  }
+
+  useEffect(() => {
+    procurarPedido();
+    const interval = setInterval(procurarPedido, 4000);
+    window.addEventListener("viagensConfirmadasAtualizadas", procurarPedido);
+    window.addEventListener("pedidosAceitesAtualizados", procurarPedido);
+    window.addEventListener("pedidosMotoristaAtualizados", procurarPedido);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("viagensConfirmadasAtualizadas", procurarPedido);
+      window.removeEventListener("pedidosAceitesAtualizados", procurarPedido);
+      window.removeEventListener("pedidosMotoristaAtualizados", procurarPedido);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pedido]);
+
+  async function aceitarPedido() {
+    const id = getId(pedido);
+    if (!id) return;
+
+    setAAceitar(true);
+    setErro("");
+
+    try {
+      const data = await api.pedidos.aceitar(id);
+      const pedidoAceite = {
+        ...(data?.pedido || {}),
+        ...pedido,
+        estado: data?.pedido?.estado || "aceite",
+      };
+      const aceites = JSON.parse(
+        localStorage.getItem("pedidosAceitesMotorista") || "[]",
+      );
+      localStorage.setItem(
+        "pedidosAceitesMotorista",
+        JSON.stringify([pedidoAceite, ...aceites.filter((p) => getId(p) !== id)]),
+      );
+      setPedido(null);
+      window.dispatchEvent(new Event("pedidosAceitesAtualizados"));
+      window.dispatchEvent(new Event("pedidosMotoristaAtualizados"));
+    } catch (err) {
+      setErro(err.message || "Não foi possível aceitar o pedido.");
+    } finally {
+      setAAceitar(false);
+    }
+  }
+
+  function ignorarPedido() {
+    const id = getId(pedido);
+    if (id) guardarPedidoIgnorado(id);
+    setPedido(null);
+  }
+
+  if (!pedido) return null;
+
+  return (
+    <aside className="pedido-flutuante" aria-live="polite">
+      <div className="vf-topo">
+        <span className="vf-badge">
+          <span className="vf-ponto" />
+          Novo pedido
+        </span>
+        <Navigation size={18} />
+      </div>
+
+      <div className="vf-rota">
+        <div>
+          <MapPin size={14} />
+          <span>{getMorada(pedido.origem_morada)}</span>
+        </div>
+        <div>
+          <CheckCircle2 size={14} />
+          <span>{getMorada(pedido.destino_morada)}</span>
+        </div>
+      </div>
+
+      <div className="pf-metricas">
+        <span>
+          <Users size={13} />
+          {pedido.numero_pessoas || "—"}
+        </span>
+        <span>{getDistancia(pedido)}</span>
+        <span>{getConforto(pedido)}</span>
+      </div>
+
+      {erro && <p className="vf-erro">{erro}</p>}
+
+      <div className="pf-acoes">
+        <button
+          type="button"
+          className="pf-btn-sec"
+          onClick={ignorarPedido}
+          disabled={aAceitar}
+        >
+          Ignorar
+        </button>
+        <button
+          type="button"
+          className="vf-btn"
+          onClick={aceitarPedido}
+          disabled={aAceitar}
+        >
+          {aAceitar ? <Loader2 size={16} className="vf-spin" /> : <CheckCircle2 size={16} />}
+          {aAceitar ? "A aceitar..." : "Aceitar"}
+        </button>
+      </div>
+    </aside>
+  );
 }
 
 function ViagemAtivaFlutuante() {

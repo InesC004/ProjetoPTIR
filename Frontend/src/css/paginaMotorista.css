@@ -400,7 +400,8 @@ header {
   color: #30f0a0;
 }
 
-.viagem-flutuante {
+.viagem-flutuante,
+.pedido-flutuante {
   position: fixed;
   right: 24px;
   bottom: 24px;
@@ -415,6 +416,12 @@ header {
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
   color: #f6fbff;
   backdrop-filter: blur(18px);
+}
+
+.pedido-flutuante {
+  bottom: auto;
+  top: 84px;
+  border-color: rgba(99, 163, 255, 0.34);
 }
 
 .vf-topo {
@@ -503,6 +510,48 @@ header {
   font-weight: 900;
 }
 
+.pf-metricas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.pf-metricas span {
+  min-height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: rgba(246, 251, 255, 0.86);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.pf-acoes {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 10px;
+}
+
+.pf-btn-sec {
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(246, 251, 255, 0.84);
+  cursor: pointer;
+  font-family: "DM Sans", sans-serif;
+  font-weight: 900;
+}
+
+.pf-btn-sec:disabled {
+  opacity: 0.72;
+  cursor: wait;
+}
+
 .vf-btn:disabled {
   opacity: 0.72;
   cursor: wait;
@@ -530,6 +579,13 @@ header {
     left: 16px;
     right: 16px;
     bottom: 16px;
+    width: auto;
+  }
+
+  .pedido-flutuante {
+    top: 76px;
+    left: 16px;
+    right: 16px;
     width: auto;
   }
 }
