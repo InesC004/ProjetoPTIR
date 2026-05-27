@@ -1,12 +1,24 @@
 const Pagamento = require("../models/pagamento");
 const os = require("os");
-//const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+
+let stripe;
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+}
 
 const HOSTNAME = os.hostname();
 
 // criar payment intent (para pagamentos com cartão)
 exports.createPaymentIntent = async (req, res) => {
   try {
+    if (!stripe) {
+      return res.status(500).json({
+        success: false,
+        message: "Stripe não está configurado. Defina STRIPE_SECRET_KEY nas variáveis de ambiente.",
+        servidor: HOSTNAME,
+      });
+    }
+
     const { viagem_id, cliente_id, valor, metodo } = req.body;
 
     // validações básicas
@@ -87,6 +99,14 @@ exports.createPaymentIntent = async (req, res) => {
 // confirmar pagamento
 exports.confirmPayment = async (req, res) => {
   try {
+    if (!stripe) {
+      return res.status(500).json({
+        success: false,
+        message: "Stripe não está configurado. Defina STRIPE_SECRET_KEY nas variáveis de ambiente.",
+        servidor: HOSTNAME,
+      });
+    }
+
     const { pagamento_id, stripe_payment_intent_id } = req.body;
 
     if (!pagamento_id || !stripe_payment_intent_id) {
@@ -323,6 +343,31 @@ exports.delete = async (req, res) => {
     });
   } catch (err) {
     console.error("Erro ao apagar pagamento:", err);
+    res.status(500).json({
+      success: false,
+      message: "Erro no servidor",
+      servidor: HOSTNAME,
+    });
+  }
+};
+
+// obter histórico de pagamentos por cliente
+exports.getByCliente = async (req, res) => {
+  try {
+    const { cliente_id } = req.params;
+
+    const pagamentos = await Pagamento.find({ cliente_id })
+      .populate("viagem_id cliente_id")
+      .sort({ data_pagamento: -1 });
+
+    res.json({
+      success: true,
+      servidor: HOSTNAME,
+      total: pagamentos.length,
+      pagamentos,
+    });
+  } catch (err) {
+    console.error("Erro ao obter histórico de pagamentos:", err);
     res.status(500).json({
       success: false,
       message: "Erro no servidor",
