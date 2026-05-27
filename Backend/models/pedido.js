@@ -77,6 +77,36 @@ const pedidoSchema = new mongoose.Schema(
       ref: "viagem",
       default: null,
     },
+    data_inicio_viagem: {
+  type: Date,
+  
+    },
+
+    data_fim_viagem: {
+      type: Date,
+    },
+
+    morada_fim: {
+      type: String,
+    },
+
+    quilometros_percorridos: {
+      type: Number,
+    },
+
+    duracao_minutos: {
+      type: Number,
+    },
+
+    preco_final: {
+      type: Number,
+    },
+
+    pagamento_estado: {
+      type: String,
+      enum: ["pendente", "pago"],
+      default: "pendente",
+    },
   },
   { timestamps: true },
 );

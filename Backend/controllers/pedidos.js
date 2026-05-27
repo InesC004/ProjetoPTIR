@@ -534,6 +534,7 @@ exports.iniciarViagem = async (req, res) => {
     }
 
     pedido.estado = "em_viagem";
+    pedido.data_inicio_viagem = new Date();
     await pedido.save();
 
     res.json({
@@ -576,8 +577,47 @@ exports.terminarViagem = async (req, res) => {
         message: "A viagem não está em curso.",
       });
     }
+    const agora = new Date();
 
+    const quilometros = haversine(
+      pedido.origem_lat,
+      pedido.origem_lng,
+      pedido.destino_lat,
+      pedido.destino_lng,
+    );
+
+    const inicio = pedido.data_inicio_viagem || pedido.updatedAt || agora;
+
+    const duracaoMinutos = Math.max(
+      1,
+      Math.round((agora - new Date(inicio)) / 60000),
+    );
+    const preco = await Preco.findOne({
+      nivel_conforto: pedido.nivel_conforto,
+    });
+
+    if (!preco) {
+      return res.status(400).json({
+        success: false,
+        message: "Preço não definido para este nível de conforto.",
+      });
+    }
+
+    const precoBase = duracaoMinutos * Number(preco.preco_minuto || 0);
+
+    const hora = agora.getHours();
+    const eNoturno = hora >= 22 || hora < 7;
+
+    const precoFinal = eNoturno
+      ? precoBase + Number(preco.acrescimo_noturno || 0)
+      : precoBase;
     pedido.estado = "concluido";
+    pedido.data_fim_viagem = agora;
+    pedido.morada_fim = pedido.destino_morada;
+    pedido.quilometros_percorridos = Number(quilometros.toFixed(2));
+    pedido.duracao_minutos = duracaoMinutos;
+    pedido.preco_final = Number(precoFinal.toFixed(2));
+    pedido.pagamento_estado = "pendente";
     await pedido.save();
 
     res.json({

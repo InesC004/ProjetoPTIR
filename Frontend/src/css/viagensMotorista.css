@@ -186,7 +186,8 @@
     grid-template-columns: 1fr;
   }
 }
-  .vm-toolbar-history {
+
+.vm-toolbar-history {
   margin-top: 8px;
 }
 
@@ -215,15 +216,6 @@
   min-height: 220px;
 }
 
-.vm-btn-danger {
-  background: linear-gradient(135deg, #ef4444, #b91c1c) !important;
-  color: white !important;
-  border: none !important;
-}
-
-.vm-btn-danger:hover {
-  filter: brightness(0.95);
-}
 .vm-btn-small {
   width: auto !important;
   height: 36px !important;

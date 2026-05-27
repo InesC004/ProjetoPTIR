@@ -323,33 +323,8 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
 
   return <div ref={divRef} style={{ position: "absolute", inset: 0 }} />;
 }
-function lerIdsFrontend(chave) {
-  try {
-    return JSON.parse(localStorage.getItem(chave) || "[]");
-  } catch {
-    return [];
-  }
-}
 
 function aplicarEstadoFrontend(pedido) {
-  const id = pedido?._id || pedido?.id;
-
-  if (!id) return pedido;
-
-  const concluidos = lerIdsFrontend("pedidosConcluidosFrontend");
-  const emViagem = lerIdsFrontend("pedidosEmViagemFrontend");
-
-  if (concluidos.includes(id)) {
-    return null;
-  }
-
-  if (emViagem.includes(id)) {
-    return {
-      ...pedido,
-      estado: "em_viagem",
-    };
-  }
-
   return pedido;
 }
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -370,6 +345,7 @@ export default function Dashboard() {
   const [pedidoAtual, setPedidoAtual] = useState(null);
   const [aPedir, setAPedir] = useState(false);
   const [erroPedido, setErroPedido] = useState("");
+  const [mostrarPopupPagamento, setMostrarPopupPagamento] = useState(false);
 
   useEffect(() => {
     async function carregarPedidoAtivo() {
@@ -446,6 +422,12 @@ useEffect(() => {
     window.removeEventListener("storage", atualizarPedidoCliente);
   };
 }, []);
+
+  useEffect(() => {
+  if (pedidoAtual?.estado === "concluido") {
+    setMostrarPopupPagamento(true);
+  }
+}, [pedidoAtual?.estado]);
 
   useEffect(() => {
     if (!partida || !destino) {
@@ -863,9 +845,11 @@ useEffect(() => {
                     Cancelar pedido
                   </button>
                 )}
+                
               </div>
             )}
           </div>
+            
         </div>
 
         <div className="painel-mapa animar-dir">
@@ -1084,6 +1068,78 @@ useEffect(() => {
           </div>
         </div>
       )}
+      {mostrarPopupPagamento && pedidoAtual?.estado === "concluido" && (
+  <div className="popup-motorista-fundo">
+    <div className="popup-motorista">
+      <div className="popup-motorista-header">
+        <div>
+          <h2>Viagem terminada</h2>
+          <p>A sua viagem foi concluída. Efetue o pagamento para finalizar.</p>
+        </div>
+        <div className="popup-motorista-icon">💳</div>
+      </div>
+
+      <div className="popup-motorista-info">
+        <div className="popup-linha">
+          <span>Origem</span>
+          <strong>{pedidoAtual.origem_morada || "—"}</strong>
+        </div>
+
+        <div className="popup-linha">
+          <span>Destino</span>
+          <strong>{pedidoAtual.destino_morada || "—"}</strong>
+        </div>
+
+        <div className="popup-linha">
+          <span>Duração</span>
+          <strong>
+            {pedidoAtual.duracao_minutos
+              ? `${pedidoAtual.duracao_minutos} min`
+              : "—"}
+          </strong>
+        </div>
+
+        <div className="popup-linha">
+          <span>Quilómetros</span>
+          <strong>
+            {pedidoAtual.quilometros_percorridos
+              ? `${pedidoAtual.quilometros_percorridos} km`
+              : "—"}
+          </strong>
+        </div>
+
+        <div className="popup-linha">
+          <span>Total a pagar</span>
+          <strong>
+            {pedidoAtual.preco_final
+              ? `${pedidoAtual.preco_final} €`
+              : "A calcular"}
+          </strong>
+        </div>
+      </div>
+
+      <div className="popup-motorista-acoes">
+        <button
+          className="btn-rejeitar"
+          type="button"
+          onClick={() => setMostrarPopupPagamento(false)}
+        >
+          Fechar
+        </button>
+
+        <button
+          className="btn-aceitar"
+          type="button"
+          onClick={() => {
+            setMostrarPopupPagamento(false);
+          }}
+        >
+          Fazer pagamento
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

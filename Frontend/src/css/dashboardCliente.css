@@ -2260,3 +2260,38 @@ input[type="number"].input-morada {
     width: 100%;
   }
 }
+.step-dot {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border: 3px solid #93c5fd !important;
+}
+
+.step-dot.feito {
+  background: linear-gradient(135deg, #bbf7d0, #22c55e) !important;
+  color: white !important;
+  border-color: #86efac !important;
+}
+
+.step-dot.feito-rosa {
+  background: linear-gradient(135deg, #93c5fd, #2563eb) !important;
+  color: white !important;
+  border-color: #60a5fa !important;
+}
+
+.step-dot.ativo {
+  background: linear-gradient(135deg, #2563eb, #1e3a8a) !important;
+  color: white !important;
+  border-color: #93c5fd !important;
+}
+
+.step-line {
+  background: linear-gradient(90deg, #bbf7d0, #93c5fd) !important;
+}
+
+.step-line.feito {
+  background: linear-gradient(90deg, #22c55e, #2563eb) !important;
+}
+
+.step-line.feito-2 {
+  background: linear-gradient(90deg, #2563eb, #1e3a8a) !important;
+}
