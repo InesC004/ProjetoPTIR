@@ -1,6 +1,10 @@
 const Pagamento = require("../models/pagamento");
 const os = require("os");
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+let stripe;
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+}
 
 const HOSTNAME = os.hostname();
 
