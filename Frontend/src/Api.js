@@ -278,6 +278,29 @@ const pedidos = {
     });
   },
 };
+
+// =============================================================================
+// Faturas
+// =============================================================================
+
+const faturas = {
+  /** Emitir fatura para uma viagem (requer pagamento confirmado). */
+  async emitir(viagemId) {
+    return request("/api/faturas", {
+      method: "POST",
+      body: { viagem_id: viagemId },
+      auth: true,
+    });
+  },
+
+  /** Listar faturas de um motorista específico. */
+  async listarPorMotorista(motoristaId) {
+    return request(`/api/faturas/motorista/${motoristaId}`, {
+      auth: true,
+    });
+  },
+};
+
 // =============================================================================
 // Serviços externos
 // =============================================================================
@@ -364,6 +387,7 @@ const api = {
   precos,
   pedidos,
   externos,
+  faturas,
 };
 
 export default api;

@@ -1,0 +1,134 @@
+====================================================
+TESTES DE FIREWALL E CONECTIVIDADE
+TAKEACAB.ONLINE
+====================================================
+                           
+==============================================================================
+Entrar nas maquinas no gcloud: gcloud compute ssh as1 --tunnel-through-iap
+                                  gcloud compute ssh lb1 --tunnel-through-iap
+                                  gcloud compute ssh db1 --tunnel-through-iap           
+==============================================================================
+
+Arquitetura esperada:
+  Internet - LB (80/443) - App Servers (8080) - MongoDB (27017)
+
+IPs das máquinas:
+  lb1  - 10.132.0.2   (IP público: 34.62.101.141)
+  lb2  - 10.132.0.6
+  as1  - 10.132.0.3   (IP público: 34.140.163.4)
+  as2  - 10.132.0.37
+  as3  - 10.132.0.36
+  as4  - 10.132.0.38
+  as5  - 10.132.0.39
+  db1  - 10.132.0.4   (IP público: 34.52.208.69)
+  db2  - 10.132.0.16  (IP público: 34.22.151.190)
+  arb  - 10.132.0.17  (IP público: 34.14.17.10)
+
+
+====================================================
+1. HTTP PÚBLICO
+REGRA: allow-http
+Permite tráfego HTTP na porta 80 vindo de qualquer origem (0.0.0.0/0). 
+O Load Balancer deve aceitar e redirecionar para HTTPS.
+====================================================
+Teste Externo - domínio: curl -k -I http://takeacab.online/
+No PowerShell -          Test-NetConnection 34.62.101.141 -Port 80
+
+====================================================
+2. TESTAR HTTPS PÚBLICO
+REGRA: allow-https
+Permite tráfego HTTPS na porta 443 vindo de qualquer origem. O certificado SSL está associado ao domínio takeacab.online.
+====================================================
+Teste Externo - domínio: curl -k -I https://takeacab.online/
+Teste direto do IP:      curl -k -I https://34.62.101.141
+                         Test-NetConnection 34.62.101.141 -Port 443
+
+====================================================
+3. LB - App Servers (interno)
+REGRA: allow-8080
+Permite comunicação interna na porta 8080 do Load Balancer (10.132.0.2) para os App Servers. NÃO deve estar acessível do exterior.
+====================================================
+Teste interno (gcloud): gcloud compute ssh lb1 --tunnel-through-iap
+                        curl http://10.132.0.3:8080   # as1
+                        curl http://10.132.0.36:8080  # as2
+                        nc -zv 10.132.0.3 8080        # teste TCP as1               
+                    
+Teste externo (Deve Falhar) : nc -zv 34.140.163.4 8080
+No PowerShell :               Test-NetConnection 34.62.101.141 -Port 8080
+
+
+====================================================
+4. App Servers -  MongoDB (interno)
+REGRA: allow-mongodb
+Permite ligações ao MongoDB na porta 27017 apenas da subnet interna (10.132.0.0/20) para db1, db2 e o arbiter. 
+====================================================
+Teste interno (gcloud): gcloud compute ssh as1 --tunnel-through-iap
+                        nc -zv 10.132.0.4  27017  # - db1 (Primary)
+                        nc -zv 10.132.0.16 27017  # - db2 (Replica)
+                        nc -zv 10.132.0.17 27017  # - db-arbiter
+
+Teste externo (Deve Falhar) : nc -zv 34.52.208.69 27017
+No PowerShell :               Test-NetConnection 34.52.208.69 -Port 27017         
+
+COMUNICAÇÃO INTERNA (db1-db2):    gcloud compute ssh db1 --tunnel-through-iap
+                                  nc -zv 10.132.0.16 27017  # db1 - db2
+
+====================================================
+5.  Acesso SSH
+REGRA: allow-iap-ssh  e  default-allow-ssh
+O acesso SSH deve ser feito exclusivamente via IAP (Identity-Aware Proxy) do Google - sem expor a porta 22 ao exterior.
+====================================================
+Teste interno (gcloud): gcloud compute ssh as1 --tunnel-through-iap
+                        gcloud compute ssh lb1 --tunnel-through-iap
+                        gcloud compute ssh db1 --tunnel-through-iap
+
+Teste Externo(deve Falhar):  Test-NetConnection 34.62.101.141 -Port 22
+
+
+====================================================
+6.  Health checks do Load Balancer
+REGRA: default-allow-health-check
+Permite que o Google Load Balancer verifique se os App Servers estão operacionais. 
+====================================================
+gcloud compute backend-services get-health grupo-backend --global
+
+====================================================
+7. REMOTE DESKTOP
+REGRA: default-allow-rdp (DESATIVADA)
+Porta 3389 para acesso remoto Windows. VMs são Linux — nunca seria
+usada, mas confirmar que está fechada é boa prática.
+====================================================
+
+  Test-NetConnection 34.62.101.141 -Port 3389
+  Test-NetConnection 34.52.208.69  -Port 3389
+
+
+====================================================
+8. ISOLAMENTO ENTRE CAMADAS (comunicações que NÃO devem existir)
+====================================================
+----------------------------------------------------
+LB - MONGODB (deve falhar):
+  gcloud compute ssh lb1 --tunnel-through-iap
+  nc -zv 10.132.0.4  27017   # lb1 - db1
+  nc -zv 10.132.0.16 27017   # lb1 - db2
+----------------------------------------------------
+APP SERVER - APP SERVER (deve falhar):
+  gcloud compute ssh as1 --tunnel-through-iap
+  nc -zv 10.132.0.37 8080   # as1 - as2
+  nc -zv 10.132.0.36 8080   # as1 - as3
+  nc -zv 10.132.0.38 8080   # as1 - as4
+  nc -zv 10.132.0.39 8080   # as1 - as5
+----------------------------------------------------
+INTERNET - APP SERVER DIRETO (deve falhar)
+  Test-NetConnection 34.140.163.4 -Port 8080
+  Test-NetConnection 34.140.163.4 -Port 80
+  Test-NetConnection 34.140.163.4 -Port 443
+----------------------------------------------------
+INTERNET - BASE DE DADOS DIRETO (deve falhar) 
+  Test-NetConnection 34.52.208.69  -Port 27017   # db1
+  Test-NetConnection 34.22.151.190 -Port 27017   # db2
+  Test-NetConnection 34.14.17.10   -Port 27017   # arbiter
+  nc -zv 34.52.208.69  27017
+  nc -zv 34.22.151.190 27017
+  nc -zv 34.14.17.10   27017
+=============================================
