@@ -1,21 +1,18 @@
-// routes/faturas.js
 const express = require('express')
 const router = express.Router()
-const faturaController = require('../controllers/faturas')
 
-// Se usares middlewares de autenticação (ex: para garantir que é um motorista), 
-// podes importá-lo e colocá-lo aqui. Ex: const { verificarMotorista } = require('../middlewares/auth')
+const faturasController = require('../controllers/faturas')
 
-// ══════════════════════════════════════════════
-// Rotas de Faturas
-// ══════════════════════════════════════════════
+// emitir fatura
+router.post('/', faturasController.emitir)
 
-// Rota para emitir a fatura (Critério A, B, C)
-// POST /api/faturas/emitir
-router.post('/emitir', faturaController.emitirFatura)
+// listar todas
+router.get('/', faturasController.getAll)
 
-// Rota para listar faturas de um motorista específico ordenadas por data (Critério D)
-// GET /api/faturas/motorista/:motorista_id
-router.get('/motorista/:motorista_id', faturaController.getFaturasPorMotorista)
+// listar por motorista (ordem descendente por data)
+router.get('/motorista/:motorista_id', faturasController.getByMotorista)
+
+// obter por id
+router.get('/:id', faturasController.getById)
 
 module.exports = router
