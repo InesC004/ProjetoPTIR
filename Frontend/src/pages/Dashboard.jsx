@@ -323,7 +323,35 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
 
   return <div ref={divRef} style={{ position: "absolute", inset: 0 }} />;
 }
+function lerIdsFrontend(chave) {
+  try {
+    return JSON.parse(localStorage.getItem(chave) || "[]");
+  } catch {
+    return [];
+  }
+}
 
+function aplicarEstadoFrontend(pedido) {
+  const id = pedido?._id || pedido?.id;
+
+  if (!id) return pedido;
+
+  const concluidos = lerIdsFrontend("pedidosConcluidosFrontend");
+  const emViagem = lerIdsFrontend("pedidosEmViagemFrontend");
+
+  if (concluidos.includes(id)) {
+    return null;
+  }
+
+  if (emViagem.includes(id)) {
+    return {
+      ...pedido,
+      estado: "em_viagem",
+    };
+  }
+
+  return pedido;
+}
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL: Dashboard
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -358,7 +386,7 @@ export default function Dashboard() {
         const dados = await resposta.json();
 
         if (dados.success && dados.pedido) {
-          setPedidoAtual(dados.pedido);
+          setPedidoAtual(aplicarEstadoFrontend(dados.pedido));
         }
       } catch {
         console.log("Erro ao carregar pedido ativo");
@@ -383,7 +411,7 @@ export default function Dashboard() {
         const data = await res.json();
 
         if (data.success) {
-          setPedidoAtual({
+          const pedidoAtualizado = aplicarEstadoFrontend({
             ...data.pedido,
             motorista_distancia_km: data.motorista_distancia_km,
             motorista_tempo_chegada_min: data.motorista_tempo_chegada_min,
@@ -393,6 +421,9 @@ export default function Dashboard() {
               ? (Number(data.viagem_tempo_estimado_min) * 0.75).toFixed(2)
               : null,
           });
+
+          setPedidoAtual(pedidoAtualizado);
+
         }
       } catch {
         console.log("Erro ao atualizar pedido");
@@ -401,6 +432,20 @@ export default function Dashboard() {
 
     return () => clearInterval(interval);
   }, [pedidoAtual]);
+
+useEffect(() => {
+  function atualizarPedidoCliente() {
+    setPedidoAtual((atual) => aplicarEstadoFrontend(atual));
+  }
+
+  window.addEventListener("pedidoClienteAtualizado", atualizarPedidoCliente);
+  window.addEventListener("storage", atualizarPedidoCliente);
+
+  return () => {
+    window.removeEventListener("pedidoClienteAtualizado", atualizarPedidoCliente);
+    window.removeEventListener("storage", atualizarPedidoCliente);
+  };
+}, []);
 
   useEffect(() => {
     if (!partida || !destino) {
@@ -801,15 +846,13 @@ export default function Dashboard() {
                 </div>
 
                 <p className="pedido-estado-texto">
-                  {pedidoAtual.estado === "pendente" &&
-                    "A aguardar motorista..."}
+                  {pedidoAtual.estado === "pendente" && "A aguardar motorista..."}
                   {pedidoAtual.estado === "aceite" && "Motorista encontrado!"}
                   {pedidoAtual.estado === "confirmado" && "Viagem confirmada"}
+                  {pedidoAtual.estado === "em_viagem" && "A viagem está em curso. Aguarde o motorista terminar."}
                 </p>
 
-                {["pendente", "aceite", "confirmado"].includes(
-                  pedidoAtual.estado,
-                ) && (
+                {["pendente", "aceite", "confirmado"].includes(pedidoAtual.estado) &&(
                   <button className="btn-localizacao" onClick={cancelarPedido}>
                     Cancelar pedido
                   </button>

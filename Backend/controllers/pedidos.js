@@ -142,7 +142,7 @@ exports.listarDisponiveis = async (req, res) => {
       motorista: req.user.id,
       data_inicio: { $lte: agora },
       data_fim: { $gte: agora },
-    });
+    }).populate("taxi", "nivel_conforto matricula marca modelo");
 
     if (!turno) {
       return res.status(400).json({
@@ -153,6 +153,7 @@ exports.listarDisponiveis = async (req, res) => {
 
     const pedidos = await Pedido.find({
       estado: "pendente",
+      nivel_conforto: turno.taxi?.nivel_conforto,
     });
 
     const motoristaLat = req.query.lat

@@ -55,7 +55,64 @@ function getConforto(pedido) {
   if (!pedido?.nivel_conforto) return "—";
   return pedido.nivel_conforto === "luxuoso" ? "Luxuoso" : "Básico";
 }
+function normalizarConforto(valor) {
+  if (!valor) return "";
 
+  const texto = String(valor).toLowerCase();
+
+  if (texto.includes("lux")) return "luxuoso";
+  if (texto.includes("basic") || texto.includes("básic")) return "basico";
+
+  return texto;
+}
+
+function getTipoMotoristaAtual() {
+  const possiveisChaves = [ "turnoAtivoMotorista",
+    "turnoMotorista",
+    "turnoAtivo",
+    "turno","utilizador", "user", "motorista", "authUser"];
+
+  for (const chave of possiveisChaves) {
+    try {
+      const dados = JSON.parse(localStorage.getItem(chave) || "null");
+
+      const tipo =
+        dados?.tipo_viatura ||
+        dados?.tipo_carro ||
+        dados?.tipo_carro_turno ||
+        dados?.nivel_conforto ||
+        dados?.conforto ||
+        dados?.categoria ||
+        dados?.viatura?.tipo ||
+        dados?.veiculo?.tipo ||
+        dados?.veiculo?.tipo_viatura ||
+        dados?.carro?.tipo ||
+        dados?.carro?.tipo_viatura ||
+        dados?.viatura?.tipo ||
+        dados?.viatura?.nivel_conforto;
+
+      if (tipo) return normalizarConforto(tipo);
+    } catch {
+      // ignora
+    }
+  }
+
+  return "";
+}
+
+function pedidoCompativelComMotorista(pedido) {
+  const tipoMotorista = getTipoMotoristaAtual();
+
+  if (!tipoMotorista) return false;
+
+  const tipoPedido = normalizarConforto(
+    pedido?.nivel_conforto || pedido?.tipo_viatura || pedido?.tipo_carro,
+  );
+
+  if (!tipoPedido) return false;
+
+  return tipoPedido === tipoMotorista;
+}
 export default function PedidosMotorista() {
   const [pedidos, setPedidos] = useState([]);
   const [aceites, setAceites] = useState([]);
@@ -333,12 +390,17 @@ export default function PedidosMotorista() {
     const viagensAtuais = JSON.parse(
       localStorage.getItem("viagensConfirmadasMotorista") || "[]",
     );
+    const pedidosEmViagem = JSON.parse(
+      localStorage.getItem("pedidosEmViagemFrontend") || "[]",
+    );
 
     const jaExiste = viagensAtuais.some((v) => getId(v) === id);
 
     const novaViagem = {
       ...pedido,
+      estado: "em_viagem",
       estadoViagem: "em_curso",
+      data_inicio: new Date().toISOString(),
     };
 
     if (!jaExiste) {
@@ -347,7 +409,12 @@ export default function PedidosMotorista() {
         JSON.stringify([novaViagem, ...viagensAtuais]),
       );
     }
-
+    if (!pedidosEmViagem.includes(id)) {
+      localStorage.setItem(
+        "pedidosEmViagemFrontend",
+        JSON.stringify([id, ...pedidosEmViagem]),
+      );
+    }
     localStorage.setItem(
       "confirmacoesAceitesMotorista",
       JSON.stringify(confirmacoesAtuais.filter((p) => getId(p) !== id)),
@@ -358,7 +425,7 @@ export default function PedidosMotorista() {
 
     window.dispatchEvent(new Event("viagensConfirmadasAtualizadas"));
     window.dispatchEvent(new Event("confirmacoesAceitesAtualizadas"));
-
+    window.dispatchEvent(new Event("pedidoClienteAtualizado"));
     setSucesso("Viagem iniciada. Consulte a secção Viagens.");
   }
 
@@ -646,8 +713,6 @@ function foiConfirmadoPeloCliente(pedido) {
   return [
     "confirmado",
     "confirmada",
-    "aceite",
-    "aceita",
     "aceite_cliente",
     "aceita_cliente",
     "aceite_pelo_cliente",

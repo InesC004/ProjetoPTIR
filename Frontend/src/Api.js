@@ -236,14 +236,14 @@ const pedidos = {
 
     const query = params.toString();
 
-    return request(`/api/pedido/disponiveis${query ? `?${query}` : ""}`, {
+    return request(`/api/pedidos/disponiveis${query ? `?${query}` : ""}`, {
       auth: true,
     });
   },
 
   /** Aceitar um pedido de táxi. */
   async aceitar(id) {
-    return request(`/api/pedido/${id}/aceitar`, {
+    return request(`/api/pedidos/${id}/aceitar`, {
       method: "PUT",
       auth: true,
     });
@@ -251,7 +251,7 @@ const pedidos = {
 
   /** Cancelar a aceitação de um pedido de táxi. */
   async cancelarAceitacao(id) {
-    return request(`/api/pedido/${id}/cancelar-aceitacao`, {
+    return request(`/api/pedidos/${id}/cancelar-aceitacao`, {
       method: "PUT",
       auth: true,
     });
@@ -259,7 +259,7 @@ const pedidos = {
 
   /** Obter um pedido específico pelo ID. */
   async obter(id) {
-    return request(`/api/pedido/${id}`, {
+    return request(`/api/pedidos/${id}`, {
       auth: true,
     });
   },
