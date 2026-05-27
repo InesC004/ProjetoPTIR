@@ -9,6 +9,7 @@ router.post('/stripe/confirm', pagamentosController.confirmPayment)
 // Rotas CRUD tradicionais
 router.post('/', pagamentosController.create)
 router.get('/', pagamentosController.getAll)
+router.get('/historico/:cliente_id', pagamentosController.getByCliente)
 router.get('/:id', pagamentosController.getById)
 router.put('/:id', pagamentosController.update)
 router.delete('/:id', pagamentosController.delete)
