@@ -214,3 +214,46 @@
 .vm-empty-small {
   min-height: 220px;
 }
+
+.vm-btn-danger {
+  background: linear-gradient(135deg, #ef4444, #b91c1c) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.vm-btn-danger:hover {
+  filter: brightness(0.95);
+}
+.vm-btn-small {
+  width: auto !important;
+  height: 36px !important;
+  padding: 0 14px !important;
+  font-size: 0.78rem !important;
+  border-radius: 12px !important;
+}
+.vm-ended-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.vm-ended-actions .vm-ended-note,
+.vm-ended-delete {
+  height: 42px;
+  margin: 0;
+  padding: 0 14px;
+  border-radius: 14px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vm-ended-delete {
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  color: white;
+  font-family: "DM Sans", sans-serif;
+}

@@ -111,6 +111,24 @@ export default function ViagensMotorista() {
   } finally {
     setProcessingId(null);
   }}
+  function eliminarViagemTerminada(pedido) {
+  const id = getId(pedido);
+  if (!id) return;
+
+  const atualizadas = viagensTerminadas.filter((v) => getId(v) !== id);
+
+  localStorage.setItem(
+    "viagensTerminadasMotorista",
+    JSON.stringify(atualizadas),
+  );
+
+  setViagensTerminadas(atualizadas);
+}
+
+function eliminarTodasViagensTerminadas() {
+  localStorage.removeItem("viagensTerminadasMotorista");
+  setViagensTerminadas([]);
+}
 
   return (
     <div className="vm-wrap">
@@ -187,6 +205,15 @@ export default function ViagensMotorista() {
           <h3>Viagens terminadas</h3>
           <p>Aqui aparecem as viagens concluídas.</p>
         </div>
+        {viagensTerminadas.length > 0 && (
+          <button
+            type="button"
+            className="vm-btn vm-btn-danger"
+            onClick={eliminarTodasViagensTerminadas}
+          >
+            Eliminar todas
+          </button>
+        )}
       </div>
 
       {viagensTerminadas.length === 0 ? (
@@ -233,7 +260,17 @@ export default function ViagensMotorista() {
                 </div>
               </div>
 
-              <p className="vm-ended-note">Concluída</p>
+              <div className="vm-ended-actions">
+                <p className="vm-ended-note">Concluída</p>
+
+                <button
+                  type="button"
+                  className="vm-ended-delete"
+                  onClick={() => eliminarViagemTerminada(pedido)}
+                >
+                  Eliminar
+                </button>
+              </div>
             </article>
           ))}
         </div>
