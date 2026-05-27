@@ -851,17 +851,11 @@ useEffect(() => {
           </div>
             
         </div>
-
         <div className="painel-mapa animar-dir">
           <div className="caixa-mapa">
             <MapaInterativo
               apiRef={apiMapa}
               aoDefinirPartida={(c, m) => {
-                setPartida(c);
-                setMoradaPartida(m);
-              }}
-              aoDefinirDestino={(c, m) => {
-                setDestino(c);
                 setMoradaDestino(m);
               }}
             />

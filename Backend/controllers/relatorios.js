@@ -172,15 +172,6 @@ exports.getDetalhesMotorista = async (req, res) => {
     const inicio = data_inicio ? new Date(`${data_inicio}T00:00:00.000`) : periodoHoje().inicio;
     const fim = data_fim ? new Date(`${data_fim}T23:59:59.999`) : periodoHoje().fim;
 
-    const viagens = await Viagem.find({
-      motorista_id,
-      data_inicio: { $gte: inicio },
-      data_fim: { $lte: fim },
-      estado: "concluida"
-    })
-    .populate("taxi_id", "matricula marca modelo")
-    .populate("cliente_id", "nome nif")
-    .sort({ data_inicio: -1 });
 
     const resultado = viagens.map((v) => ({
       _id: v._id,

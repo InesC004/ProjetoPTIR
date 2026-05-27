@@ -1,4 +1,4 @@
-/* const mongoose = require('mongoose')
+const mongoose = require('mongoose')
 
 const pagamentoSchema = new mongoose.Schema({
   viagem_id: { type: mongoose.Schema.Types.ObjectId, ref: 'viagem', required: true },
@@ -12,4 +12,4 @@ const pagamentoSchema = new mongoose.Schema({
   stripe_error: { type: String }
 }, { timestamps: true })
 
-module.exports = mongoose.model('pagamento', pagamentoSchema) */
+module.exports = mongoose.model('pagamento', pagamentoSchema)
