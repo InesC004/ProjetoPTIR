@@ -16,8 +16,9 @@ const precosRoutes = require("./routes/precos");
 const pedidosRoutes = require("./routes/pedidos");
 const viagensRoutes = require("./routes/viagens");
 const pagamentosRoutes = require("./routes/pagamentos");
+const webhooksRoutes = require("./routes/webhooks");
 const relatoriosRoutes = require('./routes/relatorios')
-const faturasRouter = require('./routes/faturas')
+const faturasRoutes = require('./routes/faturas')
 const app = express();
 const PORT = process.env.PORT || 8080;
 const MONGO_URI = process.env.MONGO_URI;
@@ -43,6 +44,11 @@ mongoose
 // ===========================
 app.use(cors());
 app.use(express.json());
+
+// ===========================
+// Webhooks (comentado por enquanto - usar confirmação manual)
+// ===========================
+// app.use('/api/webhooks', webhooksRoutes);
 
 // ===========================
 // Rotas
@@ -84,8 +90,8 @@ app.use("/api/precos", precosRoutes);
 app.use("/api/pedidos", pedidosRoutes);
 app.use("/api/viagens", viagensRoutes);
 app.use("/api/pagamentos", pagamentosRoutes);
-app.use('/api/relatorios', relatoriosRoutes);
-app.use('/api/faturas', faturasRouter);
+app.use('/api/relatorios', relatoriosRoutes)
+app.use('/api/faturas', faturasRoutes)
 // ===========================
 // Tratamento de endpoints desconhecidos
 // ===========================
