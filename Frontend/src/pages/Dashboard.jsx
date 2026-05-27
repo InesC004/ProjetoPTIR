@@ -359,6 +359,9 @@ export default function Dashboard() {
           },
         );
 
+        // ✅ CORRIGIDO: ignora silenciosamente se não existir pedido ativo
+        if (resposta.status === 404) return;
+
         const dados = await resposta.json();
 
         if (dados.success && dados.pedido) {
@@ -396,11 +399,10 @@ export default function Dashboard() {
             custo_estimado: data.viagem_tempo_estimado_min
               ? (Number(data.viagem_tempo_estimado_min) * 0.75).toFixed(2)
               : null,
-              taxi: data.taxi,
+            taxi: data.taxi,
           });
 
           setPedidoAtual(pedidoAtualizado);
-
         }
       } catch {
         console.log("Erro ao atualizar pedido");
@@ -410,25 +412,28 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [pedidoAtual]);
 
-useEffect(() => {
-  function atualizarPedidoCliente() {
-    setPedidoAtual((atual) => aplicarEstadoFrontend(atual));
-  }
+  useEffect(() => {
+    function atualizarPedidoCliente() {
+      setPedidoAtual((atual) => aplicarEstadoFrontend(atual));
+    }
 
-  window.addEventListener("pedidoClienteAtualizado", atualizarPedidoCliente);
-  window.addEventListener("storage", atualizarPedidoCliente);
+    window.addEventListener("pedidoClienteAtualizado", atualizarPedidoCliente);
+    window.addEventListener("storage", atualizarPedidoCliente);
 
-  return () => {
-    window.removeEventListener("pedidoClienteAtualizado", atualizarPedidoCliente);
-    window.removeEventListener("storage", atualizarPedidoCliente);
-  };
-}, []);
+    return () => {
+      window.removeEventListener(
+        "pedidoClienteAtualizado",
+        atualizarPedidoCliente,
+      );
+      window.removeEventListener("storage", atualizarPedidoCliente);
+    };
+  }, []);
 
   useEffect(() => {
-  if (pedidoAtual?.estado === "concluido") {
-    setMostrarPopupPagamento(true);
-  }
-}, [pedidoAtual?.estado]);
+    if (pedidoAtual?.estado === "concluido") {
+      setMostrarPopupPagamento(true);
+    }
+  }, [pedidoAtual?.estado]);
 
   useEffect(() => {
     if (!partida || !destino) {
@@ -639,12 +644,12 @@ useEffect(() => {
     },
   ];
   const passoAtual = !pedidoAtual
-  ? 1
-  : pedidoAtual.estado === "em_viagem"
-    ? 3
-    : pedidoAtual.estado === "concluido"
-      ? 4
-      : 2;
+    ? 1
+    : pedidoAtual.estado === "em_viagem"
+      ? 3
+      : pedidoAtual.estado === "concluido"
+        ? 4
+        : 2;
   return (
     <div className="dash-pagina">
       <div className="fundo-grelha" />
@@ -671,17 +676,32 @@ useEffect(() => {
 
           <div className="card-reserva animar-2">
             <div className="step-dots" aria-hidden="true">
-              <div className={`step-dot ${passoAtual >= 1 ? "feito" : "ativo"}`}>1</div>
+              <div
+                className={`step-dot ${passoAtual >= 1 ? "feito" : "ativo"}`}
+              >
+                1
+              </div>
               <div className={`step-line ${passoAtual >= 2 ? "feito" : ""}`} />
 
-              <div className={`step-dot ${passoAtual >= 2 ? "feito-rosa" : ""}`}>2</div>
-              <div className={`step-line ${passoAtual >= 3 ? "feito-2" : ""}`} />
+              <div
+                className={`step-dot ${passoAtual >= 2 ? "feito-rosa" : ""}`}
+              >
+                2
+              </div>
+              <div
+                className={`step-line ${passoAtual >= 3 ? "feito-2" : ""}`}
+              />
 
-              <div className={`step-dot ${passoAtual >= 3 ? "ativo" : ""}`}>3</div>
-              <div className={`step-line ${passoAtual >= 4 ? "feito-2" : ""}`} />
+              <div className={`step-dot ${passoAtual >= 3 ? "ativo" : ""}`}>
+                3
+              </div>
+              <div
+                className={`step-line ${passoAtual >= 4 ? "feito-2" : ""}`}
+              />
 
-              <div className={`step-dot ${passoAtual >= 4 ? "ativo" : ""}`}>4</div>
-           
+              <div className={`step-dot ${passoAtual >= 4 ? "ativo" : ""}`}>
+                4
+              </div>
             </div>
 
             <button
@@ -835,28 +855,35 @@ useEffect(() => {
                 </div>
 
                 <p className="pedido-estado-texto">
-                  {pedidoAtual.estado === "pendente" && "A aguardar motorista..."}
+                  {pedidoAtual.estado === "pendente" &&
+                    "A aguardar motorista..."}
                   {pedidoAtual.estado === "aceite" && "Motorista encontrado!"}
                   {pedidoAtual.estado === "confirmado" && "Viagem confirmada"}
-                  {pedidoAtual.estado === "em_viagem" && "A viagem está em curso. Aguarde o motorista terminar."}
+                  {pedidoAtual.estado === "em_viagem" &&
+                    "A viagem está em curso. Aguarde o motorista terminar."}
                 </p>
 
-                {["pendente", "aceite", "confirmado"].includes(pedidoAtual.estado) &&(
+                {["pendente", "aceite", "confirmado"].includes(
+                  pedidoAtual.estado,
+                ) && (
                   <button className="btn-localizacao" onClick={cancelarPedido}>
                     Cancelar pedido
                   </button>
                 )}
-                
               </div>
             )}
           </div>
-            
         </div>
         <div className="painel-mapa animar-dir">
           <div className="caixa-mapa">
             <MapaInterativo
               apiRef={apiMapa}
               aoDefinirPartida={(c, m) => {
+                setPartida(c);
+                setMoradaPartida(m);
+              }}
+              aoDefinirDestino={(c, m) => {
+                setDestino(c);
                 setMoradaDestino(m);
               }}
             />
@@ -1066,77 +1093,79 @@ useEffect(() => {
         </div>
       )}
       {mostrarPopupPagamento && pedidoAtual?.estado === "concluido" && (
-  <div className="popup-motorista-fundo">
-    <div className="popup-motorista">
-      <div className="popup-motorista-header">
-        <div>
-          <h2>Viagem terminada</h2>
-          <p>A sua viagem foi concluída. Efetue o pagamento para finalizar.</p>
+        <div className="popup-motorista-fundo">
+          <div className="popup-motorista">
+            <div className="popup-motorista-header">
+              <div>
+                <h2>Viagem terminada</h2>
+                <p>
+                  A sua viagem foi concluída. Efetue o pagamento para finalizar.
+                </p>
+              </div>
+              <div className="popup-motorista-icon">💳</div>
+            </div>
+
+            <div className="popup-motorista-info">
+              <div className="popup-linha">
+                <span>Origem</span>
+                <strong>{pedidoAtual.origem_morada || "—"}</strong>
+              </div>
+
+              <div className="popup-linha">
+                <span>Destino</span>
+                <strong>{pedidoAtual.destino_morada || "—"}</strong>
+              </div>
+
+              <div className="popup-linha">
+                <span>Duração</span>
+                <strong>
+                  {pedidoAtual.duracao_minutos
+                    ? `${pedidoAtual.duracao_minutos} min`
+                    : "—"}
+                </strong>
+              </div>
+
+              <div className="popup-linha">
+                <span>Quilómetros</span>
+                <strong>
+                  {pedidoAtual.quilometros_percorridos
+                    ? `${pedidoAtual.quilometros_percorridos} km`
+                    : "—"}
+                </strong>
+              </div>
+
+              <div className="popup-linha">
+                <span>Total a pagar</span>
+                <strong>
+                  {pedidoAtual.preco_final
+                    ? `${pedidoAtual.preco_final} €`
+                    : "A calcular"}
+                </strong>
+              </div>
+            </div>
+
+            <div className="popup-motorista-acoes">
+              <button
+                className="btn-rejeitar"
+                type="button"
+                onClick={() => setMostrarPopupPagamento(false)}
+              >
+                Fechar
+              </button>
+
+              <button
+                className="btn-aceitar"
+                type="button"
+                onClick={() => {
+                  setMostrarPopupPagamento(false);
+                }}
+              >
+                Fazer pagamento
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="popup-motorista-icon">💳</div>
-      </div>
-
-      <div className="popup-motorista-info">
-        <div className="popup-linha">
-          <span>Origem</span>
-          <strong>{pedidoAtual.origem_morada || "—"}</strong>
-        </div>
-
-        <div className="popup-linha">
-          <span>Destino</span>
-          <strong>{pedidoAtual.destino_morada || "—"}</strong>
-        </div>
-
-        <div className="popup-linha">
-          <span>Duração</span>
-          <strong>
-            {pedidoAtual.duracao_minutos
-              ? `${pedidoAtual.duracao_minutos} min`
-              : "—"}
-          </strong>
-        </div>
-
-        <div className="popup-linha">
-          <span>Quilómetros</span>
-          <strong>
-            {pedidoAtual.quilometros_percorridos
-              ? `${pedidoAtual.quilometros_percorridos} km`
-              : "—"}
-          </strong>
-        </div>
-
-        <div className="popup-linha">
-          <span>Total a pagar</span>
-          <strong>
-            {pedidoAtual.preco_final
-              ? `${pedidoAtual.preco_final} €`
-              : "A calcular"}
-          </strong>
-        </div>
-      </div>
-
-      <div className="popup-motorista-acoes">
-        <button
-          className="btn-rejeitar"
-          type="button"
-          onClick={() => setMostrarPopupPagamento(false)}
-        >
-          Fechar
-        </button>
-
-        <button
-          className="btn-aceitar"
-          type="button"
-          onClick={() => {
-            setMostrarPopupPagamento(false);
-          }}
-        >
-          Fazer pagamento
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
 }

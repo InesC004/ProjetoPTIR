@@ -98,7 +98,6 @@ export default function ViagensMotorista() {
         estado: "concluido",
         estadoViagem: "terminada",
         data_fim: new Date().toISOString(),
-        // pagamento_confirmado virá a true quando o colega confirmar o pagamento
       };
 
       localStorage.setItem(
@@ -123,7 +122,6 @@ export default function ViagensMotorista() {
   // ── Emitir fatura ────────────────────────────────────────────────────────
   async function emitirFatura(pedido) {
     const id = getId(pedido);
-    // O backend espera o viagem_id — pode estar em viagem_id ou no próprio _id do pedido
     const viagemId = pedido?.viagem_id || id;
     if (!viagemId) return;
 
@@ -132,7 +130,6 @@ export default function ViagensMotorista() {
     try {
       await api.faturas.emitir(viagemId);
 
-      // Marcar no localStorage que esta viagem já tem fatura emitida
       const terminadasAtuais = JSON.parse(
         localStorage.getItem("viagensTerminadasMotorista") || "[]",
       );
@@ -281,8 +278,9 @@ export default function ViagensMotorista() {
               faturaEstado[id] &&
               faturaEstado[id] !== "loading" &&
               faturaEstado[id] !== "ok";
-            // Pagamento confirmado: o colega vai pôr pagamento_confirmado: true
-            const pagamentoOk = !!pedido.pagamento_confirmado;
+
+            // TODO: descomentar quando o pagamento estiver implementado
+            // const pagamentoOk = !!pedido.pagamento_confirmado;
 
             return (
               <article
@@ -321,7 +319,7 @@ export default function ViagensMotorista() {
                   )}
                 </div>
 
-                {/* ── Estado do pagamento ── */}
+                {/* TODO: mostrar estado do pagamento quando estiver implementado
                 <div className="vm-payment-status">
                   {pagamentoOk ? (
                     <span className="vm-payment-ok">
@@ -330,12 +328,15 @@ export default function ViagensMotorista() {
                     </span>
                   ) : (
                     <span className="vm-payment-pending">
-                      <Clock size={13} />A aguardar pagamento do cliente…
+                      <Clock size={13} />
+                      A aguardar pagamento do cliente…
                     </span>
                   )}
                 </div>
+                */}
 
-                {/* ── Botão emitir fatura (só aparece após pagamento) ── */}
+                {/* Botão emitir fatura — desbloqueado temporariamente para testes
+                    TODO: adicionar disabled={!pagamentoOk} quando pagamento estiver pronto */}
                 {faturaOk ? (
                   <div className="vm-fatura-ok">
                     <Receipt size={14} />
@@ -345,14 +346,9 @@ export default function ViagensMotorista() {
                   <>
                     <button
                       type="button"
-                      className={`vm-btn vm-btn-fatura ${!pagamentoOk ? "vm-btn-disabled" : ""}`}
+                      className="vm-btn vm-btn-fatura"
                       onClick={() => emitirFatura(pedido)}
-                      disabled={!pagamentoOk || faturaLoading}
-                      title={
-                        !pagamentoOk
-                          ? "Aguarda confirmação do pagamento para emitir a fatura"
-                          : "Emitir fatura desta viagem"
-                      }
+                      disabled={faturaLoading}
                     >
                       {faturaLoading ? (
                         <Loader2 size={15} className="vm-spin" />
