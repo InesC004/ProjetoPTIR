@@ -63,6 +63,12 @@ const viagemSchema = new mongoose.Schema(
       default: "a_decorrer",
     },
 
+    pagamento_estado: {
+      type: String,
+      enum: ["pendente", "pago"],
+      default: "pendente",
+    },
+
     data_inicio: {
       type: Date,
       default: Date.now,

@@ -46,6 +46,18 @@ function getPreco(pedido) {
   return `${Number(preco).toFixed(2)} €`;
 }
 
+function normalizarTerminada(pedido) {
+  const pagamentoOk =
+    pedido?.pagamento_estado === "pago" || !!pedido?.pagamento_confirmado;
+
+  return {
+    ...pedido,
+    estado: pagamentoOk ? "concluido" : "pagamento_pendente",
+    estadoViagem: "terminada",
+    pagamento_confirmado: pagamentoOk,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Componente principal
 // ---------------------------------------------------------------------------
@@ -58,7 +70,7 @@ export default function ViagensMotorista() {
   // Estado para emissão de faturas: { [id]: 'loading' | 'ok' | 'erro' | msg }
   const [faturaEstado, setFaturaEstado] = useState({});
 
-  function carregarViagens() {
+  async function carregarViagens() {
     const guardadas = JSON.parse(
       localStorage.getItem("viagensConfirmadasMotorista") || "[]",
     );
@@ -66,17 +78,42 @@ export default function ViagensMotorista() {
       localStorage.getItem("viagensTerminadasMotorista") || "[]",
     );
     setViagens(guardadas);
-    setViagensTerminadas(terminadas);
+    setViagensTerminadas(terminadas.map(normalizarTerminada));
+
+    const atualizadas = await Promise.all(
+      terminadas.map(async (pedido) => {
+        try {
+          const data = await api.pedidos.obter(getId(pedido));
+          return normalizarTerminada({
+            ...pedido,
+            ...(data.pedido || {}),
+          });
+        } catch {
+          return normalizarTerminada(pedido);
+        }
+      }),
+    );
+
+    localStorage.setItem(
+      "viagensTerminadasMotorista",
+      JSON.stringify(atualizadas),
+    );
+    setViagensTerminadas(atualizadas);
   }
 
   useEffect(() => {
     carregarViagens();
+    const interval = setInterval(carregarViagens, 4000);
     window.addEventListener("viagensConfirmadasAtualizadas", carregarViagens);
-    return () =>
+    window.addEventListener("storage", carregarViagens);
+    return () => {
+      clearInterval(interval);
       window.removeEventListener(
         "viagensConfirmadasAtualizadas",
         carregarViagens,
       );
+      window.removeEventListener("storage", carregarViagens);
+    };
   }, []);
 
   // ── Terminar viagem ──────────────────────────────────────────────────────

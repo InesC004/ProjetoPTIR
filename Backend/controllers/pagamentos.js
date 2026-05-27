@@ -1,4 +1,6 @@
 const Pagamento = require("../models/pagamento");
+const Pedido = require("../models/pedido");
+const Viagem = require("../models/viagem");
 const os = require("os");
 
 let stripe;
@@ -7,6 +9,43 @@ if (process.env.STRIPE_SECRET_KEY) {
 }
 
 const HOSTNAME = os.hostname();
+
+async function marcarPedidoComoPago({ viagem_id, cliente_id }) {
+  const pedido = await Pedido.findOneAndUpdate(
+    {
+      cliente_id,
+      $or: [{ _id: viagem_id }, { viagem_id }],
+    },
+    {
+      estado: "concluido",
+      pagamento_estado: "pago",
+    },
+    { new: true },
+  )
+    .populate("cliente_id", "nome nif")
+    .populate("motorista_id", "nome nif")
+    .populate("viagem_id");
+
+  const viagemId = pedido?.viagem_id?._id || pedido?.viagem_id || viagem_id;
+  let viagem = viagemId ? await Viagem.findById(viagemId) : null;
+
+  if (!viagem && pedido) {
+    viagem = await Viagem.findOne({ pedido_id: pedido._id });
+  }
+
+  if (viagem) {
+    viagem.estado = "concluida";
+    viagem.pagamento_estado = "pago";
+    await viagem.save();
+
+    if (pedido && !pedido.viagem_id) {
+      pedido.viagem_id = viagem._id;
+      await pedido.save();
+    }
+  }
+
+  return pedido;
+}
 
 // criar payment intent (para pagamentos com cartão)
 exports.createPaymentIntent = async (req, res) => {
@@ -48,12 +87,14 @@ exports.createPaymentIntent = async (req, res) => {
         estado: "confirmado",
       });
       await pagamento.save();
+      const pedido = await marcarPedidoComoPago({ viagem_id, cliente_id });
 
       return res.status(201).json({
         success: true,
         message: `Pagamento com ${metodo} registado com sucesso.`,
         servidor: HOSTNAME,
         pagamento,
+        pedido,
       });
     }
 
@@ -143,11 +184,17 @@ exports.confirmPayment = async (req, res) => {
     }
 
     if (paymentIntent.status === "succeeded") {
+      const pedido = await marcarPedidoComoPago({
+        viagem_id: pagamento.viagem_id,
+        cliente_id: pagamento.cliente_id,
+      });
+
       res.json({
         success: true,
         message: "Pagamento confirmado com sucesso!",
         servidor: HOSTNAME,
         pagamento,
+        pedido,
       });
     } else {
       res.status(400).json({
@@ -199,12 +246,14 @@ exports.create = async (req, res) => {
     });
 
     await pagamento.save();
+    const pedido = await marcarPedidoComoPago({ viagem_id, cliente_id });
 
     res.status(201).json({
       success: true,
       message: "Pagamento criado com sucesso.",
       servidor: HOSTNAME,
       pagamento,
+      pedido,
     });
   } catch (err) {
     console.error("Erro ao criar pagamento:", err);

@@ -326,6 +326,7 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
 }
 
 const PEDIDO_PAGAMENTO_PENDENTE_KEY = "pedidoPagamentoPendenteCliente";
+const PEDIDOS_PAGOS_KEY = "pedidosPagosCliente";
 
 function getMongoId(valor) {
   if (!valor) return null;
@@ -335,6 +336,9 @@ function getMongoId(valor) {
 
 function getEstadoVisivel(pedido) {
   if (!pedido) return "";
+  if (pedido.pagamento_estado === "pago" || pedido.pagamento_confirmado) {
+    return "concluido";
+  }
   if (
     pedido.estado === "concluido" &&
     pedido.pagamento_estado !== "pago" &&
@@ -345,11 +349,43 @@ function getEstadoVisivel(pedido) {
   return pedido.estado;
 }
 
+function getIdsPedido(pedido) {
+  return [getMongoId(pedido), getMongoId(pedido?.viagem_id)].filter(Boolean);
+}
+
+function getPedidosPagos() {
+  return JSON.parse(localStorage.getItem(PEDIDOS_PAGOS_KEY) || "[]");
+}
+
+function pedidoFoiPagoLocalmente(pedido) {
+  const pagos = getPedidosPagos();
+  return getIdsPedido(pedido).some((id) => pagos.includes(id));
+}
+
+function guardarPedidoPago(pedido) {
+  const ids = getIdsPedido(pedido);
+  if (ids.length === 0) return;
+
+  const pagos = new Set(getPedidosPagos());
+  ids.forEach((id) => pagos.add(id));
+  localStorage.setItem(PEDIDOS_PAGOS_KEY, JSON.stringify([...pagos]));
+}
+
 function aplicarEstadoFrontend(pedido) {
   if (!pedido) return pedido;
+  const pagoLocal = pedidoFoiPagoLocalmente(pedido);
+  const normalizado = pagoLocal
+    ? {
+        ...pedido,
+        estado: "concluido",
+        pagamento_estado: "pago",
+        pagamento_confirmado: true,
+      }
+    : pedido;
+
   return {
-    ...pedido,
-    estado_visivel: getEstadoVisivel(pedido),
+    ...normalizado,
+    estado_visivel: getEstadoVisivel(normalizado),
   };
 }
 
@@ -367,6 +403,7 @@ function limparPedidoPagamentoPendente() {
 function atualizarViagemMotoristaComoPaga(pedido) {
   const pedidoId = getMongoId(pedido);
   const viagemId = getMongoId(pedido?.viagem_id);
+  const idsPagos = getIdsPedido(pedido);
   const terminadas = JSON.parse(
     localStorage.getItem("viagensTerminadasMotorista") || "[]",
   );
@@ -375,7 +412,12 @@ function atualizarViagemMotoristaComoPaga(pedido) {
     const id = getMongoId(viagem);
     const idViagem = getMongoId(viagem?.viagem_id);
     const corresponde =
-      id === pedidoId || id === viagemId || idViagem === pedidoId || idViagem === viagemId;
+      id === pedidoId ||
+      id === viagemId ||
+      idViagem === pedidoId ||
+      idViagem === viagemId ||
+      idsPagos.includes(id) ||
+      idsPagos.includes(idViagem);
 
     return corresponde
       ? {
@@ -527,12 +569,7 @@ export default function Dashboard() {
 
     popupPagamentoAbertoParaPedidoRef.current = pedidoId;
     setMostrarPopupPagamento(true);
-  }, [
-    pedidoAtual?._id,
-    pedidoAtual?.estado,
-    pedidoAtual?.pagamento_estado,
-    pedidoAtual?.pagamento_confirmado,
-  ]);
+  }, [pedidoAtual]);
 
   useEffect(() => {
     if (!partida || !destino) {
@@ -723,7 +760,7 @@ export default function Dashboard() {
     setErroPagamento("");
 
     try {
-      await api.pagamentos.criar({
+      const data = await api.pagamentos.criar({
         viagem_id: viagemId,
         cliente_id: clienteId,
         metodo: "dinheiro",
@@ -732,12 +769,14 @@ export default function Dashboard() {
 
       const pedidoPago = aplicarEstadoFrontend({
         ...pedidoAtual,
+        ...(data?.pedido || {}),
         estado: "concluido",
         estado_visivel: "concluido",
         pagamento_estado: "pago",
         pagamento_confirmado: true,
       });
 
+      guardarPedidoPago(pedidoPago);
       limparPedidoPagamentoPendente();
       atualizarViagemMotoristaComoPaga(pedidoPago);
       setPedidoAtual(pedidoPago);

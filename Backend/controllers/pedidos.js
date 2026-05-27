@@ -1,6 +1,7 @@
 // controllers/pedidos.js
 
 const Pedido = require("../models/pedido");
+const Viagem = require("../models/viagem");
 const Turno = require("../models/turno");
 const Preco = require("../models/preco");
 
@@ -562,6 +563,32 @@ exports.getAtivoCliente = async (req, res) => {
   }
 };
 
+// histórico de viagens concluídas do motorista
+exports.getHistoricoMotorista = async (req, res) => {
+  try {
+    const pedidos = await Pedido.find({
+      motorista_id: req.user.id,
+      estado: "concluido",
+    })
+      .populate("cliente_id", "nome nif")
+      .populate("motorista_id", "nome nif")
+      .populate("viagem_id")
+      .sort({ data_fim_viagem: -1, updatedAt: -1 });
+
+    res.json({
+      success: true,
+      pedidos,
+    });
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Erro no servidor.",
+    });
+  }
+};
+
 // iniciar viagem
 exports.iniciarViagem = async (req, res) => {
   try {
@@ -592,10 +619,50 @@ exports.iniciarViagem = async (req, res) => {
     pedido.data_inicio_viagem = new Date();
     await pedido.save();
 
+    let viagem = pedido.viagem_id
+      ? await Viagem.findById(pedido.viagem_id)
+      : await Viagem.findOne({ pedido_id: pedido._id });
+
+    if (!viagem) {
+      const turno = await Turno.findOne({
+        motorista: pedido.motorista_id,
+      })
+        .populate("taxi")
+        .sort({ data_inicio: -1 });
+
+      viagem = new Viagem({
+        pedido_id: pedido._id,
+        turno_id: turno?._id,
+        cliente_id: pedido.cliente_id,
+        motorista_id: pedido.motorista_id,
+        taxi_id: turno?.taxi?._id,
+        origem_morada: pedido.origem_morada,
+        origem_lat: pedido.origem_lat,
+        origem_lng: pedido.origem_lng,
+        destino_morada: pedido.destino_morada,
+        destino_lat: pedido.destino_lat,
+        destino_lng: pedido.destino_lng,
+        numero_pessoas: pedido.numero_pessoas,
+        nivel_conforto: pedido.nivel_conforto,
+        estado: "a_decorrer",
+        pagamento_estado: "pendente",
+        data_inicio: pedido.data_inicio_viagem,
+      });
+      await viagem.save();
+      pedido.viagem_id = viagem._id;
+      await pedido.save();
+    } else {
+      viagem.estado = "a_decorrer";
+      viagem.pagamento_estado = "pendente";
+      viagem.data_inicio = pedido.data_inicio_viagem;
+      await viagem.save();
+    }
+
     res.json({
       success: true,
       message: "Viagem iniciada.",
       pedido,
+      viagem,
     });
   } catch (err) {
     console.error(err);
@@ -675,10 +742,23 @@ exports.terminarViagem = async (req, res) => {
     pedido.pagamento_estado = "pendente";
     await pedido.save();
 
+    const viagem = pedido.viagem_id
+      ? await Viagem.findById(pedido.viagem_id)
+      : await Viagem.findOne({ pedido_id: pedido._id });
+
+    if (viagem) {
+      viagem.data_fim = agora;
+      viagem.km = Number(quilometros.toFixed(2));
+      viagem.preco_total = Number(precoFinal.toFixed(2));
+      viagem.pagamento_estado = "pendente";
+      await viagem.save();
+    }
+
     res.json({
       success: true,
       message: "Viagem terminada.",
       pedido,
+      viagem,
     });
   } catch (err) {
     console.error(err);
