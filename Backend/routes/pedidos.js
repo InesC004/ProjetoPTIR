@@ -29,6 +29,17 @@ router.get(
   pedidosController.getAtivoCliente,
 );
 
+router.put(
+  "/:id/iniciar-viagem",
+  checkRole("motorista"),
+  pedidosController.iniciarViagem,
+);
+
+router.put(
+  "/:id/terminar-viagem",
+  checkRole("motorista"),
+  pedidosController.terminarViagem,
+);
 // obter pedido
 router.get(
   "/:id",

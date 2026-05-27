@@ -377,56 +377,57 @@ export default function PedidosMotorista() {
     setConfirmacoes(guardadas);
   }
 
-  function iniciarViagemConfirmada(pedido) {
+  async function iniciarViagemConfirmada(pedido) {
     const id = getId(pedido);
     if (!id) return;
 
     setProcessingId(id);
+    setErro("");
+    setSucesso("");
 
-    const confirmacoesAtuais = JSON.parse(
-      localStorage.getItem("confirmacoesAceitesMotorista") || "[]",
-    );
+    try {
+      const data = await api.pedidos.iniciarViagem(id);
 
-    const viagensAtuais = JSON.parse(
-      localStorage.getItem("viagensConfirmadasMotorista") || "[]",
-    );
-    const pedidosEmViagem = JSON.parse(
-      localStorage.getItem("pedidosEmViagemFrontend") || "[]",
-    );
-
-    const jaExiste = viagensAtuais.some((v) => getId(v) === id);
-
-    const novaViagem = {
-      ...pedido,
-      estado: "em_viagem",
-      estadoViagem: "em_curso",
-      data_inicio: new Date().toISOString(),
-    };
-
-    if (!jaExiste) {
-      localStorage.setItem(
-        "viagensConfirmadasMotorista",
-        JSON.stringify([novaViagem, ...viagensAtuais]),
+      const confirmacoesAtuais = JSON.parse(
+        localStorage.getItem("confirmacoesAceitesMotorista") || "[]",
       );
-    }
-    if (!pedidosEmViagem.includes(id)) {
-      localStorage.setItem(
-        "pedidosEmViagemFrontend",
-        JSON.stringify([id, ...pedidosEmViagem]),
+
+      const viagensAtuais = JSON.parse(
+        localStorage.getItem("viagensConfirmadasMotorista") || "[]",
       );
+
+      const jaExiste = viagensAtuais.some((v) => getId(v) === id);
+
+      const novaViagem = {
+        ...(data?.pedido || pedido),
+        estado: "em_viagem",
+        estadoViagem: "em_curso",
+        data_inicio: new Date().toISOString(),
+      };
+
+      if (!jaExiste) {
+        localStorage.setItem(
+          "viagensConfirmadasMotorista",
+          JSON.stringify([novaViagem, ...viagensAtuais]),
+        );
+      }
+
+      localStorage.setItem(
+        "confirmacoesAceitesMotorista",
+        JSON.stringify(confirmacoesAtuais.filter((p) => getId(p) !== id)),
+      );
+
+      setConfirmacoes((prev) => prev.filter((p) => getId(p) !== id));
+
+      window.dispatchEvent(new Event("viagensConfirmadasAtualizadas"));
+      window.dispatchEvent(new Event("confirmacoesAceitesAtualizadas"));
+
+      setSucesso("Viagem iniciada. Consulte a secção Viagens.");
+    } catch (err) {
+      setErro(err.message || "Não foi possível iniciar a viagem.");
+    } finally {
+      setProcessingId(null);
     }
-    localStorage.setItem(
-      "confirmacoesAceitesMotorista",
-      JSON.stringify(confirmacoesAtuais.filter((p) => getId(p) !== id)),
-    );
-
-    setConfirmacoes((prev) => prev.filter((p) => getId(p) !== id));
-    setProcessingId(null);
-
-    window.dispatchEvent(new Event("viagensConfirmadasAtualizadas"));
-    window.dispatchEvent(new Event("confirmacoesAceitesAtualizadas"));
-    window.dispatchEvent(new Event("pedidoClienteAtualizado"));
-    setSucesso("Viagem iniciada. Consulte a secção Viagens.");
   }
 
   return (

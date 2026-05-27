@@ -7,7 +7,9 @@ import {
   Route,
   Users,
 } from "lucide-react";
+import api from "../Api";
 import "../css/ViagensMotorista.css";
+
 
 function getId(pedido) {
   return pedido?._id || pedido?.id;
@@ -68,11 +70,14 @@ export default function ViagensMotorista() {
     };
   }, []);
 
-  function terminarViagem(pedido) {
+  async function terminarViagem(pedido) {
     const id = getId(pedido);
     if (!id) return;
 
     setProcessingId(id);
+
+     try {
+    await api.pedidos.terminarViagem(id);
 
     const atualizadas = viagens.filter((v) => getId(v) !== id);
 
@@ -97,33 +102,15 @@ export default function ViagensMotorista() {
       JSON.stringify([terminada, ...terminadasAtuais]),
     );
 
-    const pedidosConcluidos = JSON.parse(
-      localStorage.getItem("pedidosConcluidosFrontend") || "[]",
-    );
-
-    if (!pedidosConcluidos.includes(id)) {
-      localStorage.setItem(
-        "pedidosConcluidosFrontend",
-        JSON.stringify([id, ...pedidosConcluidos]),
-      );
-    }
-
-    const pedidosEmViagem = JSON.parse(
-      localStorage.getItem("pedidosEmViagemFrontend") || "[]",
-    );
-
-    localStorage.setItem(
-      "pedidosEmViagemFrontend",
-      JSON.stringify(pedidosEmViagem.filter((item) => item !== id)),
-    );
-
     setViagens(atualizadas);
     setViagensTerminadas([terminada, ...terminadasAtuais]);
-    setProcessingId(null);
 
     window.dispatchEvent(new Event("viagensConfirmadasAtualizadas"));
-    window.dispatchEvent(new Event("pedidoClienteAtualizado"));
-    }
+  } catch (err) {
+    alert(err.message || "Não foi possível terminar a viagem.");
+  } finally {
+    setProcessingId(null);
+  }}
 
   return (
     <div className="vm-wrap">

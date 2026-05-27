@@ -263,8 +263,21 @@ const pedidos = {
       auth: true,
     });
   },
-};
 
+  async iniciarViagem(id) {
+    return request(`/api/pedidos/${id}/iniciar-viagem`, {
+      method: "PUT",
+      auth: true,
+    });
+  },
+
+  async terminarViagem(id) {
+    return request(`/api/pedidos/${id}/terminar-viagem`, {
+      method: "PUT",
+      auth: true,
+    });
+  },
+};
 // =============================================================================
 // Serviços externos
 // =============================================================================

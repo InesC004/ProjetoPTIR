@@ -477,7 +477,6 @@ exports.getById = async (req, res) => {
 
 exports.getAtivoCliente = async (req, res) => {
   try {
-
     const pedido = await Pedido.findOne({
       cliente_id: req.user.id,
       estado: {
@@ -498,7 +497,94 @@ exports.getAtivoCliente = async (req, res) => {
       success: true,
       pedido,
     });
+  } catch (err) {
+    console.error(err);
 
+    res.status(500).json({
+      success: false,
+      message: "Erro no servidor.",
+    });
+  }
+};
+
+// iniciar viagem
+exports.iniciarViagem = async (req, res) => {
+  try {
+    const pedido = await Pedido.findById(req.params.id);
+
+    if (!pedido) {
+      return res.status(404).json({
+        success: false,
+        message: "Pedido não encontrado.",
+      });
+    }
+
+    if (pedido.motorista_id?.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Sem permissão.",
+      });
+    }
+
+    if (pedido.estado !== "confirmado") {
+      return res.status(400).json({
+        success: false,
+        message: "O pedido ainda não foi confirmado pelo cliente.",
+      });
+    }
+
+    pedido.estado = "em_viagem";
+    await pedido.save();
+
+    res.json({
+      success: true,
+      message: "Viagem iniciada.",
+      pedido,
+    });
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Erro no servidor.",
+    });
+  }
+};
+
+// terminar viagem
+exports.terminarViagem = async (req, res) => {
+  try {
+    const pedido = await Pedido.findById(req.params.id);
+
+    if (!pedido) {
+      return res.status(404).json({
+        success: false,
+        message: "Pedido não encontrado.",
+      });
+    }
+
+    if (pedido.motorista_id?.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Sem permissão.",
+      });
+    }
+
+    if (pedido.estado !== "em_viagem") {
+      return res.status(400).json({
+        success: false,
+        message: "A viagem não está em curso.",
+      });
+    }
+
+    pedido.estado = "concluido";
+    await pedido.save();
+
+    res.json({
+      success: true,
+      message: "Viagem terminada.",
+      pedido,
+    });
   } catch (err) {
     console.error(err);
 

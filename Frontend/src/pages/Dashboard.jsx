@@ -655,7 +655,13 @@ useEffect(() => {
       desc: "Relaxe e chegue com conforto e segurança ao destino",
     },
   ];
-
+  const passoAtual = !pedidoAtual
+  ? 1
+  : pedidoAtual.estado === "em_viagem"
+    ? 3
+    : pedidoAtual.estado === "concluido"
+      ? 4
+      : 2;
   return (
     <div className="dash-pagina">
       <div className="fundo-grelha" />
@@ -682,17 +688,17 @@ useEffect(() => {
 
           <div className="card-reserva animar-2">
             <div className="step-dots" aria-hidden="true">
-              <div className={`step-dot ${partida ? "feito" : "ativo"}`}>1</div>
-              <div className={`step-line ${partida ? "feito" : ""}`} />
-              <div
-                className={`step-dot ${destino ? "feito-rosa" : partida ? "ativo" : ""}`}
-              >
-                2
-              </div>
-              <div className={`step-line ${destino ? "feito-2" : ""}`} />
-              <div className={`step-dot ${partida && destino ? "ativo" : ""}`}>
-                3
-              </div>
+              <div className={`step-dot ${passoAtual >= 1 ? "feito" : "ativo"}`}>1</div>
+              <div className={`step-line ${passoAtual >= 2 ? "feito" : ""}`} />
+
+              <div className={`step-dot ${passoAtual >= 2 ? "feito-rosa" : ""}`}>2</div>
+              <div className={`step-line ${passoAtual >= 3 ? "feito-2" : ""}`} />
+
+              <div className={`step-dot ${passoAtual >= 3 ? "ativo" : ""}`}>3</div>
+              <div className={`step-line ${passoAtual >= 4 ? "feito-2" : ""}`} />
+
+              <div className={`step-dot ${passoAtual >= 4 ? "ativo" : ""}`}>4</div>
+           
             </div>
 
             <button
