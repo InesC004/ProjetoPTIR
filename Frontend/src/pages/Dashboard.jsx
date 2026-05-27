@@ -857,6 +857,11 @@ useEffect(() => {
             <MapaInterativo
               apiRef={apiMapa}
               aoDefinirPartida={(c, m) => {
+                setPartida(c);
+                setMoradaPartida(m);
+              }}
+              aoDefinirDestino={(c, m) => {
+                setDestino(c);
                 setMoradaDestino(m);
               }}
             />
