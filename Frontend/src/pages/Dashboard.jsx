@@ -438,6 +438,11 @@ function atualizarViagemMotoristaComoPaga(pedido) {
 export default function Dashboard() {
   const apiMapa = useRef(null);
   const popupPagamentoAbertoParaPedidoRef = useRef(null);
+  const nomeCartaoRef = useRef(null);
+  const numeroCartaoRef = useRef(null);
+  const validadeCartaoRef = useRef(null);
+  const cvvCartaoRef = useRef(null);
+  const telefoneMbwayRef = useRef(null);
   const [partida, setPartida] = useState(null);
   const [moradaPartida, setMoradaPartida] = useState("");
   const [destino, setDestino] = useState(null);
@@ -454,7 +459,66 @@ export default function Dashboard() {
   const [mostrarPopupPagamento, setMostrarPopupPagamento] = useState(false);
   const [aPagar, setAPagar] = useState(false);
   const [erroPagamento, setErroPagamento] = useState("");
+  const [metodoPagamento, setMetodoPagamento] = useState("cartao");
   const [aResponderMotorista, setAResponderMotorista] = useState(false);
+
+  function apenasDigitos(valor) {
+    return valor.replace(/\D/g, "");
+  }
+
+  function limitarDigitos(evento, limite) {
+    evento.target.value = apenasDigitos(evento.target.value).slice(0, limite);
+  }
+
+  function formatarValidadeCartao(evento) {
+    const digitos = apenasDigitos(evento.target.value).slice(0, 4);
+    evento.target.value =
+      digitos.length > 2 ? `${digitos.slice(0, 2)}/${digitos.slice(2)}` : digitos;
+  }
+
+  function validadeCartaoValida(valor) {
+    const match = valor.match(/^(\d{2})\/(\d{2})$/);
+    if (!match) return false;
+
+    const mes = Number(match[1]);
+    const ano = 2000 + Number(match[2]);
+    if (mes < 1 || mes > 12) return false;
+
+    const agora = new Date();
+    const fimDoMes = new Date(ano, mes, 0, 23, 59, 59);
+    return fimDoMes >= agora;
+  }
+
+  function validarFormularioPagamento() {
+    if (metodoPagamento === "cartao") {
+      const nome = nomeCartaoRef.current?.value.trim() || "";
+      const numero = apenasDigitos(numeroCartaoRef.current?.value || "");
+      const validade = validadeCartaoRef.current?.value.trim() || "";
+      const cvv = apenasDigitos(cvvCartaoRef.current?.value || "");
+
+      if (
+        !nome ||
+        numero.length !== 16 ||
+        !validadeCartaoValida(validade) ||
+        cvv.length !== 3
+      ) {
+        setErroPagamento(
+          "Preencha os dados do cartao: nome, 16 digitos, validade valida e CVV com 3 digitos.",
+        );
+        return false;
+      }
+    }
+
+    if (metodoPagamento === "mbway") {
+      const telefone = apenasDigitos(telefoneMbwayRef.current?.value || "");
+      if (telefone.length !== 9 || !telefone.startsWith("9")) {
+        setErroPagamento("Introduza um numero MB Way valido com 9 digitos.");
+        return false;
+      }
+    }
+
+    return true;
+  }
 
   useEffect(() => {
     async function carregarPedidoAtivo() {
@@ -765,6 +829,8 @@ export default function Dashboard() {
       return;
     }
 
+    if (!validarFormularioPagamento()) return;
+
     setAPagar(true);
     setErroPagamento("");
 
@@ -772,7 +838,7 @@ export default function Dashboard() {
       const data = await api.pagamentos.criar({
         viagem_id: viagemId,
         cliente_id: clienteId,
-        metodo: "dinheiro",
+        metodo: metodoPagamento,
         valor,
       });
 
@@ -1359,6 +1425,103 @@ export default function Dashboard() {
               </div>
             </div>
 
+            <div className="pagamento-simulado">
+              <div className="pagamento-metodos" aria-label="Metodo de pagamento">
+                <button
+                  type="button"
+                  className={metodoPagamento === "cartao" ? "ativo" : ""}
+                  onClick={() => {
+                    setMetodoPagamento("cartao");
+                    setErroPagamento("");
+                  }}
+                  disabled={aPagar}
+                >
+                  Cartao
+                </button>
+                <button
+                  type="button"
+                  className={metodoPagamento === "mbway" ? "ativo" : ""}
+                  onClick={() => {
+                    setMetodoPagamento("mbway");
+                    setErroPagamento("");
+                  }}
+                  disabled={aPagar}
+                >
+                  MB Way
+                </button>
+              </div>
+
+              {metodoPagamento === "cartao" ? (
+                <div className="pagamento-form-grid">
+                  <label className="pagamento-campo pagamento-campo-full">
+                    <span>Nome no cartao</span>
+                    <input
+                      ref={nomeCartaoRef}
+                      type="text"
+                      placeholder="Nome do titular"
+                      autoComplete="off"
+                      maxLength={60}
+                    />
+                  </label>
+                  <label className="pagamento-campo pagamento-campo-full">
+                    <span>Numero do cartao</span>
+                    <input
+                      ref={numeroCartaoRef}
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="0000 0000 0000 0000"
+                      autoComplete="off"
+                      maxLength={16}
+                      onInput={(evento) => limitarDigitos(evento, 16)}
+                    />
+                  </label>
+                  <label className="pagamento-campo">
+                    <span>Validade</span>
+                    <input
+                      ref={validadeCartaoRef}
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="MM/AA"
+                      autoComplete="off"
+                      maxLength={5}
+                      onInput={formatarValidadeCartao}
+                    />
+                  </label>
+                  <label className="pagamento-campo">
+                    <span>CVV</span>
+                    <input
+                      ref={cvvCartaoRef}
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="123"
+                      autoComplete="off"
+                      maxLength={3}
+                      onInput={(evento) => limitarDigitos(evento, 3)}
+                    />
+                  </label>
+                </div>
+              ) : (
+                <div className="pagamento-form-grid">
+                  <label className="pagamento-campo pagamento-campo-full">
+                    <span>Telemovel MB Way</span>
+                    <input
+                      ref={telefoneMbwayRef}
+                      type="tel"
+                      placeholder="912 345 678"
+                      autoComplete="off"
+                      maxLength={9}
+                      onInput={(evento) => limitarDigitos(evento, 9)}
+                    />
+                  </label>
+                </div>
+              )}
+
+              <p className="pagamento-nota">
+                Estes dados servem apenas para validar a simulacao. Nao sao
+                guardados.
+              </p>
+            </div>
+
             <div className="popup-motorista-acoes">
               <button
                 className="btn-rejeitar"
@@ -1375,7 +1538,7 @@ export default function Dashboard() {
           onClick={efetuarPagamento}
           disabled={aPagar}
         >
-          {aPagar ? "A processar..." : "Fazer pagamento"}
+          {aPagar ? "A processar..." : "Pagar"}
         </button>
       </div>
       {erroPagamento && (
