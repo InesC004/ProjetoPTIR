@@ -41,6 +41,23 @@ export default function PaginaMotorista() {
   const [turnoAtivo, setTurnoAtivo] = useState(null);
   const current = NAV.find((n) => n.id === active);
 
+  const motorista = JSON.parse(
+    localStorage.getItem("motorista") ||
+      localStorage.getItem("user") ||
+      localStorage.getItem("cliente") ||
+      "{}",
+  );
+  const nomeMotorista =
+    motorista.nome ||
+    motorista.name ||
+    motorista.username ||
+    motorista.nomeCompleto ||
+    "";
+  const primeiroNome = nomeMotorista
+    ? nomeMotorista.split(" ")[0]
+    : "Motorista";
+  const inicial = primeiroNome.charAt(0).toUpperCase();
+
   useEffect(() => {
     async function fetchTurnoAtivo() {
       try {
@@ -207,54 +224,80 @@ export default function PaginaMotorista() {
             position: "relative",
           }}
         >
-          <span className="badge" style={{ marginBottom: 0 }}>
-            <span
-              className="badge-ponto"
-              style={{
-                background: "var(--verde)",
-                boxShadow: "0 0 8px var(--verde)",
-              }}
-            />
-            Motorista
-          </span>
-
           <div style={{ position: "relative" }}>
+            {/* ── Chip pill ── */}
             <button
               onClick={() => setProfileOpen(!profileOpen)}
+              type="button"
               style={{
+                all: "unset",
                 display: "flex",
                 alignItems: "center",
-                gap: 8,
-                background: "none",
-                border: "none",
+                gap: "9px",
+                padding: "6px 13px 6px 7px",
+                background: profileOpen
+                  ? "rgba(255,255,255,0.1)"
+                  : "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: "999px",
                 cursor: "pointer",
-                padding: 0,
+                transition: "all 0.2s ease",
+                boxShadow: profileOpen
+                  ? "0 0 0 2.5px rgba(61,139,255,0.4), inset 0 1px 0 rgba(255,255,255,0.08)"
+                  : "inset 0 1px 0 rgba(255,255,255,0.05)",
               }}
-              type="button"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255,255,255,0.1)";
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = profileOpen
+                  ? "rgba(255,255,255,0.1)"
+                  : "rgba(255,255,255,0.06)";
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+              }}
             >
-              <div
+              {/* Bolinha com inicial */}
+              <span
                 style={{
-                  width: 36,
-                  height: 36,
+                  width: 26,
+                  height: 26,
                   borderRadius: "50%",
                   background:
-                    "linear-gradient(135deg, var(--verde), var(--azul))",
+                    "linear-gradient(135deg, #3d8bff 0%, #6c4dff 100%)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#fff",
+                  fontSize: "0.7rem",
                   fontWeight: 700,
-                  fontSize: "0.9rem",
-                  fontFamily: "'Syne', sans-serif",
+                  color: "#fff",
+                  flexShrink: 0,
+                  boxShadow: "0 2px 8px rgba(61,139,255,0.45)",
                 }}
               >
-                M
-              </div>
-              <ChevronDown
-                size={16}
+                {inicial}
+              </span>
+
+              {/* Nome */}
+              <span
                 style={{
-                  color: "var(--cinza)",
-                  transition: "transform 0.2s",
+                  color: "#f0f4ff",
+                  fontSize: "0.83rem",
+                  fontWeight: 600,
+                  letterSpacing: "0.015em",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {primeiroNome}
+              </span>
+
+              {/* Chevron */}
+              <ChevronDown
+                size={12}
+                style={{
+                  color: "rgba(255,255,255,0.5)",
+                  flexShrink: 0,
+                  transition: "transform 0.25s ease",
                   transform: profileOpen ? "rotate(180deg)" : "rotate(0deg)",
                 }}
               />
@@ -265,26 +308,29 @@ export default function PaginaMotorista() {
                 <div className="perfil-menu-topo">
                   <div
                     style={{
-                      width: 36,
-                      height: 36,
+                      width: 38,
+                      height: 38,
                       borderRadius: "50%",
                       background:
-                        "linear-gradient(135deg, var(--verde), var(--azul))",
+                        "linear-gradient(135deg, #3d8bff 0%, #6c4dff 100%)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       color: "#fff",
                       fontWeight: 700,
-                      fontSize: "0.9rem",
+                      fontSize: "1rem",
                       flexShrink: 0,
+                      boxShadow: "0 2px 10px rgba(61,139,255,0.45)",
                     }}
                   >
-                    M
+                    {inicial}
                   </div>
                   <div>
-                    <div className="perfil-menu-nome">Motorista</div>
+                    <div className="perfil-menu-nome">
+                      {nomeMotorista || "Motorista"}
+                    </div>
                     <div className="perfil-menu-email">
-                      motorista@takecab.pt
+                      {motorista.email || motorista.mail || ""}
                     </div>
                   </div>
                 </div>
@@ -527,8 +573,8 @@ export default function PaginaMotorista() {
                   ).toLocaleTimeString("pt-PT", {
                     hour: "2-digit",
                     minute: "2-digit",
-                  })}{" "}
-                  →{" "}
+                  })}
+                  {" → "}
                   {new Date(
                     turnoAtivo.data_fim || turnoAtivo.fim,
                   ).toLocaleTimeString("pt-PT", {
@@ -640,21 +686,24 @@ export default function PaginaMotorista() {
 function getId(item) {
   return item?._id || item?.id;
 }
-
 function getMorada(valor) {
   return valor || "Morada não indicada";
 }
 
 function getPreco(pedido) {
   const preco =
-    pedido?.preco_final ?? pedido?.preco ?? pedido?.valor ?? pedido?.preco_viagem;
+    pedido?.preco_final ??
+    pedido?.preco ??
+    pedido?.valor ??
+    pedido?.preco_viagem;
   if (preco === undefined || preco === null) return null;
   return `${Number(preco).toFixed(2)} €`;
 }
 
 function getDistancia(pedido) {
   const distancia = pedido?.distancia_km ?? pedido?.distancia;
-  if (distancia === undefined || distancia === null || distancia === "") return "—";
+  if (distancia === undefined || distancia === null || distancia === "")
+    return "—";
   return `${Number(distancia).toFixed(2)} km`;
 }
 
@@ -670,7 +719,10 @@ function getPedidosIgnorados() {
 function guardarPedidoIgnorado(id) {
   const ignorados = new Set(getPedidosIgnorados());
   ignorados.add(id);
-  localStorage.setItem("pedidosIgnoradosMotorista", JSON.stringify([...ignorados]));
+  localStorage.setItem(
+    "pedidosIgnoradosMotorista",
+    JSON.stringify([...ignorados]),
+  );
 }
 
 function PedidoNovoFlutuante() {
@@ -690,7 +742,6 @@ function PedidoNovoFlutuante() {
       setPedido(null);
       return;
     }
-
     if (emCurso.length > 0) {
       setPedido(null);
       return;
@@ -703,7 +754,9 @@ function PedidoNovoFlutuante() {
       const proximo = lista.find((item) => !ignorados.has(getId(item)));
       setPedido((atual) => {
         if (!atual) return proximo || null;
-        const atualAindaDisponivel = lista.some((item) => getId(item) === getId(atual));
+        const atualAindaDisponivel = lista.some(
+          (item) => getId(item) === getId(atual),
+        );
         return atualAindaDisponivel ? atual : proximo || null;
       });
     } catch {
@@ -719,7 +772,10 @@ function PedidoNovoFlutuante() {
     window.addEventListener("pedidosMotoristaAtualizados", procurarPedido);
     return () => {
       clearInterval(interval);
-      window.removeEventListener("viagensConfirmadasAtualizadas", procurarPedido);
+      window.removeEventListener(
+        "viagensConfirmadasAtualizadas",
+        procurarPedido,
+      );
       window.removeEventListener("pedidosAceitesAtualizados", procurarPedido);
       window.removeEventListener("pedidosMotoristaAtualizados", procurarPedido);
     };
@@ -729,10 +785,8 @@ function PedidoNovoFlutuante() {
   async function aceitarPedido() {
     const id = getId(pedido);
     if (!id) return;
-
     setAAceitar(true);
     setErro("");
-
     try {
       const data = await api.pedidos.aceitar(id);
       const pedidoAceite = {
@@ -745,7 +799,10 @@ function PedidoNovoFlutuante() {
       );
       localStorage.setItem(
         "pedidosAceitesMotorista",
-        JSON.stringify([pedidoAceite, ...aceites.filter((p) => getId(p) !== id)]),
+        JSON.stringify([
+          pedidoAceite,
+          ...aceites.filter((p) => getId(p) !== id),
+        ]),
       );
       setPedido(null);
       window.dispatchEvent(new Event("pedidosAceitesAtualizados"));
@@ -774,7 +831,6 @@ function PedidoNovoFlutuante() {
         </span>
         <Navigation size={18} />
       </div>
-
       <div className="vf-rota">
         <div>
           <MapPin size={14} />
@@ -785,7 +841,6 @@ function PedidoNovoFlutuante() {
           <span>{getMorada(pedido.destino_morada)}</span>
         </div>
       </div>
-
       <div className="pf-metricas">
         <span>
           <Users size={13} />
@@ -794,9 +849,7 @@ function PedidoNovoFlutuante() {
         <span>{getDistancia(pedido)}</span>
         <span>{getConforto(pedido)}</span>
       </div>
-
       {erro && <p className="vf-erro">{erro}</p>}
-
       <div className="pf-acoes">
         <button
           type="button"
@@ -812,7 +865,11 @@ function PedidoNovoFlutuante() {
           onClick={aceitarPedido}
           disabled={aAceitar}
         >
-          {aAceitar ? <Loader2 size={16} className="vf-spin" /> : <CheckCircle2 size={16} />}
+          {aAceitar ? (
+            <Loader2 size={16} className="vf-spin" />
+          ) : (
+            <CheckCircle2 size={16} />
+          )}
           {aAceitar ? "A aceitar..." : "Aceitar"}
         </button>
       </div>
@@ -834,11 +891,12 @@ function ViagemAtivaFlutuante() {
 
   useEffect(() => {
     carregarViagemAtiva();
-
     const interval = setInterval(carregarViagemAtiva, 2000);
-    window.addEventListener("viagensConfirmadasAtualizadas", carregarViagemAtiva);
+    window.addEventListener(
+      "viagensConfirmadasAtualizadas",
+      carregarViagemAtiva,
+    );
     window.addEventListener("storage", carregarViagemAtiva);
-
     return () => {
       clearInterval(interval);
       window.removeEventListener(
@@ -852,10 +910,8 @@ function ViagemAtivaFlutuante() {
   async function terminarViagem() {
     const id = getId(viagem);
     if (!id) return;
-
     setATerminar(true);
     setErro("");
-
     try {
       const data = await api.pedidos.terminarViagem(id);
       const pedidoAtualizado = data?.pedido || viagem;
@@ -865,7 +921,6 @@ function ViagemAtivaFlutuante() {
       const terminadas = JSON.parse(
         localStorage.getItem("viagensTerminadasMotorista") || "[]",
       );
-
       const atualizadas = emCurso.filter((item) => getId(item) !== id);
       const terminada = {
         ...viagem,
@@ -876,7 +931,6 @@ function ViagemAtivaFlutuante() {
         pagamento_estado: pedidoAtualizado.pagamento_estado || "pendente",
         pagamento_confirmado: false,
       };
-
       localStorage.setItem(
         "viagensConfirmadasMotorista",
         JSON.stringify(atualizadas),
@@ -885,7 +939,6 @@ function ViagemAtivaFlutuante() {
         "viagensTerminadasMotorista",
         JSON.stringify([terminada, ...terminadas]),
       );
-
       setViagem(null);
       window.dispatchEvent(new Event("viagensConfirmadasAtualizadas"));
     } catch (err) {
@@ -906,7 +959,6 @@ function ViagemAtivaFlutuante() {
         </span>
         <Route size={18} />
       </div>
-
       <div className="vf-rota">
         <div>
           <MapPin size={14} />
@@ -917,17 +969,19 @@ function ViagemAtivaFlutuante() {
           <span>{getMorada(viagem.destino_morada)}</span>
         </div>
       </div>
-
       {getPreco(viagem) && <div className="vf-preco">{getPreco(viagem)}</div>}
       {erro && <p className="vf-erro">{erro}</p>}
-
       <button
         type="button"
         className="vf-btn"
         onClick={terminarViagem}
         disabled={aTerminar}
       >
-        {aTerminar ? <Loader2 size={16} className="vf-spin" /> : <CheckCircle2 size={16} />}
+        {aTerminar ? (
+          <Loader2 size={16} className="vf-spin" />
+        ) : (
+          <CheckCircle2 size={16} />
+        )}
         {aTerminar ? "A terminar..." : "Terminar viagem"}
       </button>
     </aside>
