@@ -31,7 +31,7 @@ body,
 
 .perfil-pagina {
   min-height: 100vh;
-  padding: 56px 32px;
+  padding: 5px 32px;
   font-family: "DM Sans", sans-serif;
   background:
     radial-gradient(circle at 0% 100%, rgba(48, 240, 160, 0.2), transparent 28%),
@@ -40,12 +40,13 @@ body,
   color: #06112a;
   position: relative;
   overflow: hidden;
+  
 }
 
 .perfil-pagina::after {
   content: "";
   position: absolute;
-  top: 60px;
+  top: 30px;
   right: 70px;
   width: 190px;
   height: 190px;
@@ -149,12 +150,33 @@ body,
   flex-shrink: 0;
 }
 
-.perfil-info-item span {
+.perfil-info-item > div > span {
   display: block;
   font-size: 0.82rem;
   color: #6680a0;
   margin-bottom: 3px;
 }
+
+
+.perfil-info-item > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.perfil-info-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 0 !important;
+  line-height: 1;
+}
+
+.perfil-info-icon svg {
+  display: block;
+}
+
 
 .perfil-info-item strong {
   color: #06112a;
@@ -169,5 +191,98 @@ body,
   .perfil-topo {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+
+
+/* =========================
+   PERFIL MOTORISTA — MOBILE
+========================= */
+@media (max-width: 760px) {
+  .perfil-pagina {
+    min-height: 100vh;
+    padding: 20px 14px 34px;
+    overflow-x: hidden;
+  }
+
+  .perfil-pagina::after {
+    width: 120px;
+    height: 120px;
+    top: 20px;
+    right: 10px;
+    opacity: 0.3;
+  }
+
+  .perfil-voltar {
+    width: fit-content;
+    padding: 11px 15px;
+    font-size: 0.9rem;
+    margin-top: -4px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .perfil-card {
+    width: 100%;
+    margin: 0;
+    padding: 24px 18px;
+    border-radius: 22px;
+  }
+
+  .perfil-topo {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 2px;
+    margin-bottom: 22px;
+    padding-bottom: 22px;
+  }
+
+  .perfil-avatar {
+    width: 58px;
+    height: 58px;
+    font-size: 2rem;
+  }
+
+  .perfil-card h1 {
+    font-size: 1.3rem;
+    line-height: 1.2;
+    word-break: break-word;
+  }
+
+  .perfil-subtitulo {
+    font-size: 0.7rem;
+  }
+
+  .perfil-info {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .perfil-info-item {
+    width: 100%;
+    padding: 15px 14px;
+    border-radius: 16px;
+    align-items: center;
+  }
+
+  .perfil-info-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+
+  .perfil-info-item > div > span {
+    font-size: 0.7rem;
+  }
+
+
+
+  .perfil-info-item strong {
+    font-size: 0.8rem;
+    line-height: 1.35;
+    word-break: break-word;
   }
 }

@@ -348,19 +348,7 @@ export default function PaginaMotorista() {
                     </span>
                     Ver perfil
                   </button>
-                  <button
-                    className="perfil-menu-item"
-                    onClick={() => {
-                      setProfileOpen(false);
-                      navigate("/configuracoes-motorista");
-                    }}
-                    type="button"
-                  >
-                    <span className="perfil-menu-icone">
-                      <Settings size={14} />
-                    </span>
-                    Definições
-                  </button>
+
                   <div className="perfil-menu-divisor" />
                   <button
                     className="perfil-menu-item danger"
@@ -390,7 +378,7 @@ export default function PaginaMotorista() {
       >
         <aside
           style={{
-            width: 290,
+            width: 280,
             minHeight: "calc(100vh - 64px)",
             background: "#071a35",
             backdropFilter: "blur(24px)",
