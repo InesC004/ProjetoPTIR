@@ -8,7 +8,45 @@ import {
   AlertCircle,
   Loader2,
   CheckCircle2,
+  Car,
 } from "lucide-react";
+import "../css/removerTaxi.css";
+
+function normalizarListaTaxis(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.Data)) return data.Data;
+  if (Array.isArray(data?.taxis)) return data.taxis;
+  return [];
+}
+
+function getCampoTaxi(taxi, campo) {
+  return (
+    taxi?.[campo] ||
+    taxi?.taxi?.[campo] ||
+    taxi?.id_taxi?.[campo] ||
+    taxi?.veiculo?.[campo] ||
+    ""
+  );
+}
+
+function getTaxiId(taxi) {
+  return (
+    taxi?._id || taxi?.taxi?._id || taxi?.id_taxi?._id || taxi?.veiculo?._id
+  );
+}
+
+function formatarTipoMotor(valor) {
+  if (valor === "eletrico") return "Elétrico";
+  if (valor === "combustao") return "Combustão";
+  return "-";
+}
+
+function formatarConforto(valor) {
+  if (valor === "luxuoso") return "Luxuoso";
+  if (valor === "basico") return "Básico";
+  return "-";
+}
 
 export default function RemoverTaxi({ aberto, onFechar }) {
   const [taxis, setTaxis] = useState([]);
@@ -27,10 +65,12 @@ export default function RemoverTaxi({ aberto, onFechar }) {
   async function fetchTaxis() {
     setLoading(true);
     setErro("");
+
     try {
       const data = await api.taxis.listar();
-      setTaxis(data);
-    } catch {
+      setTaxis(normalizarListaTaxis(data));
+    } catch (err) {
+      console.error("Erro ao carregar táxis:", err);
       setErro("Erro ao carregar táxis.");
     } finally {
       setLoading(false);
@@ -46,17 +86,26 @@ export default function RemoverTaxi({ aberto, onFechar }) {
   async function confirmarRemocaoTaxi() {
     if (!taxiAConfirmar) return;
 
-    setRemovendoId(taxiAConfirmar._id);
+    const id = getTaxiId(taxiAConfirmar);
+
+    if (!id) {
+      setErro("Não foi possível identificar o táxi.");
+      return;
+    }
+
+    setRemovendoId(id);
     setErro("");
     setSucesso("");
 
     try {
-      await api.taxis.remover(taxiAConfirmar._id);
-      setTaxis((prev) => prev.filter((t) => t._id !== taxiAConfirmar._id));
+      await api.taxis.remover(id);
+
+      setTaxis((prev) => prev.filter((t) => getTaxiId(t) !== id));
       setSucesso("Táxi removido com sucesso.");
       setTaxiAConfirmar(null);
-    } catch {
-      setErro("Não foi possível ligar ao servidor.");
+    } catch (err) {
+      console.error("Erro ao remover táxi:", err);
+      setErro(err?.message || "Não foi possível ligar ao servidor.");
     } finally {
       setRemovendoId(null);
     }
@@ -66,168 +115,168 @@ export default function RemoverTaxi({ aberto, onFechar }) {
 
   const filtrados = taxis.filter((t) => {
     const termo = searchTerm.toLowerCase();
+
     return (
-      (t.matricula || "").toLowerCase().includes(termo) ||
-      (t.marca || "").toLowerCase().includes(termo) ||
-      (t.modelo || "").toLowerCase().includes(termo) ||
-      (t.tipo_servico || "").toLowerCase().includes(termo)
+      getCampoTaxi(t, "matricula").toLowerCase().includes(termo) ||
+      getCampoTaxi(t, "marca").toLowerCase().includes(termo) ||
+      getCampoTaxi(t, "modelo").toLowerCase().includes(termo) ||
+      getCampoTaxi(t, "tipo_motor").toLowerCase().includes(termo) ||
+      getCampoTaxi(t, "nivel_conforto").toLowerCase().includes(termo)
     );
   });
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onFechar}
-      />
+  const matriculaConfirmar = taxiAConfirmar
+    ? getCampoTaxi(taxiAConfirmar, "matricula")
+    : "";
 
-      <div className="relative w-full max-w-[680px] mx-4 max-h-[90vh] overflow-y-auto rounded-2xl border border-[#1a6eff]/20 bg-[#0a1628]/95 backdrop-blur-2xl shadow-[0_32px_80px_rgba(0,0,0,0.5)]">
-        <div className="flex items-center justify-between p-6 border-b border-white/[0.06]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-[13px] flex items-center justify-center text-white bg-[linear-gradient(135deg,#ef4444,#b91c1c)]">
-              <Trash2 size={18} />
+  return (
+    <div className="dt-overlay">
+      <div className="dt-backdrop" onClick={onFechar} />
+
+      <div className="dt-modal dt-scrollbar-none">
+        <div className="dt-header">
+          <div className="dt-title-wrap">
+            <div className="dt-icon-box">
+              <Trash2 size={18} strokeWidth={1.8} />
             </div>
+
             <div>
-              <h3 className="font-['Syne',sans-serif] text-[18px] font-bold text-[#eaf0ff]">
-                Remover Táxis
-              </h3>
-              <p className="text-[12px] text-[#4e6a8a]">
-                Selecione o táxi a remover
-              </p>
+              <h3 className="dt-title">Remover Táxis</h3>
+              <p className="dt-subtitle">Selecione o táxi a remover</p>
             </div>
           </div>
 
-          <button
-            onClick={onFechar}
-            className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/[0.06] bg-white/[0.03] text-[#8ba3c7]"
-          >
-            <X size={18} />
+          <button onClick={onFechar} className="dt-close-button">
+            <X size={16} strokeWidth={2} />
           </button>
         </div>
 
-        <div className="p-6">
-          <div className="relative mb-5">
-            <Search
-              size={16}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4e6a8a]"
-            />
+        <div className="dt-content">
+          <div className="dt-search-wrap">
+            <Search size={15} className="dt-search-icon" />
+
             <input
               type="text"
-              placeholder="Pesquisar por matrícula, marca, modelo ou serviço..."
+              placeholder="Pesquisar por matrícula, marca ou modelo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-xl text-[14px] text-[#eaf0ff] placeholder-[#4e6a8a]/60 bg-white/[0.04] border border-white/[0.08] outline-none"
+              className="dt-search-input"
             />
           </div>
 
           {erro && (
-            <div className="mb-4 flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/[0.05] px-4 py-3 text-[13px] text-red-300">
+            <div className="dt-alert dt-alert-error">
               <AlertCircle size={16} />
               {erro}
             </div>
           )}
 
           {sucesso && (
-            <div className="mb-4 flex items-center gap-2 rounded-xl border border-[#00e887]/20 bg-[#00e887]/[0.06] px-4 py-3 text-[13px] text-[#8fffd0]">
+            <div className="dt-alert dt-alert-success">
               <CheckCircle2 size={16} />
               {sucesso}
             </div>
           )}
 
           {taxiAConfirmar && (
-            <div className="mb-4 rounded-2xl border border-red-500/20 bg-red-500/[0.05] p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-red-500/10 border border-red-500/20 text-red-300 shrink-0">
-                  <Trash2 size={18} />
-                </div>
+            <div className="dt-confirm-box">
+              <div className="dt-confirm-icon">
+                <Trash2 size={18} />
+              </div>
 
-                <div className="flex-1">
-                  <h4 className="text-[14px] font-semibold text-[#eaf0ff]">
-                    Confirmar remoção
-                  </h4>
+              <div className="dt-confirm-body">
+                <h4>Confirmar remoção</h4>
 
-                  <p className="text-[13px] text-[#8ba3c7] mt-1">
-                    Tem a certeza que quer remover o táxi com matrícula{" "}
-                    <span className="text-[#eaf0ff] font-semibold">
-                      {taxiAConfirmar.matricula}
-                    </span>
-                    ?
-                  </p>
+                <p>
+                  Tem a certeza que quer remover o táxi com matrícula{" "}
+                  <strong>{matriculaConfirmar || "sem matrícula"}</strong>?
+                </p>
 
-                  <div className="flex items-center gap-3 mt-4">
-                    <button
-                      type="button"
-                      onClick={() => setTaxiAConfirmar(null)}
-                      disabled={removendoId === taxiAConfirmar._id}
-                      className="px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.03] text-[#8ba3c7] hover:bg-white/[0.06] hover:text-[#eaf0ff] transition-all duration-200"
-                    >
-                      Cancelar
-                    </button>
+                <div className="dt-confirm-actions">
+                  <button
+                    type="button"
+                    onClick={() => setTaxiAConfirmar(null)}
+                    disabled={removendoId === getTaxiId(taxiAConfirmar)}
+                    className="dt-cancel-button"
+                  >
+                    Cancelar
+                  </button>
 
-                    <button
-                      type="button"
-                      onClick={confirmarRemocaoTaxi}
-                      disabled={removendoId === taxiAConfirmar._id}
-                      className="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 hover:bg-red-500/15 transition-all duration-200 flex items-center gap-2 disabled:opacity-50"
-                    >
-                      {removendoId === taxiAConfirmar._id ? (
-                        <>
-                          <Loader2 size={15} className="animate-spin" />A
-                          remover...
-                        </>
-                      ) : (
-                        <>
-                          <Trash2 size={15} />
-                          Confirmar remoção
-                        </>
-                      )}
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={confirmarRemocaoTaxi}
+                    disabled={removendoId === getTaxiId(taxiAConfirmar)}
+                    className="dt-danger-button"
+                  >
+                    {removendoId === getTaxiId(taxiAConfirmar) ? (
+                      <>
+                        <Loader2 size={15} className="dt-spin" />A remover...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 size={15} />
+                        Confirmar remoção
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
           )}
 
           {loading ? (
-            <div className="flex items-center justify-center gap-3 py-10 text-[#8ba3c7] text-[14px]">
-              <Loader2 size={18} className="animate-spin" />A carregar táxis...
+            <div className="dt-empty">
+              <Loader2 size={18} className="dt-spin" />A carregar táxis...
             </div>
           ) : filtrados.length === 0 ? (
-            <div className="text-center py-10 text-[#8ba3c7] text-[14px]">
-              Nenhum táxi encontrado.
-            </div>
+            <div className="dt-empty">Nenhum táxi encontrado.</div>
           ) : (
-            <div className="flex flex-col gap-3">
-              {filtrados.map((taxi) => (
-                <div
-                  key={taxi._id}
-                  className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="font-semibold text-[#eaf0ff] text-[15px]">
-                        {taxi.matricula}
+            <div className="dt-taxi-list">
+              {filtrados.map((taxi) => {
+                const id = getTaxiId(taxi);
+                const matricula = getCampoTaxi(taxi, "matricula");
+                const marca = getCampoTaxi(taxi, "marca");
+                const modelo = getCampoTaxi(taxi, "modelo");
+                const anoCompra = getCampoTaxi(taxi, "ano_compra");
+                const tipoMotor = getCampoTaxi(taxi, "tipo_motor");
+                const nivelConforto = getCampoTaxi(taxi, "nivel_conforto");
+
+                return (
+                  <div key={id || matricula} className="dt-taxi-row">
+                    <div className="dt-taxi-left">
+                      <div className="dt-taxi-icon">
+                        <Car size={18} strokeWidth={1.7} />
                       </div>
-                      <div className="text-[12px] text-[#8ba3c7] mt-1">
-                        {taxi.marca} {taxi.modelo}
-                      </div>
-                      <div className="text-[12px] text-[#8ba3c7]">
-                        Serviço: {taxi.tipo_servico || "-"}
+
+                      <div>
+                        <div className="dt-taxi-matricula">
+                          {matricula || "Sem matrícula"}
+                        </div>
+
+                        <div className="dt-taxi-info">
+                          {marca || "Sem marca"} {modelo || "Sem modelo"}
+                          {anoCompra ? ` · ${anoCompra}` : ""}
+                        </div>
+
+                        <div className="dt-taxi-extra">
+                          {formatarTipoMotor(tipoMotor)} ·{" "}
+                          {formatarConforto(nivelConforto)}
+                        </div>
                       </div>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => removerTaxi(taxi)}
-                      disabled={removendoId === taxi._id}
-                      className="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 hover:bg-red-500/15 disabled:opacity-50 flex items-center gap-2"
+                      disabled={removendoId === id}
+                      className="dt-remove-button"
                     >
                       <Trash2 size={15} />
                       Remover
                     </button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

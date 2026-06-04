@@ -17,111 +17,48 @@ import {
   ArrowLeft,
   Search,
 } from "lucide-react";
+import "../css/editarTaxi.css";
 
 /* ═══════════════════════════════════════════════
-   MARCAS E MODELOS
+   HELPERS PARA CAMPOS DO TÁXI
+   Aceita várias formas vindas da API:
+   taxi.matricula
+   taxi.id_taxi.matricula
+   taxi.taxi.matricula
    ═══════════════════════════════════════════════ */
-const MARCAS_MODELOS = {
-  Mercedes: [
-    "Classe A",
-    "Classe B",
-    "Classe C",
-    "Classe E",
-    "Classe S",
-    "EQA",
-    "EQB",
-    "EQC",
-    "EQE",
-    "EQS",
-    "Vito",
-  ],
-  BMW: [
-    "Série 1",
-    "Série 3",
-    "Série 5",
-    "Série 7",
-    "X1",
-    "X3",
-    "iX1",
-    "iX3",
-    "i4",
-    "i5",
-    "i7",
-  ],
-  Audi: [
-    "A3",
-    "A4",
-    "A6",
-    "A8",
-    "Q3",
-    "Q5",
-    "Q7",
-    "e-tron",
-    "Q4 e-tron",
-    "Q8 e-tron",
-  ],
-  Volkswagen: [
-    "Golf",
-    "Passat",
-    "Arteon",
-    "Touran",
-    "ID.3",
-    "ID.4",
-    "ID.5",
-    "ID.7",
-  ],
-  Toyota: [
-    "Corolla",
-    "Camry",
-    "Prius",
-    "Yaris",
-    "RAV4",
-    "bZ4X",
-    "Proace City",
-    "Proace Verso",
-  ],
-  Renault: [
-    "Clio",
-    "Mégane",
-    "Talisman",
-    "Captur",
-    "Mégane E-Tech",
-    "Scenic E-Tech",
-    "Zoe",
-  ],
-  Peugeot: ["208", "308", "508", "2008", "3008", "e-208", "e-308", "e-2008"],
-  Tesla: ["Model 3", "Model S", "Model X", "Model Y"],
-  Nissan: ["Leaf", "Qashqai", "X-Trail", "Ariya", "Townstar"],
-  Hyundai: [
-    "i20",
-    "i30",
-    "Tucson",
-    "Ioniq 5",
-    "Ioniq 6",
-    "Kona",
-    "Kona Electric",
-  ],
-  Kia: ["Ceed", "Sportage", "Niro", "EV6", "EV9", "Stonic"],
-  Skoda: ["Octavia", "Superb", "Kamiq", "Karoq", "Enyaq iV"],
-  SEAT: ["Ibiza", "León", "Ateca", "Tarraco"],
-  Citroën: ["C3", "C4", "C5 X", "ë-C4", "ë-Berlingo"],
-  Fiat: ["500", "Tipo", "500e", "Panda"],
-  Volvo: ["S60", "S90", "XC40", "XC60", "XC90", "EX30", "EX90", "C40 Recharge"],
-  Dacia: ["Sandero", "Duster", "Jogger", "Spring"],
-};
-const MARCAS = Object.keys(MARCAS_MODELOS).sort();
+function getCampoTaxi(taxi, campo) {
+  return (
+    taxi?.[campo] ||
+    taxi?.taxi?.[campo] ||
+    taxi?.id_taxi?.[campo] ||
+    taxi?.veiculo?.[campo] ||
+    ""
+  );
+}
+
+function normalizarListaTaxis(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.Data)) return data.Data;
+  if (Array.isArray(data?.taxis)) return data.taxis;
+  return [];
+}
 
 /* ═══════════════════════════════════════════════
    VALIDAÇÃO DE MATRÍCULA
    ═══════════════════════════════════════════════ */
 function validarMatricula(valor) {
   const limpo = valor.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
   if (limpo.length !== 6) return false;
-  const g1 = limpo.slice(0, 2),
-    g2 = limpo.slice(2, 4),
-    g3 = limpo.slice(4, 6);
+
+  const g1 = limpo.slice(0, 2);
+  const g2 = limpo.slice(2, 4);
+  const g3 = limpo.slice(4, 6);
+
   const isL = (s) => /^[A-Z]{2}$/.test(s);
   const isD = (s) => /^[0-9]{2}$/.test(s);
+
   return (
     (isL(g1) && isD(g2) && isD(g3)) ||
     (isD(g1) && isD(g2) && isL(g3)) ||
@@ -135,39 +72,27 @@ function formatarMatricula(valor) {
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, "")
     .slice(0, 6);
+
   if (limpo.length <= 2) return limpo;
   if (limpo.length <= 4) return limpo.slice(0, 2) + "-" + limpo.slice(2);
+
   return limpo.slice(0, 2) + "-" + limpo.slice(2, 4) + "-" + limpo.slice(4);
 }
 
 /* ═══════════════════════════════════════════════
    ESTADO BADGES
    ═══════════════════════════════════════════════ */
-const ESTADO_CORES = {
-  livre: {
-    bg: "bg-[#00e887]/10",
-    border: "border-[#00e887]/25",
-    text: "text-[#00e887]",
-    dot: "bg-[#00e887]",
-  },
-  em_uso: {
-    bg: "bg-[#ff8c42]/10",
-    border: "border-[#ff8c42]/25",
-    text: "text-[#ff8c42]",
-    dot: "bg-[#ff8c42]",
-  },
-  em_reabastecimento: {
-    bg: "bg-[#00d4ff]/10",
-    border: "border-[#00d4ff]/25",
-    text: "text-[#00d4ff]",
-    dot: "bg-[#00d4ff]",
-  },
-};
 const ESTADO_LABELS = {
   livre: "Livre",
   em_uso: "Em uso",
   em_reabastecimento: "Reabastecimento",
 };
+
+function getEstadoClass(estado) {
+  if (estado === "em_uso") return "et-state-use";
+  if (estado === "em_reabastecimento") return "et-state-fuel";
+  return "et-state-free";
+}
 
 /* ═══════════════════════════════════════════════
    CUSTOM DROPDOWN
@@ -186,10 +111,13 @@ function Dropdown({
   const ref = useRef(null);
   const inputRef = useRef(null);
 
+  const safeOptions = Array.isArray(options) ? options : [];
+
   useEffect(() => {
     function handler(e) {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     }
+
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
@@ -198,75 +126,76 @@ function Dropdown({
     if (open && inputRef.current) inputRef.current.focus();
   }, [open]);
 
-  const filtered = options.filter((o) =>
-    o.toLowerCase().includes(search.toLowerCase()),
+  const filtered = safeOptions.filter((o) =>
+    String(o).toLowerCase().includes(search.toLowerCase()),
   );
 
+  function handleSelect(opt) {
+    onChange(opt);
+    setOpen(false);
+    setSearch("");
+  }
+
   return (
-    <div ref={ref} className="relative">
-      <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
-        {label}
-      </label>
+    <div ref={ref} className="et-dropdown">
+      <label className="et-label">{label}</label>
+
       <button
         type="button"
         onClick={() => {
           if (!disabled) setOpen(!open);
         }}
-        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[14px] border outline-none transition-all duration-200 text-left ${
-          disabled
-            ? "bg-white/[0.02] border-white/[0.05] text-[#4e6a8a]/40 cursor-not-allowed"
-            : open
-              ? "bg-[#1a6eff]/[0.06] border-[#1a6eff]/40 shadow-[0_0_0_3px_rgba(26,110,255,0.1)]"
-              : error
-                ? "bg-red-500/[0.04] border-red-500/40 cursor-pointer"
-                : "bg-white/[0.04] border-white/[0.08] cursor-pointer hover:border-white/[0.15]"
-        }`}
+        className={`et-dropdown-button ${disabled ? "is-disabled" : ""} ${
+          open ? "is-open" : ""
+        } ${error ? "has-error" : ""}`}
       >
-        <span className={value ? "text-[#eaf0ff]" : "text-[#4e6a8a]/60"}>
+        <span
+          className={value ? "et-dropdown-value" : "et-dropdown-placeholder"}
+        >
           {value || placeholder}
         </span>
+
         <ChevronDown
           size={14}
-          className={`text-[#4e6a8a] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`et-dropdown-chevron ${open ? "is-open" : ""}`}
         />
       </button>
+
       {open && (
-        <div className="absolute top-full left-0 right-0 mt-2 z-50 rounded-xl border border-[#1a6eff]/20 bg-[#0c1c38]/98 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden animate-[dropIn_0.15s_ease]">
-          {options.length > 5 && (
-            <div className="p-2 border-b border-white/[0.04]">
+        <div className="et-dropdown-menu">
+          {safeOptions.length > 5 && (
+            <div className="et-dropdown-search-wrap">
               <input
                 ref={inputRef}
                 type="text"
                 placeholder="Pesquisar..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg text-[13px] text-[#eaf0ff] placeholder-[#4e6a8a]/50 bg-white/[0.04] border border-white/[0.06] outline-none focus:border-[#1a6eff]/30"
+                className="et-dropdown-search"
               />
             </div>
           )}
-          <div className="max-h-[200px] overflow-y-auto scrollbar-none">
+
+          <div className="et-dropdown-list et-scrollbar-none">
             {filtered.length === 0 ? (
-              <div className="px-4 py-3 text-[13px] text-[#4e6a8a]">
-                Nenhum resultado
-              </div>
+              <div className="et-dropdown-empty">Nenhum resultado</div>
             ) : (
               filtered.map((opt) => (
                 <button
                   key={opt}
                   type="button"
-                  onClick={() => {
-                    onChange(opt);
-                    setOpen(false);
-                    setSearch("");
-                  }}
-                  className={`w-full flex items-center justify-between px-4 py-2.5 text-[13px] text-left transition-all duration-150 cursor-pointer ${opt === value ? "bg-[#1a6eff]/10 text-[#3d8bff] font-semibold" : "text-[#eaf0ff] hover:bg-white/[0.04]"}`}
+                  onClick={() => handleSelect(opt)}
+                  className={`et-dropdown-option ${
+                    opt === value ? "is-selected" : ""
+                  }`}
                 >
                   {opt}
+
                   {opt === value && (
                     <Check
                       size={14}
                       strokeWidth={2.5}
-                      className="text-[#3d8bff]"
+                      className="et-dropdown-check"
                     />
                   )}
                 </button>
@@ -275,8 +204,9 @@ function Dropdown({
           </div>
         </div>
       )}
+
       {error && (
-        <p className="text-[11px] text-red-400 mt-1.5 pl-1 flex items-center gap-1">
+        <p className="et-error">
           <AlertCircle size={12} /> {error}
         </p>
       )}
@@ -289,50 +219,131 @@ function Dropdown({
    ═══════════════════════════════════════════════ */
 export default function EditarTaxi({ aberto, onFechar }) {
   const [taxis, setTaxis] = useState([]);
+  const [marcas, setMarcas] = useState([]);
+  const [modelosDisponiveis, setModelosDisponiveis] = useState([]);
+
   const [loadingList, setLoadingList] = useState(false);
+  const [loadingMarcas, setLoadingMarcas] = useState(false);
+  const [loadingModelos, setLoadingModelos] = useState(false);
+
   const [listError, setListError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Edição
-  const [editing, setEditing] = useState(null); // taxi object ou null
+  const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({});
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [apiError, setApiError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  // Buscar táxis ao abrir
+  const anoAtual = new Date().getFullYear();
+  const disabled = saving || success;
+
   useEffect(() => {
     if (!aberto) return;
+
     fetchTaxis();
+    carregarMarcas();
   }, [aberto]);
 
   async function fetchTaxis() {
     setLoadingList(true);
     setListError("");
+
     try {
       const data = await api.taxis.listar();
-      setTaxis(data);
-    } catch {
+      const lista = normalizarListaTaxis(data);
+
+      setTaxis(lista);
+    } catch (err) {
+      console.error("Erro ao carregar táxis:", err);
       setListError("Erro ao carregar táxis.");
     } finally {
       setLoadingList(false);
     }
   }
 
-  function startEdit(taxi) {
+  async function carregarMarcas() {
+    setLoadingMarcas(true);
+
+    try {
+      const data = await api.modelosTaxi.listarMarcas();
+      setMarcas(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Erro ao carregar marcas:", err);
+      setListError("Erro ao carregar marcas.");
+    } finally {
+      setLoadingMarcas(false);
+    }
+  }
+
+  async function carregarModelos(marca) {
+    if (!marca) {
+      setModelosDisponiveis([]);
+      return [];
+    }
+
+    setLoadingModelos(true);
+    setModelosDisponiveis([]);
+
+    try {
+      const data = await api.modelosTaxi.listarModelosPorMarca(marca);
+      const lista = Array.isArray(data) ? data : [];
+
+      setModelosDisponiveis(lista);
+      return lista;
+    } catch (err) {
+      console.error("Erro ao carregar modelos:", err);
+      setApiError("Erro ao carregar modelos.");
+      return [];
+    } finally {
+      setLoadingModelos(false);
+    }
+  }
+
+  function getModeloEscolhido(
+    lista = modelosDisponiveis,
+    modelo = form.modelo,
+  ) {
+    return lista.find((m) => m.modelo === modelo);
+  }
+
+  function getAnosPermitidos() {
+    const modeloEscolhido = getModeloEscolhido();
+
+    if (!modeloEscolhido) return [];
+
+    const inicio = Number(modeloEscolhido.ano_inicio);
+    const fim = Math.min(Number(modeloEscolhido.ano_fim || anoAtual), anoAtual);
+
+    if (!inicio || !fim || fim < inicio) return [];
+
+    return Array.from({ length: fim - inicio + 1 }, (_, i) => String(fim - i));
+  }
+
+  async function startEdit(taxi) {
+    const marca = getCampoTaxi(taxi, "marca");
+    const modelo = getCampoTaxi(taxi, "modelo");
+
     setEditing(taxi);
-    setForm({
-      matricula: taxi.matricula || "",
-      marca: taxi.marca || "",
-      modelo: taxi.modelo || "",
-      ano_compra: taxi.ano_compra?.toString() || "",
-      tipo_motor: taxi.tipo_motor || "",
-      nivel_conforto: taxi.nivel_conforto || "",
-    });
     setErrors({});
     setApiError("");
     setSuccess(false);
+
+    const modelos = await carregarModelos(marca);
+    const modeloEncontrado = modelos.find((m) => m.modelo === modelo);
+
+    setForm({
+      matricula: getCampoTaxi(taxi, "matricula"),
+      marca,
+      modelo,
+      ano_compra: String(getCampoTaxi(taxi, "ano_compra") || ""),
+      tipo_motor:
+        modeloEncontrado?.tipo_motor || getCampoTaxi(taxi, "tipo_motor"),
+      nivel_conforto:
+        modeloEncontrado?.nivel_conforto ||
+        getCampoTaxi(taxi, "nivel_conforto"),
+    });
   }
 
   function cancelEdit() {
@@ -341,50 +352,95 @@ export default function EditarTaxi({ aberto, onFechar }) {
     setErrors({});
     setApiError("");
     setSuccess(false);
+    setModelosDisponiveis([]);
   }
 
   if (!aberto) return null;
 
-  const anoAtual = new Date().getFullYear();
-  const modelosDisponiveis = form.marca ? MARCAS_MODELOS[form.marca] || [] : [];
-  const disabled = saving || success;
-
   function handleChange(campo, valor) {
     setForm((prev) => {
       const novo = { ...prev, [campo]: valor };
-      if (campo === "marca") novo.modelo = "";
+
+      if (campo === "marca") {
+        novo.modelo = "";
+        novo.ano_compra = "";
+        novo.tipo_motor = "";
+        novo.nivel_conforto = "";
+        carregarModelos(valor);
+      }
+
+      if (campo === "modelo") {
+        novo.ano_compra = "";
+
+        const modeloEscolhido = getModeloEscolhido(modelosDisponiveis, valor);
+
+        if (modeloEscolhido) {
+          novo.tipo_motor = modeloEscolhido.tipo_motor;
+          novo.nivel_conforto = modeloEscolhido.nivel_conforto;
+        } else {
+          novo.tipo_motor = "";
+          novo.nivel_conforto = "";
+        }
+      }
+
       return novo;
     });
-    if (errors[campo]) setErrors((prev) => ({ ...prev, [campo]: null }));
+
+    if (errors[campo]) {
+      setErrors((prev) => ({ ...prev, [campo]: null }));
+    }
+
     if (apiError) setApiError("");
   }
 
   function handleMatriculaChange(valor) {
     const formatado = formatarMatricula(valor);
+
     setForm((prev) => ({ ...prev, matricula: formatado }));
-    if (errors.matricula) setErrors((prev) => ({ ...prev, matricula: null }));
+
+    if (errors.matricula) {
+      setErrors((prev) => ({ ...prev, matricula: null }));
+    }
   }
 
   function validar() {
     const errs = {};
-    if (!form.matricula.trim()) errs.matricula = "Matrícula obrigatória";
-    else if (!validarMatricula(form.matricula))
+
+    if (!form.matricula?.trim()) {
+      errs.matricula = "Matrícula obrigatória";
+    } else if (!validarMatricula(form.matricula)) {
       errs.matricula = "Formato inválido";
+    }
+
     if (!form.marca) errs.marca = "Selecione a marca";
     if (!form.modelo) errs.modelo = "Selecione o modelo";
-    if (!form.ano_compra) errs.ano_compra = "Ano obrigatório";
-    else {
-      const ano = parseInt(form.ano_compra, 10);
-      if (isNaN(ano) || ano < 1990 || ano > anoAtual)
-        errs.ano_compra = `Entre 1990 e ${anoAtual}`;
+
+    const anosPermitidos = getAnosPermitidos();
+
+    if (!form.ano_compra) {
+      errs.ano_compra = "Ano obrigatório";
+    } else if (
+      anosPermitidos.length > 0 &&
+      !anosPermitidos.includes(String(form.ano_compra))
+    ) {
+      errs.ano_compra = "Selecione um ano válido para este modelo";
     }
-    if (!form.tipo_motor) errs.tipo_motor = "Selecione o tipo";
-    if (!form.nivel_conforto) errs.nivel_conforto = "Selecione o nível";
+
+    if (!form.tipo_motor) {
+      errs.tipo_motor = "O tipo de motor não foi encontrado para este modelo";
+    }
+
+    if (!form.nivel_conforto) {
+      errs.nivel_conforto =
+        "O nível de conforto não foi encontrado para este modelo";
+    }
+
     return errs;
   }
 
   async function handleSave() {
     const errs = validar();
+
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
@@ -394,7 +450,9 @@ export default function EditarTaxi({ aberto, onFechar }) {
     setApiError("");
 
     try {
-      const data = await api.taxis.atualizar(editing._id, {
+      const id = editing?._id || editing?.id_taxi?._id || editing?.taxi?._id;
+
+      const data = await api.taxis.atualizar(id, {
         matricula: form.matricula.toUpperCase(),
         marca: form.marca,
         modelo: form.modelo,
@@ -402,170 +460,166 @@ export default function EditarTaxi({ aberto, onFechar }) {
         tipo_motor: form.tipo_motor,
         nivel_conforto: form.nivel_conforto,
       });
+
       setSuccess(true);
-      setTaxis((prev) => prev.map((t) => (t._id === editing._id ? data : t)));
+
+      setTaxis((prev) =>
+        prev.map((t) => {
+          const taxiId = t?._id || t?.id_taxi?._id || t?.taxi?._id;
+          return taxiId === id ? data : t;
+        }),
+      );
+
       setTimeout(() => {
         setSuccess(false);
         cancelEdit();
+        fetchTaxis();
       }, 1500);
-    } catch {
+    } catch (err) {
+      console.error("Erro ao atualizar táxi:", err);
       setApiError("Não foi possível conectar ao servidor.");
     } finally {
       setSaving(false);
     }
   }
 
-  // Filtrar táxis
   const filtered = taxis.filter((t) => {
     const term = searchTerm.toLowerCase();
+
     return (
-      t.matricula?.toLowerCase().includes(term) ||
-      t.marca?.toLowerCase().includes(term) ||
-      t.modelo?.toLowerCase().includes(term)
+      getCampoTaxi(t, "matricula").toLowerCase().includes(term) ||
+      getCampoTaxi(t, "marca").toLowerCase().includes(term) ||
+      getCampoTaxi(t, "modelo").toLowerCase().includes(term)
     );
   });
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onFechar}
-      />
+    <div className="et-overlay">
+      <div className="et-backdrop" onClick={onFechar} />
 
-      <div className="relative w-full max-w-[620px] mx-4 max-h-[90vh] overflow-y-auto rounded-2xl border border-[#1a6eff]/20 bg-[#0a1628]/95 backdrop-blur-2xl shadow-[0_32px_80px_rgba(0,0,0,0.5)] animate-[modalIn_0.3s_ease] scrollbar-none">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#1a6eff]/30 to-transparent" />
-
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-4 sticky top-0 bg-[#0a1628]/95 backdrop-blur-xl z-10">
-          <div className="flex items-center gap-3">
+      <div className="et-modal et-scrollbar-none">
+        <div className="et-header">
+          <div className="et-title-wrap">
             {editing && (
-              <button
-                onClick={cancelEdit}
-                className="w-9 h-9 rounded-xl flex items-center justify-center border border-white/[0.06] bg-white/[0.03] text-[#8ba3c7] hover:bg-white/[0.06] hover:text-[#eaf0ff] transition-all duration-200 cursor-pointer mr-1"
-              >
+              <button onClick={cancelEdit} className="et-icon-button">
                 <ArrowLeft size={16} strokeWidth={2} />
               </button>
             )}
-            <div
-              className="w-10 h-10 rounded-[13px] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)]"
-              style={{
-                background: editing
-                  ? "linear-gradient(135deg, #ff8c42, #cc6620)"
-                  : "linear-gradient(135deg, #1a6eff, #0052cc)",
-              }}
-            >
+
+            <div className={`et-icon-box ${editing ? "edit" : ""}`}>
               {editing ? (
                 <Pencil size={18} strokeWidth={1.8} />
               ) : (
                 <Car size={18} strokeWidth={1.8} />
               )}
             </div>
+
             <div>
-              <h3 className="font-['Syne',sans-serif] text-[18px] font-bold text-[#eaf0ff]">
+              <h3 className="et-title">
                 {editing ? "Editar Táxi" : "Editar Táxis"}
               </h3>
-              <p className="text-[12px] text-[#4e6a8a]">
+
+              <p className="et-subtitle">
                 {editing
-                  ? editing.matricula
+                  ? form.matricula || getCampoTaxi(editing, "matricula")
                   : `${taxis.length} táxi${taxis.length !== 1 ? "s" : ""} na frota`}
               </p>
             </div>
           </div>
-          <button
-            onClick={onFechar}
-            className="w-9 h-9 rounded-xl flex items-center justify-center border border-white/[0.06] bg-white/[0.03] text-[#8ba3c7] hover:bg-red-500/10 hover:border-red-500/25 hover:text-red-400 transition-all duration-200 cursor-pointer"
-          >
+
+          <button onClick={onFechar} className="et-close-button">
             <X size={16} strokeWidth={2} />
           </button>
         </div>
 
-        {/* Mensagens */}
-        <div className="px-6">
+        <div className="et-alerts">
           {success && (
-            <div className="mb-4 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm flex items-center gap-2">
-              <CheckCircle2 size={16} /> Táxi atualizado com sucesso!
+            <div className="et-alert et-alert-success">
+              <CheckCircle2 size={16} />
+              Táxi atualizado com sucesso!
             </div>
           )}
+
           {(apiError || listError) && (
-            <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-2">
-              <AlertCircle size={16} /> {apiError || listError}
+            <div className="et-alert et-alert-error">
+              <AlertCircle size={16} />
+              {apiError || listError}
             </div>
           )}
         </div>
 
-        {/* ═══ LISTA DE TÁXIS ═══ */}
         {!editing ? (
-          <div className="px-6 pb-6">
-            {/* Search */}
-            <div className="relative mb-4">
-              <Search
-                size={14}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#4e6a8a]"
-              />
+          <div className="et-list-area">
+            <div className="et-search-wrap">
+              <Search size={15} className="et-search-icon" />
+
               <input
                 type="text"
                 placeholder="Pesquisar por matrícula, marca ou modelo..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl text-[13px] text-[#eaf0ff] placeholder-[#4e6a8a]/50 bg-white/[0.04] border border-white/[0.08] outline-none focus:border-[#1a6eff]/40 focus:shadow-[0_0_0_3px_rgba(26,110,255,0.1)] transition-all duration-200"
+                className="et-search-input"
               />
             </div>
 
             {loadingList ? (
-              <div className="flex items-center justify-center py-12 text-[#4e6a8a] gap-2">
-                <Loader2 size={18} className="animate-spin" /> A carregar
-                táxis...
+              <div className="et-empty">
+                <Loader2 size={18} className="et-spin" />A carregar táxis...
               </div>
             ) : filtered.length === 0 ? (
-              <div className="text-center py-12 text-[#4e6a8a] text-[14px]">
+              <div className="et-empty">
                 {searchTerm
                   ? "Nenhum táxi encontrado."
                   : "Nenhum táxi registado."}
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
+              <div className="et-taxi-list">
                 {filtered.map((taxi) => {
-                  const est = ESTADO_CORES[taxi.estado] || ESTADO_CORES.livre;
+                  const matricula = getCampoTaxi(taxi, "matricula");
+                  const marca = getCampoTaxi(taxi, "marca");
+                  const modelo = getCampoTaxi(taxi, "modelo");
+                  const anoCompra = getCampoTaxi(taxi, "ano_compra");
+                  const tipoMotor = getCampoTaxi(taxi, "tipo_motor");
+                  const nivelConforto = getCampoTaxi(taxi, "nivel_conforto");
+                  const estado = getCampoTaxi(taxi, "estado") || taxi.estado;
+                  const estadoClass = getEstadoClass(estado);
+
                   return (
                     <button
-                      key={taxi._id}
+                      key={taxi._id || taxi.id_taxi?._id || taxi.taxi?._id}
                       onClick={() => startEdit(taxi)}
-                      className="group w-full flex items-center justify-between p-4 rounded-xl border border-white/[0.04] bg-white/[0.02] hover:bg-[#1a6eff]/[0.06] hover:border-[#1a6eff]/20 transition-all duration-200 text-left cursor-pointer"
+                      className="et-taxi-row"
                     >
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-[#8ba3c7] group-hover:bg-[#1a6eff]/10 group-hover:text-[#3d8bff] group-hover:border-[#1a6eff]/20 transition-all duration-200">
-                          <Car size={18} strokeWidth={1.6} />
+                      <div className="et-taxi-left">
+                        <div className="et-taxi-icon">
+                          <Car size={18} strokeWidth={1.7} />
                         </div>
+
                         <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[14px] font-semibold text-[#eaf0ff] tracking-wider">
-                              {taxi.matricula}
+                          <div className="et-taxi-main">
+                            <span className="et-taxi-matricula">
+                              {matricula || "Sem matrícula"}
                             </span>
-                            <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${est.bg} ${est.border} ${est.text} border`}
-                            >
-                              <span
-                                className={`w-1 h-1 rounded-full ${est.dot}`}
-                              />
-                              {ESTADO_LABELS[taxi.estado] || taxi.estado}
+
+                            <span className={`et-state ${estadoClass}`}>
+                              <span />
+                              {ESTADO_LABELS[estado] || estado || "Livre"}
                             </span>
                           </div>
-                          <p className="text-[12px] text-[#4e6a8a] mt-0.5">
-                            {taxi.marca} {taxi.modelo} · {taxi.ano_compra} ·{" "}
-                            {taxi.tipo_motor === "eletrico"
+
+                          <p className="et-taxi-info">
+                            {marca || "Sem marca"} {modelo || "Sem modelo"} ·{" "}
+                            {anoCompra || "Sem ano"} ·{" "}
+                            {tipoMotor === "eletrico"
                               ? "Elétrico"
                               : "Combustão"}{" "}
                             ·{" "}
-                            {taxi.nivel_conforto === "luxuoso"
-                              ? "Luxuoso"
-                              : "Básico"}
+                            {nivelConforto === "luxuoso" ? "Luxuoso" : "Básico"}
                           </p>
                         </div>
                       </div>
-                      <Pencil
-                        size={14}
-                        className="text-[#4e6a8a] group-hover:text-[#3d8bff] transition-all duration-200"
-                      />
+
+                      <Pencil size={15} className="et-row-edit-icon" />
                     </button>
                   );
                 })}
@@ -573,134 +627,119 @@ export default function EditarTaxi({ aberto, onFechar }) {
             )}
           </div>
         ) : (
-          /* ═══ FORMULÁRIO DE EDIÇÃO ═══ */
-          <div className="px-6 pb-2 space-y-5">
-            {/* Matrícula */}
+          <div className="et-form">
             <div>
-              <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
-                Matrícula
-              </label>
+              <label className="et-label">Matrícula</label>
+
               <input
                 type="text"
                 value={form.matricula}
                 onChange={(e) => handleMatriculaChange(e.target.value)}
                 maxLength={8}
                 disabled={disabled}
-                className={`w-full px-4 py-3 rounded-xl text-[14px] text-[#eaf0ff] placeholder-[#4e6a8a]/60 bg-white/[0.04] border outline-none transition-all duration-200 uppercase tracking-widest font-semibold focus:bg-[#1a6eff]/[0.06] focus:border-[#1a6eff]/40 focus:shadow-[0_0_0_3px_rgba(26,110,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed ${errors.matricula ? "border-red-500/40" : "border-white/[0.08]"}`}
+                className={`et-input et-input-matricula ${
+                  errors.matricula ? "has-error" : ""
+                }`}
               />
+
               {errors.matricula && (
-                <p className="text-[11px] text-red-400 mt-1 pl-1 flex items-center gap-1">
+                <p className="et-error">
                   <AlertCircle size={12} /> {errors.matricula}
                 </p>
               )}
             </div>
 
-            {/* Marca + Modelo */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="et-grid-two">
               <Dropdown
                 label="Marca"
-                placeholder="Selecionar"
+                placeholder={loadingMarcas ? "A carregar..." : "Selecionar"}
                 value={form.marca}
                 onChange={(v) => handleChange("marca", v)}
-                options={MARCAS}
-                disabled={disabled}
+                options={marcas}
+                disabled={disabled || loadingMarcas}
                 error={errors.marca}
               />
+
               <Dropdown
                 label="Modelo"
-                placeholder={form.marca ? "Selecionar" : "Escolha marca"}
+                placeholder={
+                  loadingModelos
+                    ? "A carregar..."
+                    : form.marca
+                      ? "Selecionar"
+                      : "Escolha marca"
+                }
                 value={form.modelo}
                 onChange={(v) => handleChange("modelo", v)}
-                options={modelosDisponiveis}
-                disabled={!form.marca || disabled}
+                options={modelosDisponiveis.map((m) => m.modelo)}
+                disabled={!form.marca || disabled || loadingModelos}
                 error={errors.modelo}
               />
             </div>
 
-            {/* Ano */}
-            <div>
-              <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
-                Ano de compra
-              </label>
-              <input
-                type="number"
-                value={form.ano_compra}
-                onChange={(e) => handleChange("ano_compra", e.target.value)}
-                min={1990}
-                max={anoAtual}
-                disabled={disabled}
-                className={`w-full px-4 py-3 rounded-xl text-[14px] text-[#eaf0ff] placeholder-[#4e6a8a]/60 bg-white/[0.04] border outline-none transition-all duration-200 focus:bg-[#1a6eff]/[0.06] focus:border-[#1a6eff]/40 disabled:opacity-50 disabled:cursor-not-allowed ${errors.ano_compra ? "border-red-500/40" : "border-white/[0.08]"}`}
-              />
-              {errors.ano_compra && (
-                <p className="text-[11px] text-red-400 mt-1.5 pl-1 flex items-center gap-1">
-                  <AlertCircle size={12} /> {errors.ano_compra}
-                </p>
-              )}
-            </div>
+            <Dropdown
+              label="Ano de compra"
+              placeholder={
+                form.modelo ? "Selecionar ano" : "Escolha primeiro o modelo"
+              }
+              value={form.ano_compra}
+              onChange={(v) => handleChange("ano_compra", v)}
+              options={getAnosPermitidos()}
+              disabled={!form.modelo || disabled}
+              error={errors.ano_compra}
+            />
 
-            {/* Tipo motor */}
             <div>
-              <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
-                Tipo de motor
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <OptionCard
-                  icon={<Flame size={18} strokeWidth={1.8} />}
-                  label="Combustão"
-                  selected={form.tipo_motor === "combustao"}
-                  onClick={() =>
-                    !disabled && handleChange("tipo_motor", "combustao")
-                  }
-                  color="#ff8c42"
-                  disabled={disabled}
-                />
-                <OptionCard
-                  icon={<Zap size={18} strokeWidth={1.8} />}
-                  label="Elétrico"
-                  selected={form.tipo_motor === "eletrico"}
-                  onClick={() =>
-                    !disabled && handleChange("tipo_motor", "eletrico")
-                  }
-                  color="#00d4ff"
-                  disabled={disabled}
-                />
+              <label className="et-label">Tipo de motor</label>
+
+              <div className="et-readonly-field">
+                {form.tipo_motor === "eletrico" ? (
+                  <>
+                    <Zap size={16} className="et-electric-icon" />
+                    Elétrico
+                  </>
+                ) : form.tipo_motor === "combustao" ? (
+                  <>
+                    <Flame size={16} className="et-combustion-icon" />
+                    Combustão
+                  </>
+                ) : (
+                  <span className="et-muted">
+                    Escolha primeiro o modelo do táxi
+                  </span>
+                )}
               </div>
+
               {errors.tipo_motor && (
-                <p className="text-[11px] text-red-400 mt-1.5 pl-1 flex items-center gap-1">
+                <p className="et-error">
                   <AlertCircle size={12} /> {errors.tipo_motor}
                 </p>
               )}
             </div>
 
-            {/* Nível conforto */}
             <div>
-              <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
-                Nível de conforto
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <OptionCard
-                  icon={<Star size={18} strokeWidth={1.8} />}
-                  label="Básico"
-                  selected={form.nivel_conforto === "basico"}
-                  onClick={() =>
-                    !disabled && handleChange("nivel_conforto", "basico")
-                  }
-                  color="#3d8bff"
-                  disabled={disabled}
-                />
-                <OptionCard
-                  icon={<Crown size={18} strokeWidth={1.8} />}
-                  label="Luxuoso"
-                  selected={form.nivel_conforto === "luxuoso"}
-                  onClick={() =>
-                    !disabled && handleChange("nivel_conforto", "luxuoso")
-                  }
-                  color="#c64dff"
-                  disabled={disabled}
-                />
+              <label className="et-label">Nível de conforto</label>
+
+              <div className="et-readonly-field">
+                {form.nivel_conforto === "luxuoso" ? (
+                  <>
+                    <Crown size={16} className="et-luxury-icon" />
+                    Luxuoso
+                  </>
+                ) : form.nivel_conforto === "basico" ? (
+                  <>
+                    <Star size={16} className="et-basic-icon" />
+                    Básico
+                  </>
+                ) : (
+                  <span className="et-muted">
+                    Escolha primeiro o modelo do táxi
+                  </span>
+                )}
               </div>
+
               {errors.nivel_conforto && (
-                <p className="text-[11px] text-red-400 mt-1.5 pl-1 flex items-center gap-1">
+                <p className="et-error">
                   <AlertCircle size={12} /> {errors.nivel_conforto}
                 </p>
               )}
@@ -708,41 +747,37 @@ export default function EditarTaxi({ aberto, onFechar }) {
           </div>
         )}
 
-        {/* Footer (só na edição) */}
         {editing && (
-          <div className="flex items-center justify-between p-6 pt-4 mt-2 border-t border-white/[0.04] sticky bottom-0 bg-[#0a1628]/95 backdrop-blur-xl">
-            <p className="text-[11px] text-[#4e6a8a]">
+          <div className="et-footer">
+            <p className="et-footer-state">
               Estado:{" "}
-              <span
-                className={`font-semibold ${(ESTADO_CORES[editing.estado] || ESTADO_CORES.livre).text}`}
-              >
-                {ESTADO_LABELS[editing.estado] || editing.estado}
+              <span className={getEstadoClass(editing.estado)}>
+                {ESTADO_LABELS[editing.estado] || editing.estado || "Livre"}
               </span>
             </p>
-            <div className="flex gap-3">
+
+            <div className="et-actions">
               <button
                 onClick={cancelEdit}
                 disabled={saving}
-                className="px-5 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] text-[13px] font-medium text-[#8ba3c7] hover:bg-white/[0.06] hover:text-[#eaf0ff] transition-all duration-200 cursor-pointer disabled:opacity-50"
+                className="et-cancel-button"
               >
                 Cancelar
               </button>
+
               <button
                 onClick={handleSave}
                 disabled={disabled}
-                className="px-6 py-2.5 rounded-xl border-none text-[13px] font-semibold text-white cursor-pointer transition-all duration-200 hover:shadow-[0_8px_32px_rgba(255,140,66,0.4)] hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #ff8c42 0%, #cc6620 100%)",
-                }}
+                className="et-submit-button"
               >
                 {saving ? (
                   <>
-                    <Loader2 size={15} className="animate-spin" /> A guardar...
+                    <Loader2 size={15} className="et-spin" />A guardar...
                   </>
                 ) : success ? (
                   <>
-                    <CheckCircle2 size={15} /> Guardado!
+                    <CheckCircle2 size={15} />
+                    Guardado!
                   </>
                 ) : (
                   "Guardar Alterações"
@@ -752,58 +787,6 @@ export default function EditarTaxi({ aberto, onFechar }) {
           </div>
         )}
       </div>
-
-      <style>{`
-        @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-        @keyframes dropIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-        .scrollbar-none::-webkit-scrollbar { display: none; }
-        .scrollbar-none { scrollbar-width: none; }
-      `}</style>
     </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════
-   OPTION CARD
-   ═══════════════════════════════════════════════ */
-function OptionCard({ icon, label, selected, onClick, color, disabled }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`flex items-center gap-3 p-3.5 rounded-xl border text-[13.5px] font-medium transition-all duration-200 cursor-pointer text-left w-full disabled:opacity-50 disabled:cursor-not-allowed ${
-        selected
-          ? "text-[#eaf0ff]"
-          : "border-white/[0.06] bg-white/[0.02] text-[#8ba3c7] hover:border-white/[0.12] hover:bg-white/[0.04]"
-      }`}
-      style={
-        selected
-          ? {
-              borderColor: `${color}44`,
-              background: `${color}18`,
-              boxShadow: `0 0 20px ${color}15`,
-            }
-          : {}
-      }
-    >
-      <span
-        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
-        style={
-          selected
-            ? { background: `${color}25`, color }
-            : { background: "rgba(255,255,255,0.04)", color: "#8ba3c7" }
-        }
-      >
-        {icon}
-      </span>
-      {label}
-      {selected && (
-        <span
-          className="ml-auto w-2 h-2 rounded-full"
-          style={{ background: color, boxShadow: `0 0 8px ${color}` }}
-        />
-      )}
-    </button>
   );
 }

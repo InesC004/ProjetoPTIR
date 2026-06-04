@@ -1,13 +1,4 @@
-/* ════════════════════════════════════════════════════════════
-   EditarMotorista.css — alinhado com RegistarTaxi.css
-   • Mesma linguagem visual (tema claro, tokens em variáveis CSS)
-   • Duas vistas: lista (pesquisa + cartões) e edição (formulário)
-   • Azul como cor principal; laranja realça o modo de edição
-   • Responsivo (desktop / tablet / telemóvel) + bottom-sheet
-   ════════════════════════════════════════════════════════════ */
-
 .em-overlay {
-  /* ——— Tokens ——— */
   --em-primary: #1a6eff;
   --em-primary-dark: #0052cc;
   --em-primary-soft: rgb(26 110 255 / 10%);
@@ -27,6 +18,8 @@
   --em-pad-x: 28px;
   --em-pad-y: 22px;
   --em-gap: 18px;
+  --em-head-gap: 14px;
+  --em-icon: 46px;
   --em-success: #16a34a;
   --em-danger: #ef4444;
   --em-shadow: 0 24px 70px rgb(15 23 42 / 28%);
@@ -71,7 +64,6 @@
   z-index: 10;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   padding: var(--em-pad-y) var(--em-pad-x) 18px;
   background: linear-gradient(135deg, #ffffff, #f8fbff);
@@ -81,12 +73,19 @@
 .em-title-wrap {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--em-head-gap);
+  flex: 1 1 auto;
+  min-width: 0; /* permite que os filhos encolham e o texto trunque */
+}
+
+/* Contentor do título + subtítulo: encolhe e trunca em vez de tapar o X */
+.em-title-text {
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .em-back-icon {
-  flex: none;
+  flex: 0 0 auto;
   width: 38px;
   height: 38px;
   border-radius: var(--em-radius);
@@ -107,9 +106,9 @@
 }
 
 .em-icon-box {
-  flex: none;
-  width: 46px;
-  height: 46px;
+  flex: 0 0 auto;
+  width: var(--em-icon);
+  height: var(--em-icon);
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -131,10 +130,13 @@
 .em-title {
   margin: 0;
   font-family: "Syne", sans-serif;
-  font-size: clamp(18px, 4.5vw, 22px);
+  font-size: clamp(17px, 4.2vw, 22px);
   font-weight: 800;
   color: var(--em-ink);
   line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .em-subtitle {
@@ -147,7 +149,7 @@
 }
 
 .em-close-button {
-  flex: none;
+  flex: 0 0 auto;
   width: 38px;
   height: 38px;
   border-radius: var(--em-radius);
@@ -168,7 +170,7 @@
 }
 
 /* ──────────────────────────────────────────────
-   ALERTAS
+   CORPO / ALERTAS
    ────────────────────────────────────────────── */
 .em-body {
   padding: 20px var(--em-pad-x) var(--em-pad-y);
@@ -245,6 +247,7 @@
   padding: 40px 0;
   font-size: 14px;
   color: var(--em-muted);
+  text-align: center;
 }
 
 .em-list {
@@ -277,20 +280,30 @@
   gap: 16px;
 }
 
+.em-card-info {
+  min-width: 0; /* deixa o texto longo (email) truncar em vez de empurrar */
+}
+
 .em-card-name {
   font-weight: 700;
   color: var(--em-ink);
   font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .em-card-meta {
   margin-top: 4px;
   font-size: 12px;
   color: var(--em-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .em-card-badge {
-  flex: none;
+  flex: 0 0 auto;
   width: 38px;
   height: 38px;
   border-radius: var(--em-radius);
@@ -427,14 +440,20 @@
 .em-dropdown-value {
   color: var(--em-ink);
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .em-dropdown-placeholder {
   color: var(--em-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .em-dropdown-chevron {
-  flex: none;
+  flex: 0 0 auto;
   color: var(--em-muted);
   transition: transform 0.2s ease;
 }
@@ -616,9 +635,10 @@
 /* ——— Telemóvel: bottom-sheet + 1 coluna ——— */
 @media (max-width: 600px) {
   .em-overlay {
-    --em-pad-x: 20px;
+    --em-pad-x: 18px;
     --em-pad-y: 18px;
     --em-gap: 16px;
+    --em-head-gap: 11px;
     align-items: flex-end;
   }
 
@@ -629,6 +649,10 @@
     border-radius: var(--em-radius-lg) var(--em-radius-lg) 0 0;
     border-bottom: none;
     animation: em-sheet-in 0.3s ease;
+  }
+
+  .em-header {
+    padding-bottom: 16px;
   }
 
   .em-grid {
@@ -647,16 +671,21 @@
 }
 
 /* ——— Telemóvel pequeno ——— */
-@media (max-width: 380px) {
+@media (max-width: 400px) {
   .em-overlay {
     --em-pad-x: 16px;
-  }
-  .em-icon-box {
-    width: 40px;
-    height: 40px;
+    --em-icon: 40px;
+    --em-head-gap: 10px;
   }
   .em-subtitle {
     font-size: 12px;
+  }
+}
+
+/* ——— Telemóvel muito estreito: poupar espaço no cabeçalho ——— */
+@media (max-width: 340px) {
+  .em-subtitle {
+    display: none; /* prioridade ao título; evita aperto no cabeçalho */
   }
 }
 

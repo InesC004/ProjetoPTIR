@@ -281,7 +281,7 @@ export default function EditarMotorista({ aberto, onFechar }) {
               )}
             </div>
 
-            <div>
+            <div className="em-title-text">
               <h3 className="em-title">
                 {editing ? "Editar Motorista" : "Editar Motoristas"}
               </h3>
@@ -337,7 +337,7 @@ export default function EditarMotorista({ aberto, onFechar }) {
                     className="em-card"
                   >
                     <div className="em-card-row">
-                      <div>
+                      <div className="em-card-info">
                         <div className="em-card-name">{m.nome}</div>
                         <div className="em-card-meta">NIF: {m.nif}</div>
                         <div className="em-card-meta">Email: {m.email}</div>
