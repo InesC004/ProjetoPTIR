@@ -521,11 +521,6 @@ export default function RegistarTaxi({ aberto, onFechar }) {
               )}
             </div>
 
-            <p className="rt-help">
-              Este valor vem automaticamente da base de dados do modelo
-              escolhido.
-            </p>
-
             {errors.tipo_motor && (
               <p className="rt-error">
                 <AlertCircle size={12} /> {errors.tipo_motor}
@@ -553,11 +548,6 @@ export default function RegistarTaxi({ aberto, onFechar }) {
                 </span>
               )}
             </div>
-
-            <p className="rt-help">
-              Este valor vem automaticamente da base de dados do modelo
-              escolhido.
-            </p>
 
             {errors.nivel_conforto && (
               <p className="rt-error">

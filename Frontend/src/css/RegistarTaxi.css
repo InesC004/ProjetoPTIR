@@ -1,6 +1,35 @@
-/* RegistarTaxi.css */
+/* ════════════════════════════════════════════════════════════
+   RegistarTaxi.css — versão melhorada e responsiva
+   • Tokens em variáveis CSS (fácil de re-tematizar)
+   • Layout de grelha robusto (sem hacks nth-child / display:contents)
+   • Adaptado a desktop, tablet, telemóvel e ecrãs grandes
+   • Bottom-sheet em telemóvel + alvos de toque ≥ 48px
+   • Respeita safe-areas (notch) e prefers-reduced-motion
+   ════════════════════════════════════════════════════════════ */
 
 .rt-overlay {
+  /* ——— Tokens ——— */
+  --rt-primary: #1a6eff;
+  --rt-primary-dark: #0052cc;
+  --rt-primary-soft: rgb(26 110 255 / 10%);
+  --rt-ink: #0f172a;
+  --rt-text: #334155;
+  --rt-muted: #64748b;
+  --rt-faint: #94a3b8;
+  --rt-border: #d6dee9;
+  --rt-border-soft: #edf1f7;
+  --rt-bg: #ffffff;
+  --rt-bg-soft: #f8fafc;
+  --rt-radius: 14px;
+  --rt-radius-lg: 22px;
+  --rt-field-h: 46px;
+  --rt-pad-x: 28px;
+  --rt-pad-y: 22px;
+  --rt-gap: 18px;
+  --rt-success: #16a34a;
+  --rt-danger: #ef4444;
+  --rt-shadow: 0 24px 70px rgb(15 23 42 / 28%);
+
   position: fixed;
   inset: 0;
   z-index: 100;
@@ -12,38 +41,33 @@
 .rt-backdrop {
   position: absolute;
   inset: 0;
-  background: rgb(0 0 0 / 35%);
-  backdrop-filter: blur(3px);
+  background: rgb(15 23 42 / 55%);
+  backdrop-filter: blur(5px);
 }
 
 .rt-modal {
   position: relative;
   width: 100%;
-  max-width: 700px;
-  max-height: 85vh;
+  max-width: 760px;
+  max-height: 88dvh;
   margin-inline: 16px;
   overflow-y: auto;
-  border-radius: 16px;
+  border-radius: var(--rt-radius-lg);
   border: 1px solid #e5e7eb;
-  background: #ffffff;
-  box-shadow: 0 20px 50px rgb(0 0 0 / 15%);
-  animation: rt-modal-in 0.3s ease;
+  background: var(--rt-bg);
+  box-shadow: var(--rt-shadow);
+  animation: rt-modal-in 0.25s ease;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .rt-modal-top-line {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgb(26 110 255 / 30%),
-    transparent
-  );
+  display: none;
 }
 
+/* ──────────────────────────────────────────────
+   HEADER
+   ────────────────────────────────────────────── */
 .rt-header {
   position: sticky;
   top: 0;
@@ -51,71 +75,86 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 20px 12px;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  gap: 12px;
+  padding: var(--rt-pad-y) var(--rt-pad-x) 18px;
+  background: linear-gradient(135deg, #ffffff, #f8fbff);
+  border-bottom: 1px solid var(--rt-border-soft);
 }
 
 .rt-title-wrap {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  min-width: 0; /* permite truncar texto em ecrãs pequenos */
 }
 
 .rt-icon-box {
-  width: 40px;
-  height: 40px;
-  border-radius: 13px;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  background: linear-gradient(135deg, #1a6eff, #0052cc);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 25%);
+  background: linear-gradient(
+    135deg,
+    var(--rt-primary),
+    var(--rt-primary-dark)
+  );
+  box-shadow: 0 10px 24px rgb(26 110 255 / 28%);
 }
 
 .rt-title {
   margin: 0;
   font-family: "Syne", sans-serif;
-  font-size: 18px;
-  font-weight: 700;
-  color: #111827;
+  font-size: clamp(18px, 4.5vw, 22px);
+  font-weight: 800;
+  color: var(--rt-ink);
+  line-height: 1.15;
 }
 
 .rt-subtitle {
-  margin: 0;
-  font-size: 12px;
-  color: #6b7280;
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: var(--rt-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rt-close-button {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  border: 1px solid rgb(255 255 255 / 6%);
-  background: rgb(255 255 255 / 3%);
-  color: #8ba3c7;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--rt-radius);
+  border: 1px solid #e2e8f0;
+  background: var(--rt-bg);
+  color: var(--rt-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: 0.2s ease;
 }
 
 .rt-close-button:hover {
-  border-color: rgb(239 68 68 / 25%);
-  background: rgb(239 68 68 / 10%);
-  color: #f87171;
+  border-color: #fecaca;
+  background: #fff1f2;
+  color: var(--rt-danger);
 }
 
-.rt-alerts {
-  padding-inline: 24px;
+/* ──────────────────────────────────────────────
+   ALERTAS
+   ────────────────────────────────────────────── */
+.rt-alerts:not(:empty) {
+  padding: 16px var(--rt-pad-x) 0;
 }
 
 .rt-alert {
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  border-radius: 12px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: var(--rt-radius);
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -123,37 +162,45 @@
 }
 
 .rt-alert-success {
-  border: 1px solid rgb(16 185 129 / 30%);
-  background: rgb(16 185 129 / 10%);
-  color: #34d399;
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  color: var(--rt-success);
 }
 
 .rt-alert-error {
-  border: 1px solid rgb(239 68 68 / 30%);
-  background: rgb(239 68 68 / 10%);
-  color: #f87171;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
 }
 
+/* ──────────────────────────────────────────────
+   FORMULÁRIO
+   Layout simples e robusto: tudo em coluna; só o
+   .rt-grid-two cria duas colunas (Marca | Modelo).
+   Para pôr "Tipo de motor" e "Nível de conforto"
+   lado a lado, basta envolvê-los num
+   <div className="rt-grid-two"> no JSX.
+   ────────────────────────────────────────────── */
 .rt-form {
-  padding: 0 24px 8px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--rt-gap);
+  padding: 20px var(--rt-pad-x) 12px;
 }
 
 .rt-grid-two {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--rt-gap);
 }
 
 .rt-label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 7px;
   font-size: 12px;
-  font-weight: 600;
-  color: #374151;
-  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: var(--rt-text);
+  letter-spacing: 0.045em;
   text-transform: uppercase;
 }
 
@@ -161,134 +208,136 @@
 .rt-dropdown-button,
 .rt-readonly-field {
   width: 100%;
-  padding: 12px 16px;
-  border-radius: 12px;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  color: #111827;
+  min-height: var(--rt-field-h);
+  padding: 11px 15px;
+  border-radius: var(--rt-radius);
+  border: 1px solid var(--rt-border);
+  background: var(--rt-bg);
+  color: var(--rt-ink);
   font-size: 14px;
   outline: none;
-  transition: all 0.2s ease;
-}
-
-.rt-input {
+  transition: 0.2s ease;
   box-sizing: border-box;
 }
 
 .rt-input::placeholder {
-  color: rgb(78 106 138 / 60%);
+  color: var(--rt-faint);
 }
 
-.rt-input:focus {
-  border-color: rgb(26 110 255 / 40%);
-  background: rgb(26 110 255 / 6%);
-  box-shadow: 0 0 0 3px rgb(26 110 255 / 10%);
+.rt-input:focus,
+.rt-dropdown-button.is-open {
+  border-color: var(--rt-primary);
+  background: var(--rt-bg);
+  box-shadow: 0 0 0 4px var(--rt-primary-soft);
 }
 
 .rt-input:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
 .rt-input.has-error,
 .rt-dropdown-button.has-error {
-  border-color: rgb(239 68 68 / 40%);
-  background: rgb(239 68 68 / 4%);
+  border-color: var(--rt-danger);
+  background: #fff7f7;
 }
 
 .rt-input-matricula {
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-weight: 600;
+  letter-spacing: 0.14em;
+  font-weight: 700;
 }
 
 .rt-help {
   margin: 6px 0 0;
-  padding-left: 4px;
-  font-size: 10.5px;
-  color: #4e6a8a;
+  padding-left: 2px;
+  font-size: 11px;
+  color: var(--rt-muted);
 }
 
 .rt-error {
   margin: 6px 0 0;
-  padding-left: 4px;
+  padding-left: 2px;
   font-size: 11px;
-  color: #f87171;
+  color: var(--rt-danger);
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
 .rt-muted {
-  color: rgb(78 106 138 / 70%);
+  color: var(--rt-faint);
 }
 
 .rt-readonly-field {
-  background: #f9fafb;
-  box-sizing: border-box;
+  background: var(--rt-bg-soft);
+  border-style: dashed;
   display: flex;
   align-items: center;
   gap: 8px;
+  font-weight: 600;
 }
 
 .rt-electric-icon {
-  color: #00d4ff;
+  color: #0891b2;
 }
 
 .rt-combustion-icon {
-  color: #ff8c42;
+  color: #f97316;
 }
 
 .rt-luxury-icon {
-  color: #c64dff;
+  color: #9333ea;
 }
 
 .rt-basic-icon {
-  color: #3d8bff;
+  color: #2563eb;
 }
 
-/* Dropdown */
-
+/* ──────────────────────────────────────────────
+   DROPDOWN
+   ────────────────────────────────────────────── */
 .rt-dropdown {
   position: relative;
 }
 
 .rt-dropdown-button {
-  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   text-align: left;
   cursor: pointer;
 }
 
 .rt-dropdown-button:hover {
-  border-color: rgb(255 255 255 / 15%);
+  border-color: var(--rt-faint);
 }
 
 .rt-dropdown-button.is-disabled {
-  border-color: rgb(255 255 255 / 5%);
-  background: rgb(255 255 255 / 2%);
-  color: rgb(78 106 138 / 40%);
+  background: var(--rt-bg-soft);
+  color: var(--rt-faint);
   cursor: not-allowed;
 }
 
-.rt-dropdown-button.is-open {
-  border-color: rgb(26 110 255 / 40%);
-  background: rgb(26 110 255 / 6%);
-  box-shadow: 0 0 0 3px rgb(26 110 255 / 10%);
-}
-
 .rt-dropdown-value {
-  color: #eaf0ff;
+  color: var(--rt-ink);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rt-dropdown-placeholder {
-  color: rgb(78 106 138 / 60%);
+  color: var(--rt-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rt-dropdown-chevron {
-  color: #4e6a8a;
+  flex: none;
+  color: var(--rt-muted);
   transition: transform 0.2s ease;
 }
 
@@ -304,48 +353,45 @@
   z-index: 50;
   margin-top: 8px;
   overflow: hidden;
-  border-radius: 12px;
-  border: 1px solid rgb(26 110 255 / 20%);
-  background: rgb(12 28 56 / 98%);
-  backdrop-filter: blur(32px);
-  box-shadow: 0 20px 60px rgb(0 0 0 / 60%);
+  border-radius: var(--rt-radius);
+  border: 1px solid #dbeafe;
+  background: var(--rt-bg);
+  box-shadow: 0 18px 45px rgb(15 23 42 / 18%);
   animation: rt-drop-in 0.15s ease;
 }
 
 .rt-dropdown-search-wrap {
   padding: 8px;
-  border-bottom: 1px solid rgb(255 255 255 / 4%);
+  border-bottom: 1px solid #edf2f7;
 }
 
 .rt-dropdown-search {
   width: 100%;
   box-sizing: border-box;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid rgb(255 255 255 / 6%);
-  background: rgb(255 255 255 / 4%);
-  color: #eaf0ff;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--rt-border);
+  background: var(--rt-bg-soft);
+  color: var(--rt-ink);
   font-size: 13px;
   outline: none;
 }
 
 .rt-dropdown-search::placeholder {
-  color: rgb(78 106 138 / 50%);
-}
-
-.rt-dropdown-search:focus {
-  border-color: rgb(26 110 255 / 30%);
+  color: var(--rt-faint);
 }
 
 .rt-dropdown-list {
-  max-height: 200px;
+  max-height: 190px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .rt-dropdown-empty {
   padding: 12px 16px;
   font-size: 13px;
-  color: #4e6a8a;
+  color: var(--rt-faint);
 }
 
 .rt-dropdown-option {
@@ -353,53 +399,57 @@
   padding: 10px 16px;
   border: none;
   background: transparent;
-  color: #eaf0ff;
+  color: var(--rt-ink);
   font-size: 13px;
   text-align: left;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: all 0.15s ease;
+  gap: 8px;
+  transition: 0.15s ease;
 }
 
 .rt-dropdown-option:hover {
-  background: rgb(255 255 255 / 4%);
+  background: #f1f5f9;
 }
 
 .rt-dropdown-option.is-selected {
-  background: rgb(26 110 255 / 10%);
-  color: #3d8bff;
-  font-weight: 600;
+  background: #eff6ff;
+  color: var(--rt-primary);
+  font-weight: 700;
 }
 
 .rt-dropdown-check {
-  color: #3d8bff;
+  flex: none;
+  color: var(--rt-primary);
 }
 
-/* Footer */
-
+/* ──────────────────────────────────────────────
+   FOOTER
+   ────────────────────────────────────────────── */
 .rt-footer {
   position: sticky;
   bottom: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   margin-top: 8px;
-  padding: 14px 20px 18px;
-  border-top: 1px solid #e5e7eb;
-  background: #ffffff;
+  padding: 18px var(--rt-pad-x) var(--rt-pad-y);
+  border-top: 1px solid var(--rt-border-soft);
+  background: var(--rt-bg);
 }
 
 .rt-state {
   margin: 0;
-  font-size: 11px;
-  color: #4e6a8a;
+  font-size: 12px;
+  color: var(--rt-muted);
 }
 
 .rt-state span {
-  color: #00e887;
-  font-weight: 600;
+  color: #10b981;
+  font-weight: 800;
 }
 
 .rt-actions {
@@ -409,40 +459,45 @@
 
 .rt-cancel-button,
 .rt-submit-button {
-  border-radius: 12px;
-  font-size: 13px;
+  border-radius: var(--rt-radius);
+  font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: 0.2s ease;
 }
 
 .rt-cancel-button {
-  padding: 10px 20px;
-  border: 1px solid rgb(255 255 255 / 8%);
-  background: rgb(255 255 255 / 3%);
-  color: #8ba3c7;
-  font-weight: 500;
+  padding: 11px 22px;
+  border: 1px solid transparent;
+  background: var(--rt-bg-soft);
+  color: var(--rt-muted);
+  font-weight: 700;
 }
 
 .rt-cancel-button:hover {
-  background: rgb(255 255 255 / 6%);
-  color: #eaf0ff;
+  background: #f1f5f9;
+  color: var(--rt-ink);
 }
 
 .rt-submit-button {
-  padding: 10px 24px;
+  padding: 11px 26px;
   border: none;
-  background: linear-gradient(135deg, #1a6eff 0%, #0052cc 50%, #1a6eff 100%);
-  background-size: 200% 100%;
+  background: linear-gradient(
+    135deg,
+    var(--rt-primary),
+    var(--rt-primary-dark)
+  );
   color: white;
-  font-weight: 600;
+  font-weight: 800;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  box-shadow: 0 10px 24px rgb(26 110 255 / 25%);
 }
 
 .rt-submit-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgb(26 110 255 / 40%);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgb(26 110 255 / 35%);
 }
 
 .rt-cancel-button:disabled,
@@ -468,15 +523,28 @@
   scrollbar-width: none;
 }
 
+/* ──────────────────────────────────────────────
+   ANIMAÇÕES
+   ────────────────────────────────────────────── */
 @keyframes rt-modal-in {
   from {
     opacity: 0;
-    transform: scale(0.95) translateY(10px);
+    transform: scale(0.96) translateY(8px);
   }
-
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes rt-sheet-in {
+  from {
+    opacity: 0.4;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -485,7 +553,6 @@
     opacity: 0;
     transform: translateY(-4px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -498,18 +565,135 @@
   }
 }
 
-@media (max-width: 560px) {
+/* ════════════════════════════════════════════════════════════
+   RESPONSIVO
+   ════════════════════════════════════════════════════════════ */
+
+/* ——— Ecrãs grandes / desktop wide ——— */
+@media (min-width: 1024px) {
+  .rt-overlay {
+    --rt-pad-x: 32px;
+  }
+  .rt-modal {
+    max-width: 820px;
+  }
+}
+
+/* ——— Tablet ——— */
+@media (max-width: 900px) {
+  .rt-overlay {
+    --rt-pad-x: 24px;
+  }
+}
+
+/* ——— Telemóvel: 1 coluna + bottom-sheet ——— */
+@media (max-width: 600px) {
+  .rt-overlay {
+    --rt-pad-x: 20px;
+    --rt-pad-y: 18px;
+    --rt-gap: 16px;
+    align-items: flex-end; /* encosta ao fundo (estilo sheet) */
+  }
+
+  .rt-modal {
+    margin-inline: 0;
+    max-width: 100%;
+    max-height: 92dvh;
+    border-radius: var(--rt-radius-lg) var(--rt-radius-lg) 0 0;
+    border-bottom: none;
+    animation: rt-sheet-in 0.3s ease;
+  }
+
+  /* Marca | Modelo passam a empilhar */
   .rt-grid-two {
     grid-template-columns: 1fr;
   }
 
+  /* Footer empilha e botões ocupam a largura */
   .rt-footer {
-    align-items: stretch;
     flex-direction: column;
-    gap: 12px;
+    align-items: stretch;
   }
 
   .rt-actions {
-    justify-content: flex-end;
+    width: 100%;
+  }
+
+  .rt-cancel-button,
+  .rt-submit-button {
+    flex: 1;
+    padding-inline: 16px;
+  }
+}
+
+/* ——— Telemóvel pequeno ——— */
+@media (max-width: 380px) {
+  .rt-overlay {
+    --rt-pad-x: 16px;
+  }
+  .rt-icon-box {
+    width: 40px;
+    height: 40px;
+  }
+  .rt-subtitle {
+    font-size: 12px;
+  }
+}
+
+/* ——— Ecrã baixo / landscape no telemóvel ——— */
+@media (max-height: 560px) and (orientation: landscape) {
+  .rt-overlay {
+    --rt-pad-y: 14px;
+    align-items: center;
+  }
+  .rt-modal {
+    max-height: 96dvh;
+    border-radius: var(--rt-radius-lg);
+  }
+  .rt-header {
+    padding-bottom: 14px;
+  }
+}
+
+/* ——— Dispositivos de toque: alvos maiores + evita zoom no iOS ——— */
+@media (hover: none) and (pointer: coarse) {
+  .rt-overlay {
+    --rt-field-h: 50px;
+  }
+  .rt-input,
+  .rt-dropdown-button,
+  .rt-dropdown-search,
+  .rt-readonly-field {
+    font-size: 16px; /* < 16px faz o Safari iOS dar zoom ao focar */
+  }
+  .rt-close-button {
+    width: 42px;
+    height: 42px;
+  }
+  .rt-dropdown-option {
+    padding-block: 13px;
+  }
+}
+
+/* ——— Safe-area (notch / barra inferior) ——— */
+@supports (padding: max(0px)) {
+  @media (max-width: 600px) {
+    .rt-footer {
+      padding-bottom: max(var(--rt-pad-y), env(safe-area-inset-bottom));
+    }
+  }
+}
+
+/* ——— Acessibilidade: menos movimento ——— */
+@media (prefers-reduced-motion: reduce) {
+  .rt-modal,
+  .rt-dropdown-menu,
+  .rt-spin,
+  .rt-submit-button {
+    animation: none !important;
+    transition: none !important;
+  }
+  .rt-submit-button:hover {
+    transform: none;
   }
 }
