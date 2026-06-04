@@ -9,6 +9,7 @@ export default function LoginModal({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [mostrarPassword, setMostrarPassword] = useState(false);
 
   if (!isOpen) return null;
 
@@ -92,16 +93,29 @@ export default function LoginModal({ isOpen, onClose }) {
 
               <div className="modal-campo">
                 <label className="modal-label">Palavra-passe</label>
-                <input
-                  className="modal-input"
-                  type="password"
-                  name="access_password"
-                  value={formData.access_password}
-                  onChange={handleChange}
-                  placeholder="Coloque a sua palavra-passe"
-                  required
-                />
+
+                <div className="password-wrapper">
+                  <input
+                    className="modal-input"
+                    type={mostrarPassword ? "text" : "password"}
+                    name="access_password"
+                    value={formData.access_password}
+                    onChange={handleChange}
+                    placeholder="Coloque a sua palavra-passe"
+                    required
+                  />
+
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setMostrarPassword(!mostrarPassword)}
+                  >
+                    {mostrarPassword ? "🙈" : "👁️"}
+                  </button>
+                </div>
               </div>
+
+
 
               <button
                 type="submit"
