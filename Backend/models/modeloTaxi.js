@@ -11,4 +11,3 @@ const modeloTaxiSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("modeloTaxi", modeloTaxiSchema);
-ss
