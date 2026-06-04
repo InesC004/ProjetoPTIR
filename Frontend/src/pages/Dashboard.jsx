@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import Header from "../components/Header2";
 import api from "../Api";
 import "../css/DashboardCliente.css";
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // UTILITÁRIOS
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -32,6 +33,16 @@ function criarIcone(L, cor, emoji, tamanho = 38) {
     iconSize: [tamanho, tamanho],
     iconAnchor: [tamanho / 2, tamanho / 2],
   });
+}
+
+// FIX AXE: helper para aplicar aria-label ao marcador Leaflet após addTo()
+// Os marcadores Leaflet geram role="button" mas sem aria-label — o axe apanha isto.
+function aplicarAriaLabel(marker, label) {
+  // Leaflet demora um tick a inserir o elemento no DOM
+  setTimeout(() => {
+    const el = marker.getElement();
+    if (el) el.setAttribute("aria-label", label);
+  }, 0);
 }
 
 async function coordenadasParaMorada(lat, lng) {
@@ -198,10 +209,15 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
           camadaRotaRef.current.remove();
           camadaRotaRef.current = null;
         }
+
+        // FIX AXE: alt="Ponto de partida" + aplicarAriaLabel
         const mk = L.marker([lat, lng], {
           icon: criarIcone(L, "#00e887", "📍"),
           draggable: true,
+          alt: "Ponto de partida",
         }).addTo(mapa);
+        aplicarAriaLabel(mk, "Ponto de partida");
+
         mk.on("dragend", async () => {
           const pos = mk.getLatLng();
           const morada = await coordenadasParaMorada(pos.lat, pos.lng);
@@ -249,6 +265,8 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
           ({ coords: { latitude: lat, longitude: lng } }) => {
             if (!mapRef.current) return;
             mapRef.current.setView([lat, lng], 15);
+
+            // FIX AXE: alt + aria-label no marcador de posição atual
             marcadorPosicao.current = L.marker([lat, lng], {
               icon: L.divIcon({
                 className: "",
@@ -260,9 +278,11 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
                 iconAnchor: [24, 24],
               }),
               zIndexOffset: 5,
+              alt: "A sua posição atual",
             })
               .addTo(mapRef.current)
               .bindTooltip("A sua posição", { direction: "top" });
+            aplicarAriaLabel(marcadorPosicao.current, "A sua posição atual");
           },
           () => {},
         );
@@ -270,12 +290,18 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
 
       mapa.on("click", async (evento) => {
         const { lat, lng } = evento.latlng;
+
         if (estadoRef.current === "partida") {
           if (marcadorPartida.current) marcadorPartida.current.remove();
+
+          // FIX AXE: aria-label no marcador de partida
           const mk = L.marker([lat, lng], {
             icon: criarIcone(L, "#00e887", "📍"),
             draggable: true,
+            alt: "Ponto de partida",
           }).addTo(mapa);
+          aplicarAriaLabel(mk, "Ponto de partida");
+
           mk.on("dragend", async () => {
             const pos = mk.getLatLng();
             const morada = await coordenadasParaMorada(pos.lat, pos.lng);
@@ -288,10 +314,15 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
           estadoRef.current = "destino";
         } else if (estadoRef.current === "destino") {
           if (marcadorDestino.current) marcadorDestino.current.remove();
+
+          // FIX AXE: aria-label no marcador de destino
           const mk = L.marker([lat, lng], {
             icon: criarIcone(L, "#c64dff", "🏁"),
             draggable: true,
+            alt: "Ponto de destino",
           }).addTo(mapa);
+          aplicarAriaLabel(mk, "Ponto de destino");
+
           mk.on("dragend", async () => {
             const pos = mk.getLatLng();
             const morada = await coordenadasParaMorada(pos.lat, pos.lng);
@@ -325,6 +356,9 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
   return <div ref={divRef} style={{ position: "absolute", inset: 0 }} />;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// HELPERS DE ESTADO
+// ═══════════════════════════════════════════════════════════════════════════════
 const PEDIDO_PAGAMENTO_PENDENTE_KEY = "pedidoPagamentoPendenteCliente";
 const PEDIDOS_PAGOS_KEY = "pedidosPagosCliente";
 
@@ -336,16 +370,14 @@ function getMongoId(valor) {
 
 function getEstadoVisivel(pedido) {
   if (!pedido) return "";
-  if (pedido.pagamento_estado === "pago" || pedido.pagamento_confirmado) {
+  if (pedido.pagamento_estado === "pago" || pedido.pagamento_confirmado)
     return "concluido";
-  }
   if (
     pedido.estado === "concluido" &&
     pedido.pagamento_estado !== "pago" &&
     !pedido.pagamento_confirmado
-  ) {
+  )
     return "pagamento_pendente";
-  }
   return pedido.estado;
 }
 
@@ -365,7 +397,6 @@ function pedidoFoiPagoLocalmente(pedido) {
 function guardarPedidoPago(pedido) {
   const ids = getIdsPedido(pedido);
   if (ids.length === 0) return;
-
   const pagos = new Set(getPedidosPagos());
   ids.forEach((id) => pagos.add(id));
   localStorage.setItem(PEDIDOS_PAGOS_KEY, JSON.stringify([...pagos]));
@@ -382,18 +413,13 @@ function aplicarEstadoFrontend(pedido) {
         pagamento_confirmado: true,
       }
     : pedido;
-
-  return {
-    ...normalizado,
-    estado_visivel: getEstadoVisivel(normalizado),
-  };
+  return { ...normalizado, estado_visivel: getEstadoVisivel(normalizado) };
 }
 
 function guardarPedidoPagamentoPendente(pedido) {
   if (!pedido) return;
-  if (getEstadoVisivel(pedido) === "pagamento_pendente") {
+  if (getEstadoVisivel(pedido) === "pagamento_pendente")
     localStorage.setItem(PEDIDO_PAGAMENTO_PENDENTE_KEY, JSON.stringify(pedido));
-  }
 }
 
 function limparPedidoPagamentoPendente() {
@@ -407,7 +433,6 @@ function atualizarViagemMotoristaComoPaga(pedido) {
   const terminadas = JSON.parse(
     localStorage.getItem("viagensTerminadasMotorista") || "[]",
   );
-
   const atualizadas = terminadas.map((viagem) => {
     const id = getMongoId(viagem);
     const idViagem = getMongoId(viagem?.viagem_id);
@@ -418,7 +443,6 @@ function atualizarViagemMotoristaComoPaga(pedido) {
       idViagem === viagemId ||
       idsPagos.includes(id) ||
       idsPagos.includes(idViagem);
-
     return corresponde
       ? {
           ...viagem,
@@ -428,10 +452,13 @@ function atualizarViagemMotoristaComoPaga(pedido) {
         }
       : viagem;
   });
-
-  localStorage.setItem("viagensTerminadasMotorista", JSON.stringify(atualizadas));
+  localStorage.setItem(
+    "viagensTerminadasMotorista",
+    JSON.stringify(atualizadas),
+  );
   window.dispatchEvent(new Event("viagensConfirmadasAtualizadas"));
 }
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL: Dashboard
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -443,6 +470,7 @@ export default function Dashboard() {
   const validadeCartaoRef = useRef(null);
   const cvvCartaoRef = useRef(null);
   const telefoneMbwayRef = useRef(null);
+
   const [partida, setPartida] = useState(null);
   const [moradaPartida, setMoradaPartida] = useState("");
   const [destino, setDestino] = useState(null);
@@ -450,7 +478,6 @@ export default function Dashboard() {
   const [aLocalizarGPS, setALocalizarGPS] = useState(false);
   const [dadosRota, setDadosRota] = useState(null);
   const [aCalcular, setACalcular] = useState(false);
-
   const [nivelConforto, setNivelConforto] = useState("basico");
   const [numeroPessoas, setNumeroPessoas] = useState(1);
   const [pedidoAtual, setPedidoAtual] = useState(null);
@@ -473,17 +500,17 @@ export default function Dashboard() {
   function formatarValidadeCartao(evento) {
     const digitos = apenasDigitos(evento.target.value).slice(0, 4);
     evento.target.value =
-      digitos.length > 2 ? `${digitos.slice(0, 2)}/${digitos.slice(2)}` : digitos;
+      digitos.length > 2
+        ? `${digitos.slice(0, 2)}/${digitos.slice(2)}`
+        : digitos;
   }
 
   function validadeCartaoValida(valor) {
     const match = valor.match(/^(\d{2})\/(\d{2})$/);
     if (!match) return false;
-
     const mes = Number(match[1]);
     const ano = 2000 + Number(match[2]);
     if (mes < 1 || mes > 12) return false;
-
     const agora = new Date();
     const fimDoMes = new Date(ano, mes, 0, 23, 59, 59);
     return fimDoMes >= agora;
@@ -495,7 +522,6 @@ export default function Dashboard() {
       const numero = apenasDigitos(numeroCartaoRef.current?.value || "");
       const validade = validadeCartaoRef.current?.value.trim() || "";
       const cvv = apenasDigitos(cvvCartaoRef.current?.value || "");
-
       if (
         !nome ||
         numero.length !== 16 ||
@@ -508,7 +534,6 @@ export default function Dashboard() {
         return false;
       }
     }
-
     if (metodoPagamento === "mbway") {
       const telefone = apenasDigitos(telefoneMbwayRef.current?.value || "");
       if (telefone.length !== 9 || !telefone.startsWith("9")) {
@@ -516,7 +541,6 @@ export default function Dashboard() {
         return false;
       }
     }
-
     return true;
   }
 
@@ -524,26 +548,20 @@ export default function Dashboard() {
     async function carregarPedidoAtivo() {
       try {
         const token = localStorage.getItem("token");
-
         const resposta = await fetch(
           "http://localhost:8080/api/pedidos/ativo",
           {
             headers: { Authorization: `Bearer ${token}` },
           },
         );
-
-        // ✅ CORRIGIDO: ignora silenciosamente se não existir pedido ativo
         if (resposta.status === 404) return;
-
         const dados = await resposta.json();
-
         if (dados.success && dados.pedido) {
           const pedido = aplicarEstadoFrontend(dados.pedido);
           setPedidoAtual(pedido);
           guardarPedidoPagamentoPendente(pedido);
           return;
         }
-
         const pendente = JSON.parse(
           localStorage.getItem(PEDIDO_PAGAMENTO_PENDENTE_KEY) || "null",
         );
@@ -552,31 +570,25 @@ export default function Dashboard() {
         const pendente = JSON.parse(
           localStorage.getItem(PEDIDO_PAGAMENTO_PENDENTE_KEY) || "null",
         );
-        if (pendente) {
-          setPedidoAtual(aplicarEstadoFrontend(pendente));
-        } else {
-          console.log("Erro ao carregar pedido ativo");
-        }
+        if (pendente) setPedidoAtual(aplicarEstadoFrontend(pendente));
+        else console.log("Erro ao carregar pedido ativo");
       }
     }
-
     carregarPedidoAtivo();
   }, []);
 
   useEffect(() => {
     if (!pedidoAtual) return;
-
     const interval = setInterval(async () => {
       try {
         const token = localStorage.getItem("token");
-
         const res = await fetch(
           `http://localhost:8080/api/pedidos/${pedidoAtual._id}`,
-          { headers: { Authorization: `Bearer ${token}` } },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
         );
-
         const data = await res.json();
-
         if (data.success) {
           const pedidoAtualizado = aplicarEstadoFrontend({
             ...data.pedido,
@@ -589,20 +601,16 @@ export default function Dashboard() {
               : null,
             taxi: data.taxi,
           });
-
           setPedidoAtual(pedidoAtualizado);
-          if (getEstadoVisivel(pedidoAtualizado) === "pagamento_pendente") {
+          if (getEstadoVisivel(pedidoAtualizado) === "pagamento_pendente")
             guardarPedidoPagamentoPendente(pedidoAtualizado);
-          } else if (getEstadoVisivel(pedidoAtualizado) === "concluido") {
+          else if (getEstadoVisivel(pedidoAtualizado) === "concluido")
             limparPedidoPagamentoPendente();
-          }
-
         }
       } catch {
         console.log("Erro ao atualizar pedido");
       }
     }, 3000);
-
     return () => clearInterval(interval);
   }, [pedidoAtual]);
 
@@ -610,10 +618,8 @@ export default function Dashboard() {
     function atualizarPedidoCliente() {
       setPedidoAtual((atual) => aplicarEstadoFrontend(atual));
     }
-
     window.addEventListener("pedidoClienteAtualizado", atualizarPedidoCliente);
     window.addEventListener("storage", atualizarPedidoCliente);
-
     return () => {
       window.removeEventListener(
         "pedidoClienteAtualizado",
@@ -626,12 +632,9 @@ export default function Dashboard() {
   useEffect(() => {
     const estadoAtual = getEstadoVisivel(pedidoAtual);
     if (estadoAtual !== "pagamento_pendente") return;
-
     guardarPedidoPagamentoPendente(pedidoAtual);
-
     const pedidoId = getMongoId(pedidoAtual);
     if (popupPagamentoAbertoParaPedidoRef.current === pedidoId) return;
-
     popupPagamentoAbertoParaPedidoRef.current = pedidoId;
     setMostrarPopupPagamento(true);
   }, [pedidoAtual]);
@@ -704,17 +707,13 @@ export default function Dashboard() {
 
   async function pedirViagem() {
     setErroPedido("");
-
     if (!partida || !destino) {
       setErroPedido("Defina a partida e o destino.");
       return;
     }
-
     setAPedir(true);
-
     try {
       const token = localStorage.getItem("token");
-
       const resposta = await fetch("http://localhost:8080/api/pedidos/create", {
         method: "POST",
         headers: {
@@ -732,20 +731,13 @@ export default function Dashboard() {
           nivel_conforto: nivelConforto,
         }),
       });
-
       const texto = await resposta.text();
       const dados = texto ? JSON.parse(texto) : {};
-
       if (!resposta.ok) {
         setErroPedido(dados.message || "Erro ao pedir viagem.");
-
-        if (dados.pedido) {
-          setPedidoAtual(dados.pedido);
-        }
-
+        if (dados.pedido) setPedidoAtual(dados.pedido);
         return;
       }
-
       setPedidoAtual(dados.pedido);
     } catch {
       setErroPedido("Erro de ligação ao servidor.");
@@ -756,9 +748,7 @@ export default function Dashboard() {
 
   async function cancelarPedido() {
     if (!pedidoAtual) return;
-
     const token = localStorage.getItem("token");
-
     const res = await fetch(
       `http://localhost:8080/api/pedidos/${pedidoAtual._id}/cancelar`,
       {
@@ -766,25 +756,19 @@ export default function Dashboard() {
         headers: { Authorization: `Bearer ${token}` },
       },
     );
-
     const data = await res.json();
-
     if (!res.ok) {
       setErroPedido(data.message || "Erro ao cancelar pedido.");
       return;
     }
-
     setPedidoAtual(null);
   }
 
   async function responderMotorista(respostaCliente) {
-    if (!pedidoAtual) return;
-    if (getEstadoVisivel(pedidoAtual) !== "aceite") return;
-
+    if (!pedidoAtual || getEstadoVisivel(pedidoAtual) !== "aceite") return;
     const token = localStorage.getItem("token");
     setAResponderMotorista(true);
     setErroPedido("");
-
     try {
       const res = await fetch(
         `http://localhost:8080/api/pedidos/${pedidoAtual._id}/responder`,
@@ -797,15 +781,10 @@ export default function Dashboard() {
           body: JSON.stringify({ resposta: respostaCliente }),
         },
       );
-
       const data = await res.json();
-
-      if (data.success) {
-        setPedidoAtual(aplicarEstadoFrontend(data.pedido));
-      } else {
-        if (data.pedido) {
-          setPedidoAtual(aplicarEstadoFrontend(data.pedido));
-        }
+      if (data.success) setPedidoAtual(aplicarEstadoFrontend(data.pedido));
+      else {
+        if (data.pedido) setPedidoAtual(aplicarEstadoFrontend(data.pedido));
         setErroPedido(data.message || "Erro ao responder ao motorista.");
       }
     } catch {
@@ -817,23 +796,22 @@ export default function Dashboard() {
 
   async function efetuarPagamento() {
     if (!pedidoAtual) return;
-
-    const viagemId = getMongoId(pedidoAtual.viagem_id) || getMongoId(pedidoAtual);
+    const viagemId =
+      getMongoId(pedidoAtual.viagem_id) || getMongoId(pedidoAtual);
     const clienteId = getMongoId(pedidoAtual.cliente_id);
     const valor = Number(
-      pedidoAtual.preco_final || pedidoAtual.custo_estimado || pedidoAtual.preco || 0,
+      pedidoAtual.preco_final ||
+        pedidoAtual.custo_estimado ||
+        pedidoAtual.preco ||
+        0,
     );
-
     if (!viagemId || !clienteId || valor <= 0) {
       setErroPagamento("Não foi possível obter os dados do pagamento.");
       return;
     }
-
     if (!validarFormularioPagamento()) return;
-
     setAPagar(true);
     setErroPagamento("");
-
     try {
       const data = await api.pagamentos.criar({
         viagem_id: viagemId,
@@ -841,7 +819,6 @@ export default function Dashboard() {
         metodo: metodoPagamento,
         valor,
       });
-
       const pedidoPago = aplicarEstadoFrontend({
         ...pedidoAtual,
         ...(data?.pedido || {}),
@@ -850,7 +827,6 @@ export default function Dashboard() {
         pagamento_estado: "pago",
         pagamento_confirmado: true,
       });
-
       guardarPedidoPago(pedidoPago);
       limparPedidoPagamentoPendente();
       atualizarViagemMotoristaComoPaga(pedidoPago);
@@ -900,6 +876,7 @@ export default function Dashboard() {
       desc: "Relaxe e chegue com conforto e segurança ao destino",
     },
   ];
+
   const estadoPedido = getEstadoVisivel(pedidoAtual);
   const pedidoBloqueiaNovaViagem = Boolean(
     pedidoAtual && estadoPedido !== "concluido",
@@ -911,6 +888,7 @@ export default function Dashboard() {
       : ["pagamento_pendente", "concluido"].includes(estadoPedido)
         ? 4
         : 2;
+
   return (
     <div className="dash-pagina">
       <div className="fundo-grelha" />
@@ -922,418 +900,454 @@ export default function Dashboard() {
 
       <Header isDashboard />
 
-      <section className="hero">
-        <div className="painel-esquerdo">
-          <h1 className="titulo animar-1">
-            <span className="linha-1">Chegue a qualquer</span>
-            <br />
-            <span className="titulo-gradiente">lado em minutos</span>
-            <br />
-          </h1>
-          <p className="descricao animar-2">
-            Clique no mapa para marcar a partida e o destino. A rota é calculada
-            por estradas reais em tempo real.
-          </p>
+      <main id="conteudo-principal">
+        <section className="hero">
+          <div className="painel-esquerdo">
+            <h1 className="titulo animar-1">
+              <span className="linha-1">Chegue a qualquer</span>
+              <br />
+              <span className="titulo-gradiente">lado em minutos</span>
+              <br />
+            </h1>
+            <p className="descricao animar-2">
+              Clique no mapa para marcar a partida e o destino. A rota é
+              calculada por estradas reais em tempo real.
+            </p>
 
-          <div className="card-reserva animar-2">
-            <div className="step-dots" aria-hidden="true">
-              <div
-                className={`step-dot ${passoAtual >= 1 ? "feito" : "ativo"}`}
-              >
-                1
-              </div>
-              <div className={`step-line ${passoAtual >= 2 ? "feito" : ""}`} />
-
-              <div
-                className={`step-dot ${passoAtual >= 2 ? "feito-rosa" : ""}`}
-              >
-                2
-              </div>
-              <div
-                className={`step-line ${passoAtual >= 3 ? "feito-2" : ""}`}
-              />
-
-              <div className={`step-dot ${passoAtual >= 3 ? "ativo" : ""}`}>
-                3
-              </div>
-              <div
-                className={`step-line ${passoAtual >= 4 ? "feito-2" : ""}`}
-              />
-
-              <div className={`step-dot ${passoAtual >= 4 ? "ativo" : ""}`}>
-                4
-              </div>
-            </div>
-
-            <button
-              className="btn-localizacao"
-              onClick={usarLocalizacaoAtual}
-              disabled={aLocalizarGPS || pedidoBloqueiaNovaViagem}
-            >
-              <span>{aLocalizarGPS ? "⌛" : "📡"}</span>
-              {aLocalizarGPS
-                ? "A obter localização..."
-                : "Usar a minha localização atual"}
-            </button>
-
-            <div className="rotulo-campo rotulo-verde">Partida</div>
-            <div className="linha-input">
-              <div className="ponto ponto-verde" />
-              <input
-                className={`input-morada${moradaPartida ? " preenchido-verde" : ""}`}
-                type="text"
-                placeholder="Clique no mapa (1º clique)…"
-                value={moradaPartida}
-                readOnly
-              />
-              {moradaPartida && !pedidoBloqueiaNovaViagem && (
-                <button
-                  className="btn-limpar"
-                  type="button"
-                  onClick={() => {
-                    setDadosRota(null);
-                    apiMapa.current?.limparPartida();
-                  }}
+            <div className="card-reserva animar-2">
+              <div className="step-dots" aria-hidden="true">
+                <div
+                  className={`step-dot ${passoAtual >= 1 ? "feito" : "ativo"}`}
                 >
-                  ✕
-                </button>
-              )}
-            </div>
+                  1
+                </div>
+                <div
+                  className={`step-line ${passoAtual >= 2 ? "feito" : ""}`}
+                />
+                <div
+                  className={`step-dot ${passoAtual >= 2 ? "feito-rosa" : ""}`}
+                >
+                  2
+                </div>
+                <div
+                  className={`step-line ${passoAtual >= 3 ? "feito-2" : ""}`}
+                />
+                <div className={`step-dot ${passoAtual >= 3 ? "ativo" : ""}`}>
+                  3
+                </div>
+                <div
+                  className={`step-line ${passoAtual >= 4 ? "feito-2" : ""}`}
+                />
+                <div className={`step-dot ${passoAtual >= 4 ? "ativo" : ""}`}>
+                  4
+                </div>
+              </div>
 
-            <div className="rotulo-campo rotulo-azul">Destino</div>
-            <div className="linha-input">
-              <div className="ponto ponto-azul" />
-              <input
-                className={`input-morada${moradaDestino ? " preenchido-azul" : ""}`}
-                type="text"
-                placeholder={
-                  moradaPartida
-                    ? "Clique no mapa (2º clique)…"
-                    : "Primeiro defina a partida"
+              <button
+                className="btn-localizacao"
+                onClick={usarLocalizacaoAtual}
+                disabled={aLocalizarGPS || pedidoBloqueiaNovaViagem}
+                type="button"
+              >
+                <span aria-hidden="true">{aLocalizarGPS ? "⌛" : "📡"}</span>
+                {aLocalizarGPS
+                  ? "A obter localização..."
+                  : "Usar a minha localização atual"}
+              </button>
+
+              <label
+                htmlFor="input-partida"
+                className="rotulo-campo rotulo-verde"
+              >
+                Partida
+              </label>
+              <div className="linha-input">
+                <div className="ponto ponto-verde" aria-hidden="true" />
+                <input
+                  id="input-partida"
+                  className={`input-morada${moradaPartida ? " preenchido-verde" : ""}`}
+                  type="text"
+                  placeholder="Clique no mapa (1º clique)…"
+                  value={moradaPartida}
+                  readOnly
+                  aria-readonly="true"
+                />
+                {moradaPartida && !pedidoBloqueiaNovaViagem && (
+                  <button
+                    className="btn-limpar"
+                    type="button"
+                    aria-label="Limpar ponto de partida"
+                    onClick={() => {
+                      setDadosRota(null);
+                      apiMapa.current?.limparPartida();
+                    }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              <label
+                htmlFor="input-destino"
+                className="rotulo-campo rotulo-azul"
+              >
+                Destino
+              </label>
+              <div className="linha-input">
+                <div className="ponto ponto-azul" aria-hidden="true" />
+                <input
+                  id="input-destino"
+                  className={`input-morada${moradaDestino ? " preenchido-azul" : ""}`}
+                  type="text"
+                  placeholder={
+                    moradaPartida
+                      ? "Clique no mapa (2º clique)…"
+                      : "Primeiro defina a partida"
+                  }
+                  value={moradaDestino}
+                  readOnly
+                  aria-readonly="true"
+                />
+                {moradaDestino && !pedidoBloqueiaNovaViagem && (
+                  <button
+                    className="btn-limpar"
+                    type="button"
+                    aria-label="Limpar ponto de destino"
+                    onClick={() => {
+                      setDadosRota(null);
+                      apiMapa.current?.limparDestino();
+                    }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {aCalcular && (
+                <div className="faixa-rota" role="status" aria-live="polite">
+                  <div className="faixa-loading">
+                    <div className="spinner" aria-hidden="true" />A calcular
+                    rota…
+                  </div>
+                </div>
+              )}
+              {dadosRota && !aCalcular && (
+                <div className="faixa-rota">
+                  <div className="faixa-item">
+                    <div className="faixa-valor">
+                      {fmtDist(dadosRota.distanciaM)}
+                    </div>
+                    <div className="faixa-label">Distância</div>
+                  </div>
+                  <div className="faixa-item">
+                    <div className="faixa-valor ciano">
+                      {fmtTempo(dadosRota.duracaoS)}
+                    </div>
+                    <div className="faixa-label">Tempo estimado</div>
+                  </div>
+                </div>
+              )}
+
+              <label htmlFor="nivel-conforto" className="rotulo-campo">
+                Nível de conforto
+              </label>
+              <div className="linha-input">
+                <select
+                  id="nivel-conforto"
+                  className="input-morada"
+                  value={nivelConforto}
+                  onChange={(e) => setNivelConforto(e.target.value)}
+                  style={{ paddingLeft: 16 }}
+                  disabled={pedidoBloqueiaNovaViagem}
+                >
+                  <option value="basico">Básico</option>
+                  <option value="luxuoso">Luxuoso</option>
+                </select>
+              </div>
+
+              <label htmlFor="numero-pessoas" className="rotulo-campo">
+                Número de pessoas
+              </label>
+              <div className="linha-input">
+                <input
+                  id="numero-pessoas"
+                  className="input-morada"
+                  type="number"
+                  min="1"
+                  max="4"
+                  value={numeroPessoas}
+                  onChange={(e) => setNumeroPessoas(Number(e.target.value))}
+                  style={{ paddingLeft: 16 }}
+                  disabled={pedidoBloqueiaNovaViagem}
+                />
+              </div>
+
+              <button
+                className="btn-pedir"
+                type="button"
+                onClick={pedirViagem}
+                disabled={
+                  !partida ||
+                  !destino ||
+                  aCalcular ||
+                  aPedir ||
+                  pedidoBloqueiaNovaViagem
                 }
-                value={moradaDestino}
-                readOnly
-              />
-              {moradaDestino && !pedidoBloqueiaNovaViagem && (
-                <button
-                  className="btn-limpar"
-                  type="button"
-                  onClick={() => {
-                    setDadosRota(null);
-                    apiMapa.current?.limparDestino();
-                  }}
+              >
+                {!partida
+                  ? "📍 Clique no mapa para a partida"
+                  : !destino
+                    ? "🏁 Clique no mapa para o destino"
+                    : aCalcular
+                      ? "A calcular rota…"
+                      : aPedir
+                        ? "A pedir viagem..."
+                        : pedidoBloqueiaNovaViagem
+                          ? "Pedido ativo"
+                          : "→ Pedir Viagem"}
+              </button>
+
+              {erroPedido && (
+                <p
+                  role="alert"
+                  style={{ color: "#c62828", marginTop: 10, fontWeight: 700 }}
                 >
-                  ✕
-                </button>
+                  {erroPedido}
+                </p>
+              )}
+
+              {pedidoAtual && (
+                <div
+                  className="pedido-estado-card"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <div className="pedido-estado-topo">
+                    <div className="pedido-estado-titulo">Pedido ativo</div>
+                    <div className={`pedido-estado-badge ${estadoPedido}`}>
+                      {estadoPedido}
+                    </div>
+                  </div>
+                  <p className="pedido-estado-texto">
+                    {estadoPedido === "pendente" && "A aguardar motorista..."}
+                    {estadoPedido === "aceite" && "Motorista encontrado!"}
+                    {estadoPedido === "confirmado" && "Viagem confirmada"}
+                    {estadoPedido === "em_viagem" &&
+                      "A viagem está em curso. Aguarde o motorista terminar."}
+                    {estadoPedido === "pagamento_pendente" &&
+                      "A viagem terminou. O pagamento está pendente."}
+                    {estadoPedido === "concluido" && "Viagem concluída e paga."}
+                  </p>
+                  {estadoPedido === "pagamento_pendente" && (
+                    <button
+                      className="btn-localizacao"
+                      type="button"
+                      onClick={() => setMostrarPopupPagamento(true)}
+                    >
+                      Efetuar pagamento
+                    </button>
+                  )}
+                  {estadoPedido === "concluido" && (
+                    <button
+                      className="btn-localizacao"
+                      type="button"
+                      onClick={reiniciar}
+                    >
+                      Nova viagem
+                    </button>
+                  )}
+                  {["pendente", "aceite", "confirmado"].includes(
+                    estadoPedido,
+                  ) && (
+                    <button
+                      className="btn-localizacao"
+                      type="button"
+                      onClick={cancelarPedido}
+                    >
+                      Cancelar pedido
+                    </button>
+                  )}
+                </div>
               )}
             </div>
+          </div>
 
-            {aCalcular && (
-              <div className="faixa-rota">
-                <div className="faixa-loading">
+          <div className="painel-mapa animar-dir">
+            <div className="caixa-mapa">
+              <MapaInterativo
+                apiRef={apiMapa}
+                aoDefinirPartida={(c, m) => {
+                  setPartida(c);
+                  setMoradaPartida(m);
+                }}
+                aoDefinirDestino={(c, m) => {
+                  setDestino(c);
+                  setMoradaDestino(m);
+                }}
+              />
+              <div className="barra-topo-mapa">
+                <div className="dica-mapa" aria-live="polite">
+                  <div
+                    className="dica-ponto"
+                    aria-hidden="true"
+                    style={{
+                      background: corDica,
+                      boxShadow: `0 0 8px ${corDica}`,
+                    }}
+                  />
+                  {textoDica}
+                </div>
+                {(moradaPartida || moradaDestino) &&
+                  !pedidoBloqueiaNovaViagem && (
+                    <button
+                      className="btn-recomecar"
+                      type="button"
+                      onClick={reiniciar}
+                    >
+                      ↺ Recomeçar
+                    </button>
+                  )}
+              </div>
+              {aCalcular && (
+                <div className="a-calcular" aria-hidden="true">
                   <div className="spinner" />A calcular rota…
                 </div>
-              </div>
-            )}
-            {dadosRota && !aCalcular && (
-              <div className="faixa-rota">
-                <div className="faixa-item">
-                  <div className="faixa-valor">
+              )}
+              {dadosRota && !aCalcular && (
+                <div className="card-rota" aria-hidden="true">
+                  <div className="rc-label">Tempo de viagem</div>
+                  <div className="rc-valor">{fmtTempo(dadosRota.duracaoS)}</div>
+                  <div className="rc-label" style={{ marginTop: 8 }}>
+                    Distância
+                  </div>
+                  <div className="rc-valor2">
                     {fmtDist(dadosRota.distanciaM)}
                   </div>
-                  <div className="faixa-label">Distância</div>
                 </div>
-                <div className="faixa-item">
-                  <div className="faixa-valor ciano">
-                    {fmtTempo(dadosRota.duracaoS)}
-                  </div>
-                  <div className="faixa-label">Tempo estimado</div>
-                </div>
-              </div>
-            )}
-
-            <div className="rotulo-campo">Nível de conforto</div>
-            <div className="linha-input">
-              <select
-                className="input-morada"
-                value={nivelConforto}
-                onChange={(e) => setNivelConforto(e.target.value)}
-                style={{ paddingLeft: 16 }}
-                disabled={pedidoBloqueiaNovaViagem}
-              >
-                <option value="basico">Básico</option>
-                <option value="luxuoso">Luxuoso</option>
-              </select>
-            </div>
-
-            <div className="rotulo-campo">Número de pessoas</div>
-            <div className="linha-input">
-              <input
-                className="input-morada"
-                type="number"
-                min="1"
-                max="4"
-                value={numeroPessoas}
-                onChange={(e) => setNumeroPessoas(Number(e.target.value))}
-                style={{ paddingLeft: 16 }}
-                disabled={pedidoBloqueiaNovaViagem}
-              />
-            </div>
-
-            <button
-              className="btn-pedir"
-              onClick={pedirViagem}
-              disabled={
-                !partida || !destino || aCalcular || aPedir || pedidoBloqueiaNovaViagem
-              }
-            >
-              {!partida
-                ? "📍 Clique no mapa para a partida"
-                : !destino
-                  ? "🏁 Clique no mapa para o destino"
-                  : aCalcular
-                    ? "A calcular rota…"
-                    : aPedir
-                      ? "A pedir viagem..."
-                      : pedidoBloqueiaNovaViagem
-                        ? "Pedido ativo"
-                        : "→ Pedir Viagem"}
-            </button>
-
-            {erroPedido && (
-              <p style={{ color: "#e53935", marginTop: 10, fontWeight: 700 }}>
-                {erroPedido}
-              </p>
-            )}
-
-            {pedidoAtual && (
-              <div className="pedido-estado-card">
-                <div className="pedido-estado-topo">
-                  <div className="pedido-estado-titulo">Pedido ativo</div>
-                  <div className={`pedido-estado-badge ${estadoPedido}`}>
-                    {estadoPedido}
-                  </div>
-                </div>
-
-                <p className="pedido-estado-texto">
-                  {estadoPedido === "pendente" &&
-                    "A aguardar motorista..."}
-                  {estadoPedido === "aceite" && "Motorista encontrado!"}
-                  {estadoPedido === "confirmado" && "Viagem confirmada"}
-                  {estadoPedido === "em_viagem" &&
-                    "A viagem está em curso. Aguarde o motorista terminar."}
-                  {estadoPedido === "pagamento_pendente" && "A viagem terminou. O pagamento está pendente."}
-                  {estadoPedido === "concluido" && "Viagem concluída e paga."}
-                </p>
-
-                {estadoPedido === "pagamento_pendente" && (
-                  <button
-                    className="btn-localizacao"
-                    type="button"
-                    onClick={() => setMostrarPopupPagamento(true)}
-                  >
-                    Efetuar pagamento
-                  </button>
-                )}
-
-                {estadoPedido === "concluido" && (
-                  <button className="btn-localizacao" type="button" onClick={reiniciar}>
-                    Nova viagem
-                  </button>
-                )}
-
-                {["pendente", "aceite", "confirmado"].includes(
-                  estadoPedido,
-                ) && (
-                  <button className="btn-localizacao" onClick={cancelarPedido}>
-                    Cancelar pedido
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="painel-mapa animar-dir">
-          <div className="caixa-mapa">
-            <MapaInterativo
-              apiRef={apiMapa}
-              aoDefinirPartida={(c, m) => {
-                setPartida(c);
-                setMoradaPartida(m);
-              }}
-              aoDefinirDestino={(c, m) => {
-                setDestino(c);
-                setMoradaDestino(m);
-              }}
-            />
-            <div className="barra-topo-mapa">
-              <div className="dica-mapa">
-                <div
-                  className="dica-ponto"
-                  style={{
-                    background: corDica,
-                    boxShadow: `0 0 8px ${corDica}`,
-                  }}
-                />
-                {textoDica}
-              </div>
-              {(moradaPartida || moradaDestino) && !pedidoBloqueiaNovaViagem && (
-                <button className="btn-recomecar" onClick={reiniciar}>
-                  ↺ Recomeçar
-                </button>
               )}
-            </div>
-            {aCalcular && (
-              <div className="a-calcular">
-                <div className="spinner" />A calcular rota…
-              </div>
-            )}
-            {dadosRota && !aCalcular && (
-              <div className="card-rota">
-                <div className="rc-label">Tempo de viagem</div>
-                <div className="rc-valor">{fmtTempo(dadosRota.duracaoS)}</div>
-                <div className="rc-label" style={{ marginTop: 8 }}>
-                  Distância
-                </div>
-                <div className="rc-valor2">{fmtDist(dadosRota.distanciaM)}</div>
-              </div>
-            )}
-            <div className="barra-inferior-mapa">
-              <div className="barra-esq">
-                <div className="barra-icone">
-                  {partida && destino ? "🗺" : partida ? "🏁" : "📍"}
-                </div>
-                <div>
-                  <div className="barra-titulo">
-                    {pedidoAtual
-                      ? `Pedido ${estadoPedido}`
-                      : partida && destino
-                        ? "Rota calculada · OpenRouteService"
-                        : partida
-                          ? "Defina o destino no mapa"
-                          : "1º clique = Partida · 2º clique = Destino"}
+              <div className="barra-inferior-mapa">
+                <div className="barra-esq">
+                  <div className="barra-icone" aria-hidden="true">
+                    {partida && destino ? "🗺" : partida ? "🏁" : "📍"}
                   </div>
-                  <div className="barra-sub">
-                    {pedidoBloqueiaNovaViagem
-                      ? "Tem um pedido ativo. Cancele ou termine a viagem para pedir outra."
-                      : partida && destino
-                        ? "Rota real por estradas · Arraste os marcadores para ajustar"
-                        : "OpenStreetMap · Leaflet · ORS"}
+                  <div>
+                    <div className="barra-titulo">
+                      {pedidoAtual
+                        ? `Pedido ${estadoPedido}`
+                        : partida && destino
+                          ? "Rota calculada · OpenRouteService"
+                          : partida
+                            ? "Defina o destino no mapa"
+                            : "1º clique = Partida · 2º clique = Destino"}
+                    </div>
+                    <div className="barra-sub">
+                      {pedidoBloqueiaNovaViagem
+                        ? "Tem um pedido ativo. Cancele ou termine a viagem para pedir outra."
+                        : partida && destino
+                          ? "Rota real por estradas · Arraste os marcadores para ajustar"
+                          : "OpenStreetMap · Leaflet · ORS"}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="secao">
-        <div className="secao-centro">
-          <span className="secao-rotulo">Porquê TakeCab</span>
-          <h2 className="secao-titulo">
-            A forma mais inteligente
-            <br />
-            de se mover.
-          </h2>
-        </div>
-        <div className="grelha-3">
-          {funcionalidades.map((f) => (
-            <div key={f.n} className="card-feat">
-              <div className="feat-num">{f.n}</div>
-              <div className="feat-icone">{f.icone}</div>
-              <div className="feat-titulo">{f.titulo}</div>
-              <div className="feat-desc">{f.desc}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="secao" style={{ paddingTop: 0 }}>
-        <div className="secao-centro">
-          <span className="secao-rotulo" style={{ color: "var(--verde)" }}>
-            Processo simples
-          </span>
-          <h2 className="secao-titulo">Como funciona</h2>
-        </div>
-        <div className="grelha-3">
-          {passos.map((p) => (
-            <div key={p.n} className="card-passo">
-              <div className="passo-num">{p.n}</div>
-              <div className="passo-titulo">{p.titulo}</div>
-              <div className="passo-desc">{p.desc}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <div className="cta-wrap">
-        <div className="cta-box">
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              right: 0,
-              width: 240,
-              height: 240,
-              background: "rgba(26,110,255,.16)",
-              borderRadius: "50%",
-              filter: "blur(80px)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              width: 200,
-              height: 200,
-              background: "rgba(198,77,255,.13)",
-              borderRadius: "50%",
-              filter: "blur(60px)",
-            }}
-          />
-          <div style={{ position: "relative" }}>
-            <h2 className="cta-titulo">Pronto para partir?</h2>
-            <p className="cta-desc">
-              A sua próxima viagem está a um toque de distância. Peça uma
-              viagem!
-            </p>
-            <div className="cta-botoes">
-              <button className="btn-branco">Pedir Viagem</button>
-            </div>
+        <section className="secao">
+          <div className="secao-centro">
+            <span className="secao-rotulo">Porquê TakeCab</span>
+            <h2 className="secao-titulo">
+              A forma mais inteligente
+              <br />
+              de se mover.
+            </h2>
           </div>
-        </div>
-      </div>
+          <div className="grelha-3">
+            {funcionalidades.map((f) => (
+              <div key={f.n} className="card-feat">
+                <div className="feat-num" aria-hidden="true">
+                  {f.n}
+                </div>
+                <div className="feat-icone" aria-hidden="true">
+                  {f.icone}
+                </div>
+                <div className="feat-titulo">{f.titulo}</div>
+                <div className="feat-desc">{f.desc}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="secao" style={{ paddingTop: 0 }}>
+          <div className="secao-centro">
+            {/*
+              FIX AXE: removido style={{ color: "#00884f" }} inline que sobrepunha
+              o .secao-rotulo do CSS. A cor #00884f está agora definida em .secao-rotulo-verde
+              no CSS, com !important para garantir especificidade.
+            */}
+            <span className="secao-rotulo secao-rotulo-verde">
+              Processo simples
+            </span>
+            <h2 className="secao-titulo">Como funciona</h2>
+          </div>
+          <div className="grelha-3">
+            {passos.map((p) => (
+              <div key={p.n} className="card-passo">
+                <div className="passo-num" aria-hidden="true">
+                  {p.n}
+                </div>
+                {/* Inline style como fallback absoluto */}
+                <div
+                  className="passo-titulo"
+                  style={{ color: "#0d1829", WebkitTextFillColor: "#0d1829" }}
+                >
+                  {p.titulo}
+                </div>
+                <div
+                  className="passo-desc"
+                  style={{ color: "#3d506a", WebkitTextFillColor: "#3d506a" }}
+                >
+                  {p.desc}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
 
       {estadoPedido === "aceite" && (
-        <div className="popup-motorista-fundo">
+        <div
+          className="popup-motorista-fundo"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="popup-motorista-titulo"
+        >
           <div className="popup-motorista">
             <div className="popup-motorista-header">
               <div>
-                <h2>Motorista encontrado</h2>
+                <h2 id="popup-motorista-titulo">Motorista encontrado</h2>
                 <p>Um motorista respondeu ao seu pedido.</p>
               </div>
-              <div className="popup-motorista-icon">🚕</div>
+              <div className="popup-motorista-icon" aria-hidden="true">
+                🚕
+              </div>
             </div>
-
             <div className="popup-motorista-info">
               <div className="popup-linha">
                 <span>Motorista</span>
                 <strong>{pedidoAtual.motorista_id?.nome || "Motorista"}</strong>
               </div>
-
               <div className="popup-linha">
                 <span>Distância até si</span>
                 <strong>{pedidoAtual.motorista_distancia_km || "--"} km</strong>
               </div>
-
               <div className="popup-linha">
                 <span>Tempo até chegar</span>
                 <strong>
                   {pedidoAtual.motorista_tempo_chegada_min || "--"} min
                 </strong>
               </div>
-
               <div className="popup-linha">
                 <span>Custo estimado</span>
                 <strong>
@@ -1342,7 +1356,6 @@ export default function Dashboard() {
                     : "A calcular"}
                 </strong>
               </div>
-
               <div className="popup-linha">
                 <span>Táxi</span>
                 <strong>
@@ -1352,18 +1365,18 @@ export default function Dashboard() {
                 </strong>
               </div>
             </div>
-
             <div className="popup-motorista-acoes">
               <button
                 className="btn-rejeitar"
+                type="button"
                 onClick={() => responderMotorista("rejeitar")}
                 disabled={aResponderMotorista}
               >
                 {aResponderMotorista ? "A responder..." : "Rejeitar"}
               </button>
-
               <button
                 className="btn-aceitar"
+                type="button"
                 onClick={() => responderMotorista("confirmar")}
                 disabled={aResponderMotorista}
               >
@@ -1373,30 +1386,35 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
       {mostrarPopupPagamento && estadoPedido === "pagamento_pendente" && (
-        <div className="popup-motorista-fundo">
+        <div
+          className="popup-motorista-fundo"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="popup-pagamento-titulo"
+        >
           <div className="popup-motorista">
             <div className="popup-motorista-header">
               <div>
-                <h2>Viagem terminada</h2>
+                <h2 id="popup-pagamento-titulo">Viagem terminada</h2>
                 <p>
                   A sua viagem foi concluída. Efetue o pagamento para finalizar.
                 </p>
               </div>
-              <div className="popup-motorista-icon">💳</div>
+              <div className="popup-motorista-icon" aria-hidden="true">
+                💳
+              </div>
             </div>
-
             <div className="popup-motorista-info">
               <div className="popup-linha">
                 <span>Origem</span>
                 <strong>{pedidoAtual.origem_morada || "—"}</strong>
               </div>
-
               <div className="popup-linha">
                 <span>Destino</span>
                 <strong>{pedidoAtual.destino_morada || "—"}</strong>
               </div>
-
               <div className="popup-linha">
                 <span>Duração</span>
                 <strong>
@@ -1405,7 +1423,6 @@ export default function Dashboard() {
                     : "—"}
                 </strong>
               </div>
-
               <div className="popup-linha">
                 <span>Quilómetros</span>
                 <strong>
@@ -1414,7 +1431,6 @@ export default function Dashboard() {
                     : "—"}
                 </strong>
               </div>
-
               <div className="popup-linha">
                 <span>Total a pagar</span>
                 <strong>
@@ -1424,11 +1440,15 @@ export default function Dashboard() {
                 </strong>
               </div>
             </div>
-
             <div className="pagamento-simulado">
-              <div className="pagamento-metodos" aria-label="Metodo de pagamento">
+              <div
+                className="pagamento-metodos"
+                role="group"
+                aria-label="Método de pagamento"
+              >
                 <button
                   type="button"
+                  aria-pressed={metodoPagamento === "cartao"}
                   className={metodoPagamento === "cartao" ? "ativo" : ""}
                   onClick={() => {
                     setMetodoPagamento("cartao");
@@ -1436,10 +1456,11 @@ export default function Dashboard() {
                   }}
                   disabled={aPagar}
                 >
-                  Cartao
+                  Cartão
                 </button>
                 <button
                   type="button"
+                  aria-pressed={metodoPagamento === "mbway"}
                   className={metodoPagamento === "mbway" ? "ativo" : ""}
                   onClick={() => {
                     setMetodoPagamento("mbway");
@@ -1450,29 +1471,28 @@ export default function Dashboard() {
                   MB Way
                 </button>
               </div>
-
               {metodoPagamento === "cartao" ? (
                 <div className="pagamento-form-grid">
                   <label className="pagamento-campo pagamento-campo-full">
-                    <span>Nome no cartao</span>
+                    <span>Nome no cartão</span>
                     <input
                       ref={nomeCartaoRef}
                       type="text"
                       placeholder="Nome do titular"
-                      autoComplete="off"
+                      autoComplete="cc-name"
                       maxLength={60}
                     />
                   </label>
                   <label className="pagamento-campo pagamento-campo-full">
-                    <span>Numero do cartao</span>
+                    <span>Número do cartão</span>
                     <input
                       ref={numeroCartaoRef}
                       type="text"
                       inputMode="numeric"
                       placeholder="0000 0000 0000 0000"
-                      autoComplete="off"
+                      autoComplete="cc-number"
                       maxLength={16}
-                      onInput={(evento) => limitarDigitos(evento, 16)}
+                      onInput={(e) => limitarDigitos(e, 16)}
                     />
                   </label>
                   <label className="pagamento-campo">
@@ -1482,7 +1502,7 @@ export default function Dashboard() {
                       type="text"
                       inputMode="numeric"
                       placeholder="MM/AA"
-                      autoComplete="off"
+                      autoComplete="cc-exp"
                       maxLength={5}
                       onInput={formatarValidadeCartao}
                     />
@@ -1494,61 +1514,61 @@ export default function Dashboard() {
                       type="text"
                       inputMode="numeric"
                       placeholder="123"
-                      autoComplete="off"
+                      autoComplete="cc-csc"
                       maxLength={3}
-                      onInput={(evento) => limitarDigitos(evento, 3)}
+                      onInput={(e) => limitarDigitos(e, 3)}
                     />
                   </label>
                 </div>
               ) : (
                 <div className="pagamento-form-grid">
                   <label className="pagamento-campo pagamento-campo-full">
-                    <span>Telemovel MB Way</span>
+                    <span>Telemóvel MB Way</span>
                     <input
                       ref={telefoneMbwayRef}
                       type="tel"
                       placeholder="912 345 678"
-                      autoComplete="off"
+                      autoComplete="tel"
                       maxLength={9}
-                      onInput={(evento) => limitarDigitos(evento, 9)}
+                      onInput={(e) => limitarDigitos(e, 9)}
                     />
                   </label>
                 </div>
               )}
-
               <p className="pagamento-nota">
-                Estes dados servem apenas para validar a simulacao. Nao sao
+                Estes dados servem apenas para validar a simulação. Não são
                 guardados.
               </p>
             </div>
-
             <div className="popup-motorista-acoes">
               <button
                 className="btn-rejeitar"
                 type="button"
                 onClick={() => setMostrarPopupPagamento(false)}
                 disabled={aPagar}
-        >
+              >
                 Fechar
               </button>
-
-        <button
-          className="btn-aceitar"
-          type="button"
-          onClick={efetuarPagamento}
-          disabled={aPagar}
-        >
-          {aPagar ? "A processar..." : "Pagar"}
-        </button>
-      </div>
-      {erroPagamento && (
-        <p style={{ color: "#e53935", marginTop: 12, fontWeight: 700 }}>
-          {erroPagamento}
-        </p>
+              <button
+                className="btn-aceitar"
+                type="button"
+                onClick={efetuarPagamento}
+                disabled={aPagar}
+              >
+                {aPagar ? "A processar..." : "Pagar"}
+              </button>
+            </div>
+            {erroPagamento && (
+              <p
+                role="alert"
+                style={{ color: "#c62828", marginTop: 12, fontWeight: 700 }}
+              >
+                {erroPagamento}
+              </p>
+            )}
+          </div>
+        </div>
       )}
-    </div>
-  </div>
-)}
     </div>
   );
 }

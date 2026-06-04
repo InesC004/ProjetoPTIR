@@ -22,32 +22,42 @@ export default function Homepage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#071426] text-white">
-      {/* VIDEO */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute inset-0 h-full w-full scale-105 object-cover opacity-90"
-      >
-        <source src={backgroundVideo} type="video/mp4" />
-      </video>
+      {/*
+        FIX AXE: "All page content should be contained by landmarks"
+        O <video> e os overlays decorativos estavam fora de qualquer landmark.
+        aria-hidden="true" diz ao axe (e leitores de ecrã) para ignorar estes
+        elementos decorativos — eles não têm conteúdo útil para utilizadores
+        de tecnologias assistivas.
+      */}
+      <div aria-hidden="true">
+        {/* VIDEO de fundo — decorativo */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          tabIndex={-1}
+          className="absolute inset-0 h-full w-full scale-105 object-cover opacity-90"
+        >
+          <source src={backgroundVideo} type="video/mp4" />
+        </video>
 
-      {/* OVERLAYS */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#061426]/70 via-[#061426]/35 to-[#061426]/80" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#061426]/85 via-[#061426]/25 to-[#061426]/85" />
+        {/* OVERLAYS decorativos */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#061426]/70 via-[#061426]/35 to-[#061426]/80" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#061426]/85 via-[#061426]/25 to-[#061426]/85" />
 
-      {/* LIGHT BLOBS */}
-      <div
-        className="absolute left-[12%] top-[28%] h-80 w-80 rounded-full bg-sky-400/20 blur-[90px]"
-        style={{ transform: `translate(${mousePos.x}px, ${mousePos.y}px)` }}
-      />
-      <div
-        className="absolute right-[18%] top-[42%] h-72 w-72 rounded-full bg-yellow-400/15 blur-[100px]"
-        style={{ transform: `translate(${-mousePos.x}px, ${-mousePos.y}px)` }}
-      />
+        {/* LIGHT BLOBS decorativos */}
+        <div
+          className="absolute left-[12%] top-[28%] h-80 w-80 rounded-full bg-sky-400/20 blur-[90px]"
+          style={{ transform: `translate(${mousePos.x}px, ${mousePos.y}px)` }}
+        />
+        <div
+          className="absolute right-[18%] top-[42%] h-72 w-72 rounded-full bg-yellow-400/15 blur-[100px]"
+          style={{ transform: `translate(${-mousePos.x}px, ${-mousePos.y}px)` }}
+        />
+      </div>
 
-      {/* CONTENT */}
+      {/* CONTENT — todo dentro de landmarks */}
       <div className="relative z-10 min-h-screen">
         <Header />
 
@@ -55,6 +65,7 @@ export default function Homepage() {
           {/* wrapper para compensar o header */}
           <div className="flex min-h-[calc(100vh-80px)] items-center justify-center">
             <section
+              aria-label="Apresentação do serviço"
               className={`mx-auto max-w-5xl text-center flex flex-col items-center transition-all duration-1000 ${
                 loaded
                   ? "translate-y-0 opacity-100"

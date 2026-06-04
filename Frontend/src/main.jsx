@@ -5,6 +5,13 @@ import App from "./App.jsx";
 import "./css/Index.css";
 import "./css/Global.css";
 
+if (import.meta.env.DEV) {
+  const axe = await import("@axe-core/react");
+  const React = await import("react");
+  const ReactDOM = await import("react-dom");
+  axe.default(React.default, ReactDOM.default, 1000);
+}
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Auth0Provider

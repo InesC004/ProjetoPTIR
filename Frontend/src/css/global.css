@@ -133,12 +133,6 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-.descricao {
-  color: var(--cinza);
-  font-size: 0.9rem;
-  line-height: 1.6;
-  margin-bottom: 16px;
-}
 
 /* ── Card de reserva mais compacto ── */
 .card-reserva {
@@ -680,18 +674,6 @@ body {
   line-height: 1.6;
 }
 
-.card-passo {
-  text-align: center;
-  padding: 44px 28px;
-  background: var(--card);
-  border: 1px solid var(--borda);
-  border-radius: 24px;
-  transition: all 0.3s;
-}
-.card-passo:hover {
-  transform: translateY(-4px);
-  border-color: rgba(26, 110, 255, 0.3);
-}
 .passo-num {
   width: 64px;
   height: 64px;

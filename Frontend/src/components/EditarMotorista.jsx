@@ -27,9 +27,17 @@ function validarEmail(valor) {
 
 function formatarDataInput(valor) {
   if (!valor) return "";
+  // Se já vier no formato YYYY-MM-DD, usar diretamente
+  if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) return valor;
+  // Cortar apenas a parte da data sem converter timezone
+  if (valor.includes("T")) return valor.split("T")[0];
   const d = new Date(valor);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toISOString().split("T")[0];
+  // Usar data local em vez de UTC
+  const ano = d.getFullYear();
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
 }
 
 function Dropdown({

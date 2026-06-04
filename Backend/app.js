@@ -17,8 +17,10 @@ const pedidosRoutes = require("./routes/pedidos");
 const viagensRoutes = require("./routes/viagens");
 const pagamentosRoutes = require("./routes/pagamentos");
 const webhooksRoutes = require("./routes/webhooks");
-const relatoriosRoutes = require('./routes/relatorios')
-const faturasRoutes = require('./routes/faturas')
+const relatoriosRoutes = require("./routes/relatorios");
+const faturasRoutes = require("./routes/faturas");
+const modelosTaxiRoutes = require("./routes/modelosTaxi");
+
 const app = express();
 const PORT = process.env.PORT || 8080;
 const MONGO_URI = process.env.MONGO_URI;
@@ -90,8 +92,9 @@ app.use("/api/precos", precosRoutes);
 app.use("/api/pedidos", pedidosRoutes);
 app.use("/api/viagens", viagensRoutes);
 app.use("/api/pagamentos", pagamentosRoutes);
-app.use('/api/relatorios', relatoriosRoutes)
-app.use('/api/faturas', faturasRoutes)
+app.use("/api/relatorios", relatoriosRoutes);
+app.use("/api/faturas", faturasRoutes);
+app.use("/api/modelos-taxi", modelosTaxiRoutes);
 // ===========================
 // Tratamento de endpoints desconhecidos
 // ===========================

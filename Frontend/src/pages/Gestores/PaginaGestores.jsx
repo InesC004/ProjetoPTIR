@@ -647,17 +647,6 @@ function SecRelatorios() {
         </button>
 
         <button
-          className={tipo === "clientes" ? "active" : ""}
-          onClick={() => {
-            setTipo("clientes");
-            setTotal("euros");
-            setSub(null);
-          }}
-        >
-          Clientes e faturação
-        </button>
-
-        <button
           className={tipo === "reabastecimentos" ? "active" : ""}
           onClick={() => {
             setTipo("reabastecimentos");
@@ -683,7 +672,7 @@ function SecRelatorios() {
       <div className="pg-busca-wrap">
         <input
           type="text"
-          placeholder="Pesquisar motorista, táxi, matrícula, cliente ou NIF..."
+          placeholder=""
           value={pesquisa}
           onChange={(e) => setPesquisa(e.target.value)}
           className="pg-busca"

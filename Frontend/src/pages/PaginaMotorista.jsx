@@ -629,7 +629,7 @@ export default function PaginaMotorista() {
               />
               {current?.tag}
             </div>
-            <h2
+            <h1
               style={{
                 fontFamily: "'Syne', sans-serif",
                 fontSize: "1.8rem",
@@ -640,7 +640,7 @@ export default function PaginaMotorista() {
               }}
             >
               {current?.label}
-            </h2>
+            </h1>
             <p
               style={{
                 fontSize: "1rem",
