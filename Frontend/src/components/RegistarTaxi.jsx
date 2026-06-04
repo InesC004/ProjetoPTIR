@@ -14,116 +14,27 @@ import {
   Loader2,
   CheckCircle2,
 } from "lucide-react";
-
-/* ═══════════════════════════════════════════════
-   MARCAS E MODELOS
-   ═══════════════════════════════════════════════ */
-const MARCAS_MODELOS = {
-  Mercedes: [
-    "Classe A",
-    "Classe B",
-    "Classe C",
-    "Classe E",
-    "Classe S",
-    "EQA",
-    "EQB",
-    "EQC",
-    "EQE",
-    "EQS",
-    "Vito",
-  ],
-  BMW: [
-    "Série 1",
-    "Série 3",
-    "Série 5",
-    "Série 7",
-    "X1",
-    "X3",
-    "iX1",
-    "iX3",
-    "i4",
-    "i5",
-    "i7",
-  ],
-  Audi: [
-    "A3",
-    "A4",
-    "A6",
-    "A8",
-    "Q3",
-    "Q5",
-    "Q7",
-    "e-tron",
-    "Q4 e-tron",
-    "Q8 e-tron",
-  ],
-  Volkswagen: [
-    "Golf",
-    "Passat",
-    "Arteon",
-    "Touran",
-    "ID.3",
-    "ID.4",
-    "ID.5",
-    "ID.7",
-  ],
-  Toyota: [
-    "Corolla",
-    "Camry",
-    "Prius",
-    "Yaris",
-    "RAV4",
-    "bZ4X",
-    "Proace City",
-    "Proace Verso",
-  ],
-  Renault: [
-    "Clio",
-    "Mégane",
-    "Talisman",
-    "Captur",
-    "Mégane E-Tech",
-    "Scenic E-Tech",
-    "Zoe",
-  ],
-  Peugeot: ["208", "308", "508", "2008", "3008", "e-208", "e-308", "e-2008"],
-  Tesla: ["Model 3", "Model S", "Model X", "Model Y"],
-  Nissan: ["Leaf", "Qashqai", "X-Trail", "Ariya", "Townstar"],
-  Hyundai: [
-    "i20",
-    "i30",
-    "Tucson",
-    "Ioniq 5",
-    "Ioniq 6",
-    "Kona",
-    "Kona Electric",
-  ],
-  Kia: ["Ceed", "Sportage", "Niro", "EV6", "EV9", "Stonic"],
-  Skoda: ["Octavia", "Superb", "Kamiq", "Karoq", "Enyaq iV"],
-  SEAT: ["Ibiza", "León", "Ateca", "Tarraco"],
-  Citroën: ["C3", "C4", "C5 X", "ë-C4", "ë-Berlingo"],
-  Fiat: ["500", "Tipo", "500e", "Panda"],
-  Volvo: ["S60", "S90", "XC40", "XC60", "XC90", "EX30", "EX90", "C40 Recharge"],
-  Dacia: ["Sandero", "Duster", "Jogger", "Spring"],
-};
-
-const MARCAS = Object.keys(MARCAS_MODELOS).sort();
-
+import "../css/RegistarTaxi.css";
 /* ═══════════════════════════════════════════════
    VALIDAÇÃO DE MATRÍCULA PORTUGUESA
    ═══════════════════════════════════════════════ */
 function validarMatricula(valor) {
   const limpo = valor.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
   if (limpo.length !== 6) return false;
+
   const g1 = limpo.slice(0, 2);
   const g2 = limpo.slice(2, 4);
   const g3 = limpo.slice(4, 6);
+
   const isL = (s) => /^[A-Z]{2}$/.test(s);
   const isD = (s) => /^[0-9]{2}$/.test(s);
+
   if (isL(g1) && isD(g2) && isD(g3)) return true;
   if (isD(g1) && isD(g2) && isL(g3)) return true;
   if (isD(g1) && isL(g2) && isD(g3)) return true;
   if (isL(g1) && isD(g2) && isL(g3)) return true;
+
   return false;
 }
 
@@ -132,8 +43,10 @@ function formatarMatricula(valor) {
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, "")
     .slice(0, 6);
+
   if (limpo.length <= 2) return limpo;
   if (limpo.length <= 4) return limpo.slice(0, 2) + "-" + limpo.slice(2);
+
   return limpo.slice(0, 2) + "-" + limpo.slice(2, 4) + "-" + limpo.slice(4);
 }
 
@@ -154,10 +67,13 @@ function Dropdown({
   const ref = useRef(null);
   const inputRef = useRef(null);
 
+  const safeOptions = Array.isArray(options) ? options : [];
+
   useEffect(() => {
     function handler(e) {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     }
+
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
@@ -166,8 +82,8 @@ function Dropdown({
     if (open && inputRef.current) inputRef.current.focus();
   }, [open]);
 
-  const filtered = options.filter((o) =>
-    o.toLowerCase().includes(search.toLowerCase()),
+  const filtered = safeOptions.filter((o) =>
+    String(o).toLowerCase().includes(search.toLowerCase()),
   );
 
   function handleSelect(opt) {
@@ -181,6 +97,7 @@ function Dropdown({
       <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
         {label}
       </label>
+
       <button
         type="button"
         onClick={() => {
@@ -199,15 +116,18 @@ function Dropdown({
         <span className={value ? "text-[#eaf0ff]" : "text-[#4e6a8a]/60"}>
           {value || placeholder}
         </span>
+
         <ChevronDown
           size={14}
-          className={`text-[#4e6a8a] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`text-[#4e6a8a] transition-transform duration-200 ${
+            open ? "rotate-180" : ""
+          }`}
         />
       </button>
 
       {open && (
         <div className="absolute top-full left-0 right-0 mt-2 z-50 rounded-xl border border-[#1a6eff]/20 bg-[#0c1c38]/98 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden animate-[dropIn_0.15s_ease]">
-          {options.length > 5 && (
+          {safeOptions.length > 5 && (
             <div className="p-2 border-b border-white/[0.04]">
               <input
                 ref={inputRef}
@@ -219,6 +139,7 @@ function Dropdown({
               />
             </div>
           )}
+
           <div className="max-h-[200px] overflow-y-auto scrollbar-none">
             {filtered.length === 0 ? (
               <div className="px-4 py-3 text-[13px] text-[#4e6a8a]">
@@ -237,6 +158,7 @@ function Dropdown({
                   }`}
                 >
                   {opt}
+
                   {opt === value && (
                     <Check
                       size={14}
@@ -272,55 +194,149 @@ export default function RegistarTaxi({ aberto, onFechar }) {
     tipo_motor: "",
     nivel_conforto: "",
   });
+
+  const [marcas, setMarcas] = useState([]);
+  const [modelosDisponiveis, setModelosDisponiveis] = useState([]);
+
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [loadingMarcas, setLoadingMarcas] = useState(false);
+  const [loadingModelos, setLoadingModelos] = useState(false);
   const [apiError, setApiError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  if (!aberto) return null;
-
-  const modelosDisponiveis = form.marca ? MARCAS_MODELOS[form.marca] || [] : [];
   const anoAtual = new Date().getFullYear();
+
+  useEffect(() => {
+    async function carregarMarcas() {
+      setLoadingMarcas(true);
+
+      try {
+        const data = await api.modelosTaxi.listarMarcas();
+        setMarcas(data);
+      } catch (err) {
+        console.error(err);
+        setApiError("Erro ao carregar marcas.");
+      } finally {
+        setLoadingMarcas(false);
+      }
+    }
+
+    if (aberto) carregarMarcas();
+  }, [aberto]);
+
+  async function carregarModelos(marca) {
+    setLoadingModelos(true);
+    setModelosDisponiveis([]);
+
+    try {
+      const data = await api.modelosTaxi.listarModelosPorMarca(marca);
+
+      // Guarda o objeto completo, porque também precisamos do tipo_motor
+      // que vem da base de dados para o modelo escolhido.
+      setModelosDisponiveis(data);
+    } catch (err) {
+      console.error(err);
+      setApiError("Erro ao carregar modelos.");
+    } finally {
+      setLoadingModelos(false);
+    }
+  }
+
+  if (!aberto) return null;
 
   function handleChange(campo, valor) {
     setForm((prev) => {
       const novo = { ...prev, [campo]: valor };
-      if (campo === "marca") novo.modelo = "";
+
+      if (campo === "marca") {
+        novo.modelo = "";
+        novo.ano_compra = "";
+        novo.tipo_motor = "";
+        novo.nivel_conforto = "";
+        carregarModelos(valor);
+      }
+
+      if (campo === "modelo") {
+        novo.ano_compra = "";
+
+        const modeloEscolhido = modelosDisponiveis.find(
+          (m) => m.modelo === valor,
+        );
+
+        if (modeloEscolhido) {
+          novo.tipo_motor = modeloEscolhido.tipo_motor;
+          novo.nivel_conforto = modeloEscolhido.nivel_conforto;
+        }
+      }
       return novo;
     });
-    if (errors[campo]) setErrors((prev) => ({ ...prev, [campo]: null }));
+
+    if (errors[campo]) {
+      setErrors((prev) => ({
+        ...prev,
+        [campo]: null,
+      }));
+    }
+
     if (apiError) setApiError("");
   }
 
   function handleMatriculaChange(valor) {
     const formatado = formatarMatricula(valor);
-    setForm((prev) => ({ ...prev, matricula: formatado }));
-    if (errors.matricula) setErrors((prev) => ({ ...prev, matricula: null }));
+
+    setForm((prev) => ({
+      ...prev,
+      matricula: formatado,
+    }));
+
+    if (errors.matricula) {
+      setErrors((prev) => ({
+        ...prev,
+        matricula: null,
+      }));
+    }
+
     if (apiError) setApiError("");
   }
 
   function validar() {
     const errs = {};
-    if (!form.matricula.trim()) errs.matricula = "Matrícula obrigatória";
-    else if (!validarMatricula(form.matricula))
+
+    if (!form.matricula.trim()) {
+      errs.matricula = "Matrícula obrigatória";
+    } else if (!validarMatricula(form.matricula)) {
       errs.matricula =
         "Formato inválido. Use: AA-00-00, 00-00-AA, 00-AA-00 ou AA-00-AA";
+    }
+
     if (!form.marca) errs.marca = "Selecione a marca";
     if (!form.modelo) errs.modelo = "Selecione o modelo";
-    if (!form.ano_compra) errs.ano_compra = "Ano obrigatório";
-    else {
+
+    if (!form.ano_compra) {
+      errs.ano_compra = "Ano obrigatório";
+    } else {
       const ano = parseInt(form.ano_compra, 10);
-      if (isNaN(ano) || ano < 1990 || ano > anoAtual)
+
+      if (isNaN(ano) || ano < 1990 || ano > anoAtual) {
         errs.ano_compra = `O ano deve estar entre 1990 e ${anoAtual}`;
+      }
     }
-    if (!form.tipo_motor) errs.tipo_motor = "Selecione o tipo de motor";
-    if (!form.nivel_conforto)
-      errs.nivel_conforto = "Selecione o nível de conforto";
+
+    if (!form.tipo_motor) {
+      errs.tipo_motor = "O tipo de motor não foi encontrado para este modelo";
+    }
+    if (!form.nivel_conforto) {
+      errs.nivel_conforto =
+        "O nível de conforto não foi encontrado para este modelo";
+    }
+
     return errs;
   }
 
   async function handleSubmit() {
     const errs = validar();
+
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
@@ -341,9 +357,12 @@ export default function RegistarTaxi({ aberto, onFechar }) {
 
     try {
       await api.taxis.criar(novoTaxi);
+
       setSuccess(true);
+
       setTimeout(() => {
         setSuccess(false);
+
         setForm({
           matricula: "",
           marca: "",
@@ -352,16 +371,31 @@ export default function RegistarTaxi({ aberto, onFechar }) {
           tipo_motor: "",
           nivel_conforto: "",
         });
+
+        setModelosDisponiveis([]);
         setErrors({});
         onFechar();
       }, 2000);
-    } catch {
-      setApiError("Não foi possível conectar ao servidor.");
+    } catch (err) {
+      console.error(err);
+      setApiError(err.message || "Não foi possível conectar ao servidor.");
     } finally {
       setLoading(false);
     }
   }
 
+  function getAnosPermitidos() {
+    const modeloEscolhido = modelosDisponiveis.find(
+      (m) => m.modelo === form.modelo,
+    );
+
+    if (!modeloEscolhido) return [];
+
+    const inicio = modeloEscolhido.ano_inicio;
+    const fim = Math.min(modeloEscolhido.ano_fim || anoAtual, anoAtual);
+
+    return Array.from({ length: fim - inicio + 1 }, (_, i) => String(fim - i));
+  }
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       <div
@@ -372,7 +406,6 @@ export default function RegistarTaxi({ aberto, onFechar }) {
       <div className="relative w-full max-w-[540px] mx-4 max-h-[90vh] overflow-y-auto rounded-2xl border border-[#1a6eff]/20 bg-[#0a1628]/95 backdrop-blur-2xl shadow-[0_32px_80px_rgba(0,0,0,0.5)] animate-[modalIn_0.3s_ease] scrollbar-none">
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#1a6eff]/30 to-transparent" />
 
-        {/* Header */}
         <div className="flex items-center justify-between p-6 pb-4 sticky top-0 bg-[#0a1628]/95 backdrop-blur-xl z-10">
           <div className="flex items-center gap-3">
             <div
@@ -383,15 +416,18 @@ export default function RegistarTaxi({ aberto, onFechar }) {
             >
               <Car size={18} strokeWidth={1.8} />
             </div>
+
             <div>
               <h3 className="font-['Syne',sans-serif] text-[18px] font-bold text-[#eaf0ff]">
                 Registar Táxi
               </h3>
+
               <p className="text-[12px] text-[#4e6a8a]">
                 Adicionar novo veículo à frota
               </p>
             </div>
           </div>
+
           <button
             onClick={onFechar}
             className="w-9 h-9 rounded-xl flex items-center justify-center border border-white/[0.06] bg-white/[0.03] text-[#8ba3c7] hover:bg-red-500/10 hover:border-red-500/25 hover:text-red-400 transition-all duration-200 cursor-pointer"
@@ -400,7 +436,6 @@ export default function RegistarTaxi({ aberto, onFechar }) {
           </button>
         </div>
 
-        {/* Mensagens de sucesso / erro da API */}
         <div className="px-6">
           {success && (
             <div className="mb-4 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm flex items-center gap-2">
@@ -408,6 +443,7 @@ export default function RegistarTaxi({ aberto, onFechar }) {
               Táxi registado com sucesso!
             </div>
           )}
+
           {apiError && (
             <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-2">
               <AlertCircle size={16} />
@@ -416,13 +452,12 @@ export default function RegistarTaxi({ aberto, onFechar }) {
           )}
         </div>
 
-        {/* Form */}
         <div className="px-6 pb-2 space-y-5">
-          {/* Matrícula */}
           <div>
             <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
               Matrícula
             </label>
+
             <input
               type="text"
               placeholder="Ex: AA-00-BB"
@@ -436,9 +471,11 @@ export default function RegistarTaxi({ aberto, onFechar }) {
                   : "border-white/[0.08]"
               }`}
             />
+
             <p className="text-[10.5px] text-[#4e6a8a] mt-1.5 pl-1">
               Formatos: AA-00-00 · 00-00-AA · 00-AA-00 · AA-00-AA
             </p>
+
             {errors.matricula && (
               <p className="text-[11px] text-red-400 mt-1 pl-1 flex items-center gap-1">
                 <AlertCircle size={12} /> {errors.matricula}
@@ -446,47 +483,47 @@ export default function RegistarTaxi({ aberto, onFechar }) {
             )}
           </div>
 
-          {/* Marca + Modelo */}
           <div className="grid grid-cols-2 gap-3">
             <Dropdown
               label="Marca"
-              placeholder="Selecionar marca"
+              placeholder={loadingMarcas ? "A carregar..." : "Selecionar marca"}
               value={form.marca}
               onChange={(v) => handleChange("marca", v)}
-              options={MARCAS}
-              disabled={loading || success}
+              options={marcas}
+              disabled={loading || success || loadingMarcas}
               error={errors.marca}
             />
+
             <Dropdown
               label="Modelo"
-              placeholder={form.marca ? "Selecionar modelo" : "Escolha a marca"}
+              placeholder={
+                loadingModelos
+                  ? "A carregar..."
+                  : form.marca
+                    ? "Selecionar modelo"
+                    : "Escolha a marca"
+              }
               value={form.modelo}
               onChange={(v) => handleChange("modelo", v)}
-              options={modelosDisponiveis}
-              disabled={!form.marca || loading || success}
+              options={modelosDisponiveis.map((m) => m.modelo)}
+              disabled={!form.marca || loading || success || loadingModelos}
               error={errors.modelo}
             />
           </div>
 
-          {/* Ano de compra */}
           <div>
-            <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
-              Ano de compra
-            </label>
-            <input
-              type="number"
-              placeholder={`1990 — ${anoAtual}`}
+            <Dropdown
+              label="Ano de compra"
+              placeholder={
+                form.modelo ? "Selecionar ano" : "Escolha primeiro o modelo"
+              }
               value={form.ano_compra}
-              onChange={(e) => handleChange("ano_compra", e.target.value)}
-              min={1990}
-              max={anoAtual}
-              disabled={loading || success}
-              className={`w-full px-4 py-3 rounded-xl text-[14px] text-[#eaf0ff] placeholder-[#4e6a8a]/60 bg-white/[0.04] border outline-none transition-all duration-200 focus:bg-[#1a6eff]/[0.06] focus:border-[#1a6eff]/40 focus:shadow-[0_0_0_3px_rgba(26,110,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed ${
-                errors.ano_compra
-                  ? "border-red-500/40 bg-red-500/[0.04]"
-                  : "border-white/[0.08]"
-              }`}
+              onChange={(v) => handleChange("ano_compra", v)}
+              options={getAnosPermitidos()}
+              disabled={!form.modelo || loading || success}
+              error={errors.ano_compra}
             />
+
             {errors.ano_compra && (
               <p className="text-[11px] text-red-400 mt-1.5 pl-1 flex items-center gap-1">
                 <AlertCircle size={12} /> {errors.ano_compra}
@@ -494,35 +531,34 @@ export default function RegistarTaxi({ aberto, onFechar }) {
             )}
           </div>
 
-          {/* Tipo de motor */}
           <div>
             <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
               Tipo de motor
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              <OptionCard
-                icon={<Flame size={18} strokeWidth={1.8} />}
-                label="Combustão"
-                selected={form.tipo_motor === "combustao"}
-                onClick={() =>
-                  !loading &&
-                  !success &&
-                  handleChange("tipo_motor", "combustao")
-                }
-                color="#ff8c42"
-                disabled={loading || success}
-              />
-              <OptionCard
-                icon={<Zap size={18} strokeWidth={1.8} />}
-                label="Elétrico"
-                selected={form.tipo_motor === "eletrico"}
-                onClick={() =>
-                  !loading && !success && handleChange("tipo_motor", "eletrico")
-                }
-                color="#00d4ff"
-                disabled={loading || success}
-              />
+
+            <div className="px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-[14px] text-[#eaf0ff] flex items-center gap-2">
+              {form.tipo_motor === "eletrico" ? (
+                <>
+                  <Zap size={16} className="text-[#00d4ff]" />
+                  Elétrico
+                </>
+              ) : form.tipo_motor === "combustao" ? (
+                <>
+                  <Flame size={16} className="text-[#ff8c42]" />
+                  Combustão
+                </>
+              ) : (
+                <span className="text-[#4e6a8a]/70">
+                  Escolha primeiro o modelo do táxi
+                </span>
+              )}
             </div>
+
+            <p className="text-[10.5px] text-[#4e6a8a] mt-1.5 pl-1">
+              Este valor vem automaticamente da base de dados do modelo
+              escolhido.
+            </p>
+
             {errors.tipo_motor && (
               <p className="text-[11px] text-red-400 mt-1.5 pl-1 flex items-center gap-1">
                 <AlertCircle size={12} /> {errors.tipo_motor}
@@ -530,37 +566,34 @@ export default function RegistarTaxi({ aberto, onFechar }) {
             )}
           </div>
 
-          {/* Nível de conforto */}
           <div>
             <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
               Nível de conforto
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              <OptionCard
-                icon={<Star size={18} strokeWidth={1.8} />}
-                label="Básico"
-                selected={form.nivel_conforto === "basico"}
-                onClick={() =>
-                  !loading &&
-                  !success &&
-                  handleChange("nivel_conforto", "basico")
-                }
-                color="#3d8bff"
-                disabled={loading || success}
-              />
-              <OptionCard
-                icon={<Crown size={18} strokeWidth={1.8} />}
-                label="Luxuoso"
-                selected={form.nivel_conforto === "luxuoso"}
-                onClick={() =>
-                  !loading &&
-                  !success &&
-                  handleChange("nivel_conforto", "luxuoso")
-                }
-                color="#c64dff"
-                disabled={loading || success}
-              />
+
+            <div className="px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-[14px] text-[#eaf0ff] flex items-center gap-2">
+              {form.nivel_conforto === "luxuoso" ? (
+                <>
+                  <Crown size={16} className="text-[#c64dff]" />
+                  Luxuoso
+                </>
+              ) : form.nivel_conforto === "basico" ? (
+                <>
+                  <Star size={16} className="text-[#3d8bff]" />
+                  Básico
+                </>
+              ) : (
+                <span className="text-[#4e6a8a]/70">
+                  Escolha primeiro o modelo do táxi
+                </span>
+              )}
             </div>
+
+            <p className="text-[10.5px] text-[#4e6a8a] mt-1.5 pl-1">
+              Este valor vem automaticamente da base de dados do modelo
+              escolhido.
+            </p>
+
             {errors.nivel_conforto && (
               <p className="text-[11px] text-red-400 mt-1.5 pl-1 flex items-center gap-1">
                 <AlertCircle size={12} /> {errors.nivel_conforto}
@@ -569,12 +602,12 @@ export default function RegistarTaxi({ aberto, onFechar }) {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-between p-6 pt-4 mt-2 border-t border-white/[0.04] sticky bottom-0 bg-[#0a1628]/95 backdrop-blur-xl">
           <p className="text-[11px] text-[#4e6a8a]">
             Estado inicial:{" "}
             <span className="text-[#00e887] font-semibold">livre</span>
           </p>
+
           <div className="flex gap-3">
             <button
               onClick={onFechar}
@@ -583,6 +616,7 @@ export default function RegistarTaxi({ aberto, onFechar }) {
             >
               Cancelar
             </button>
+
             <button
               onClick={handleSubmit}
               disabled={loading || success}
@@ -615,58 +649,20 @@ export default function RegistarTaxi({ aberto, onFechar }) {
           from { opacity: 0; transform: scale(0.95) translateY(10px); }
           to { opacity: 1; transform: scale(1) translateY(0); }
         }
+
         @keyframes dropIn {
           from { opacity: 0; transform: translateY(-4px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .scrollbar-none::-webkit-scrollbar { display: none; }
-        .scrollbar-none { scrollbar-width: none; }
+
+        .scrollbar-none::-webkit-scrollbar {
+          display: none;
+        }
+
+        .scrollbar-none {
+          scrollbar-width: none;
+        }
       `}</style>
     </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════
-   OPTION CARD
-   ═══════════════════════════════════════════════ */
-function OptionCard({ icon, label, selected, onClick, color, disabled }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`flex items-center gap-3 p-3.5 rounded-xl border text-[13.5px] font-medium transition-all duration-200 cursor-pointer text-left w-full disabled:opacity-50 disabled:cursor-not-allowed ${
-        selected
-          ? "text-[#eaf0ff]"
-          : "border-white/[0.06] bg-white/[0.02] text-[#8ba3c7] hover:border-white/[0.12] hover:bg-white/[0.04]"
-      }`}
-      style={
-        selected
-          ? {
-              borderColor: `${color}44`,
-              background: `${color}18`,
-              boxShadow: `0 0 20px ${color}15`,
-            }
-          : {}
-      }
-    >
-      <span
-        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
-        style={
-          selected
-            ? { background: `${color}25`, color }
-            : { background: "rgba(255,255,255,0.04)", color: "#8ba3c7" }
-        }
-      >
-        {icon}
-      </span>
-      {label}
-      {selected && (
-        <span
-          className="ml-auto w-2 h-2 rounded-full"
-          style={{ background: color, boxShadow: `0 0 8px ${color}` }}
-        />
-      )}
-    </button>
   );
 }

@@ -194,6 +194,19 @@ const taxis = {
 };
 
 // =============================================================================
+// Modelos de Táxi
+// =============================================================================
+
+const modelosTaxi = {
+  async listarMarcas() {
+    return request("/api/modelos-taxi/marcas");
+  },
+
+  async listarModelosPorMarca(marca) {
+    return request(`/api/modelos-taxi/modelos/${marca}`);
+  },
+};
+// =============================================================================
 // Preços
 // =============================================================================
 
@@ -422,6 +435,7 @@ const api = {
   clientes,
   motoristas,
   taxis,
+  modelosTaxi,
   precos,
   pedidos,
   externos,
