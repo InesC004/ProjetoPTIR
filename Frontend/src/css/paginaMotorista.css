@@ -589,3 +589,170 @@ header {
     width: auto;
   }
 }
+
+
+
+/* =========================
+   MOBILE
+========================= */
+
+  /* Sidebar desaparece */
+@media (max-width: 768px) {
+  aside {
+    display: flex !important;
+    width: 76px !important;
+    min-width: 76px !important;
+    padding: 18px 8px !important;
+  }
+
+  aside p {
+    display: none !important;
+  }
+
+  aside nav button {
+    justify-content: center !important;
+    padding: 12px !important;
+    font-size: 0 !important;
+  }
+
+  aside nav button svg {
+    width: 20px !important;
+    height: 20px !important;
+    opacity: 1 !important;
+  }
+
+  aside > div:last-child {
+    display: none !important;
+  }
+
+  .motorista-main {
+    padding: 28px 18px !important;
+  }
+
+  /* Conteúdo ocupa o ecrã todo */
+  .motorista-main {
+    padding: 20px 16px !important;
+    width: 100% !important;
+    min-height: auto;
+  }
+
+  /* Título */
+  .motorista-main h1 {
+    font-size: 1.8rem !important;
+    line-height: 1.2;
+  }
+
+  /* Cards */
+  .card-feat,
+  .rc-card,
+  .rc-form-card,
+  .rc-list-card {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* Inputs */
+  .rc-input,
+  .rc-select,
+  input,
+  select,
+  textarea {
+    width: 100% !important;
+    font-size: 16px !important; /* evita zoom do iPhone */
+  }
+
+  /* Botões */
+  button {
+    min-height: 48px;
+  }
+
+  /* Cabeçalho */
+  header {
+    padding: 0 12px !important;
+  }
+
+  /* Logo */
+  header img {
+    height: 32px !important;
+  }
+
+  /* Esconde subtítulo da marca */
+  header span:last-child {
+    display: none;
+  }
+}
+
+
+.turno-ativo-box {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid #d8e3f0;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: #1f2a44;
+}
+
+@media (max-width: 768px) {
+  .turno-ativo-box {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+}
+
+
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+
+  /* esconder sidebar */
+  aside {
+    display: none !important;
+  }
+
+  .mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: #071a35;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    z-index: 9999;
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.15);
+  }
+
+  .mobile-nav-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: #8ba3c0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    font-size: 0.6rem;
+  }
+
+  .mobile-nav-btn.active {
+    color: #30f0a0;
+  }
+
+  .mobile-nav-btn span {
+    font-size: 0.55rem;
+    line-height: 1;
+  }
+
+  .motorista-main {
+    padding-bottom: 90px !important;
+  }
+}

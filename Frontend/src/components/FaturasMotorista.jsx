@@ -11,7 +11,7 @@ import {
   User,
 } from "lucide-react";
 import api from "../Api";
-import "../css/FaturasMotorista.css";
+import "../css/faturasMotorista.css";
 
 // ---------------------------------------------------------------------------
 // Helpers

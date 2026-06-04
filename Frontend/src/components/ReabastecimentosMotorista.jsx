@@ -11,7 +11,7 @@ import {
   RefreshCw,
   Euro,
 } from "lucide-react";
-import "../css/ReabastecimentosMotorista.css";
+import "../css/reabastecimentosMotorista.css";
 
 const API_URL = "http://localhost:8080/api";
 const TURNOS_URL = `${API_URL}/turnos`;
@@ -80,7 +80,7 @@ function getTipoMotor(turno) {
   return taxi.tipo_motor || "";
 }
 
-export default function ReabastecimentosMotorista() {
+export default function ReabastecimentosMotorista( { turnoAtivo } ) {
   const [turnos, setTurnos] = useState([]);
   const [reabastecimentos, setReabastecimentos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -287,23 +287,11 @@ export default function ReabastecimentosMotorista() {
             <form onSubmit={criarReabastecimento}>
               <div className="rc-field">
                 <label className="rc-label">Turno</label>
-                <select
-                  value={turnoSelecionado}
-                  onChange={(e) => {
-                    setTurnoSelecionado(e.target.value);
-                    setErro("");
-                    setSucesso("");
-                  }}
-                  className="rc-input rc-select"
-                >
-                  <option value="">Selecionar turno…</option>
-                  {turnos.map((turno) => (
-                    <option key={turno._id} value={turno._id}>
-                      {formatDateTime(turno.data_inicio || turno.inicio)} ·{" "}
-                      {getTaxiLabel(turno)}
-                    </option>
-                  ))}
-                </select>
+                <div className="rc-input">
+                  {turnoAtivo
+                    ? `${formatDateTime(turnoAtivo.data_inicio || turnoAtivo.inicio)} · ${getTaxiLabel(turnoAtivo)}`
+                    : "Sem turno ativo"}
+                </div>                
               </div>
 
               <div className="rc-field">

@@ -11,7 +11,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import api from "../Api";
-import "../css/Profile.css";
+import "../css/profile.css";
 import Header from "../components/Header2";
 
 function formatDate(isoString) {

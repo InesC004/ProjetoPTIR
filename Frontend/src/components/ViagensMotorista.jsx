@@ -12,7 +12,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import api from "../Api";
-import "../css/ViagensMotorista.css";
+import "../css/viagensMotorista.css";
 
 // ---------------------------------------------------------------------------
 // Helpers

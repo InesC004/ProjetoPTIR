@@ -9,7 +9,7 @@ import {
   MapPin,
   ArrowLeft,
 } from "lucide-react";
-import "../css/PerfilMotorista.css";
+import "../css/perfilMotorista.css";
 
 export default function PerfilMotorista() {
   const navigate = useNavigate();

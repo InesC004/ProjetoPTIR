@@ -11,7 +11,7 @@ import {
   Plus,
   Ban,
 } from "lucide-react";
-import "../css/TurnosMotorista.css";
+import "../css/turnosMotorista.css";
 
 const API_URL = "http://localhost:8080/api";
 const TURNOS_URL = `${API_URL}/turnos`;

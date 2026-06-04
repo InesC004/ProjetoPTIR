@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import Header from "../components/Header2";
 import api from "../Api";
-import "../css/DashboardCliente.css";
+import "../css/dashboardCliente.css";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // UTILITÁRIOS

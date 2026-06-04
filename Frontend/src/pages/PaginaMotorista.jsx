@@ -21,7 +21,7 @@ import logo from "../Pictures/logo1.jpeg";
 import TurnosMotorista from "../components/TurnosMotorista";
 import ReabastecimentosMotorista from "../components/ReabastecimentosMotorista";
 import api from "../Api";
-import "../css/PaginaMotorista.css";
+import "../css/paginaMotorista.css";
 import PedidosMotorista from "../components/PedidosMotorista";
 import ViagensMotorista from "../components/ViagensMotorista";
 import FaturasMotorista from "../components/FaturasMotorista";
@@ -673,10 +673,33 @@ export default function PaginaMotorista() {
                 desc="Aqui poderá emitir e consultar as faturas das suas viagens."
               />
             )}
-            {active === "reabastecimento" && <ReabastecimentosMotorista />}
+            {active === "reabastecimento" && (<ReabastecimentosMotorista turnoAtivo={turnoAtivo} />)}
           </div>
         </main>
       </div>
+
+      {/* MENU MOBILE */}
+      <div className="mobile-nav">
+        {NAV.map((item) => {
+          const Icon = item.Icon;
+
+          return (
+            <button
+              key={item.id}
+              className={`mobile-nav-btn ${
+                active === item.id ? "active" : ""
+              }`}
+              onClick={() => setActive(item.id)}
+            >
+              <Icon size={20} />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+
+
       <PedidoNovoFlutuante />
       <ViagemAtivaFlutuante />
     </div>

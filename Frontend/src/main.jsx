@@ -2,8 +2,8 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Auth0Provider } from "@auth0/auth0-react";
 import App from "./App.jsx";
-import "./css/Index.css";
-import "./css/Global.css";
+import "./css/index.css";
+import "./css/global.css";
 
 if (import.meta.env.DEV) {
   const axe = await import("@axe-core/react");
