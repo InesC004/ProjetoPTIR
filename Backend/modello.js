@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
-const ModeloTaxi = require("./models/modeloTaxi");
+require("dotenv").config();
 
-mongoose.connect("mongodb://localhost:27017/NOME_DA_TUA_BD");
+const ModeloTaxi = require("./models/modeloTaxi");
 
 const dados = [
   { marca: "Mercedes", modelo: "Classe A", ano_inicio: 2018, ano_fim: 2026 },
@@ -11,10 +11,18 @@ const dados = [
 ];
 
 async function seed() {
-  await ModeloTaxi.deleteMany();
-  await ModeloTaxi.insertMany(dados);
-  console.log("Modelos inseridos com sucesso");
-  mongoose.connection.close();
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+
+    await ModeloTaxi.deleteMany({});
+    const resultado = await ModeloTaxi.insertMany(dados);
+
+    console.log(`${resultado.length} modelos inseridos com sucesso`);
+  } catch (err) {
+    console.error("Erro:", err);
+  } finally {
+    await mongoose.connection.close();
+  }
 }
 
 seed();
