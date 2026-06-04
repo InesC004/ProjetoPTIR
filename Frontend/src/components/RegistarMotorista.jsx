@@ -10,7 +10,10 @@ import {
   Eye,
   EyeOff,
   MapPin,
+  ArrowLeft,
+  ArrowRight,
 } from "lucide-react";
+import "../css/registarMotorista.css";
 
 /* ═══════════════════════════════════════════════
    VALIDAÇÕES (restrições 4, 12, 13, 14, 15)
@@ -265,400 +268,322 @@ export default function RegistarMotorista({ aberto, onFechar }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onFechar}
-      />
+    <div className="rm-overlay">
+      <div className="rm-backdrop" onClick={onFechar} />
 
-      <div className="relative w-full max-w-[540px] mx-4 max-h-[90vh] overflow-y-auto rounded-2xl border border-[#00c873]/20 bg-[#0a1628]/95 backdrop-blur-2xl shadow-[0_32px_80px_rgba(0,0,0,0.5)] animate-[modalIn_0.3s_ease] scrollbar-none">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00c873]/30 to-transparent" />
-
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-4 sticky top-0 bg-[#0a1628]/95 backdrop-blur-xl z-10">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-[13px] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)]"
-              style={{
-                background: "linear-gradient(135deg, #00c873, #00a85e)",
-              }}
-            >
+      <div className="rm-modal rm-scrollbar-none">
+        {/* HEADER */}
+        <div className="rm-header">
+          <div className="rm-title-wrap">
+            <div className="rm-icon-box">
               <UserPlus size={18} strokeWidth={1.8} />
             </div>
             <div>
-              <h3 className="font-['Syne',sans-serif] text-[18px] font-bold text-[#eaf0ff]">
-                Registar Motorista
-              </h3>
-              <p className="text-[12px] text-[#4e6a8a]">Passo {step} de 2</p>
+              <h3 className="rm-title">Registar Motorista</h3>
+              <p className="rm-subtitle">Passo {step} de 2</p>
             </div>
           </div>
-          <button
-            onClick={onFechar}
-            className="w-9 h-9 rounded-xl flex items-center justify-center border border-white/[0.06] bg-white/[0.03] text-[#8ba3c7] hover:bg-red-500/10 hover:border-red-500/25 hover:text-red-400 transition-all duration-200 cursor-pointer"
-          >
+
+          <button onClick={onFechar} className="rm-close-button">
             <X size={16} strokeWidth={2} />
           </button>
         </div>
 
-        {/* Progress bar */}
-        <div className="px-6 mb-4">
-          <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
+        {/* PROGRESSO */}
+        <div className="rm-progress">
+          <div className="rm-progress-track">
             <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: step === 1 ? "50%" : "100%",
-                background: "linear-gradient(90deg, #00c873, #00e887)",
-              }}
+              className="rm-progress-bar"
+              style={{ width: step === 1 ? "50%" : "100%" }}
             />
           </div>
         </div>
 
-        {/* Mensagens */}
-        <div className="px-6">
+        {/* ALERTAS */}
+        <div className="rm-alerts">
           {success && (
-            <div className="mb-4 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm flex items-center gap-2">
-              <CheckCircle2 size={16} /> Motorista registado com sucesso!
+            <div className="rm-alert rm-alert-success">
+              <CheckCircle2 size={16} />
+              Motorista registado com sucesso!
             </div>
           )}
+
           {apiError && (
-            <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-2">
-              <AlertCircle size={16} /> {apiError}
+            <div className="rm-alert rm-alert-error">
+              <AlertCircle size={16} />
+              {apiError}
             </div>
           )}
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="px-6 pb-2 space-y-4">
-          {step === 1 ? (
-            <>
-              {/* Nome */}
-              <Field
-                label="Nome completo"
-                name="name"
-                placeholder="Ex: Carlos Silva"
-                value={form.name}
-                onChange={handleChange}
-                error={errors.name}
-                disabled={disabled}
-              />
-
-              {/* Email */}
-              <Field
-                label="Email"
-                name="email"
-                type="email"
-                placeholder="Ex: carlos@takecab.pt"
-                value={form.email}
-                onChange={handleChange}
-                error={errors.email}
-                disabled={disabled}
-              />
-
-              {/* NIF + Género */}
-              <div className="grid grid-cols-2 gap-3">
+        {/* FORM */}
+        <form onSubmit={handleSubmit}>
+          <div className="rm-form">
+            {step === 1 ? (
+              <>
+                {/* Nome */}
                 <Field
-                  label="NIF"
-                  name="nif"
-                  placeholder="9 dígitos"
-                  value={form.nif}
+                  label="Nome completo"
+                  name="name"
+                  placeholder="Ex: Carlos Silva"
+                  value={form.name}
                   onChange={handleChange}
-                  error={errors.nif}
+                  error={errors.name}
                   disabled={disabled}
-                  maxLength={9}
                 />
-                <div>
-                  <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
-                    Género
-                  </label>
-                  <select
-                    name="genero"
-                    value={form.genero}
+
+                {/* Email */}
+                <Field
+                  label="Email"
+                  name="email"
+                  type="email"
+                  placeholder="Ex: carlos@takecab.pt"
+                  value={form.email}
+                  onChange={handleChange}
+                  error={errors.email}
+                  disabled={disabled}
+                />
+
+                {/* NIF + Género */}
+                <div className="rm-grid-two">
+                  <Field
+                    label="NIF"
+                    name="nif"
+                    placeholder="9 dígitos"
+                    value={form.nif}
                     onChange={handleChange}
+                    error={errors.nif}
                     disabled={disabled}
-                    className={`w-full px-4 py-3 rounded-xl text-[14px] bg-white/[0.04] border outline-none transition-all duration-200 cursor-pointer focus:bg-[#1a6eff]/[0.06] focus:border-[#1a6eff]/40 focus:shadow-[0_0_0_3px_rgba(26,110,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed ${
-                      form.genero ? "text-[#eaf0ff]" : "text-[#4e6a8a]/60"
-                    } ${errors.genero ? "border-red-500/40" : "border-white/[0.08]"}`}
-                  >
-                    <option value="" className="bg-[#0a1628] text-[#4e6a8a]">
-                      Selecionar
-                    </option>
-                    <option
-                      value="Masculino"
-                      className="bg-[#0a1628] text-[#eaf0ff]"
+                    maxLength={9}
+                  />
+
+                  <div>
+                    <label className="rm-label">Género</label>
+                    <select
+                      name="genero"
+                      value={form.genero}
+                      onChange={handleChange}
+                      disabled={disabled}
+                      className={`rm-select ${
+                        form.genero ? "" : "is-placeholder"
+                      } ${errors.genero ? "has-error" : ""}`}
                     >
-                      Masculino
-                    </option>
-                    <option
-                      value="Feminino"
-                      className="bg-[#0a1628] text-[#eaf0ff]"
-                    >
-                      Feminino
-                    </option>
-                  </select>
-                  {errors.genero && (
-                    <p className="text-[11px] text-red-400 mt-1 pl-1 flex items-center gap-1">
-                      <AlertCircle size={12} /> {errors.genero}
+                      <option value="">Selecionar</option>
+                      <option value="Masculino">Masculino</option>
+                      <option value="Feminino">Feminino</option>
+                    </select>
+                    {errors.genero && (
+                      <p className="rm-error">
+                        <AlertCircle size={12} /> {errors.genero}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Nº Carta de Condução */}
+                <Field
+                  label="Nº Carta de Condução"
+                  name="numero_carta"
+                  placeholder="Ex: ABC123456"
+                  value={form.numero_carta}
+                  onChange={handleChange}
+                  error={errors.numero_carta}
+                  disabled={disabled}
+                />
+
+                {/* Data de nascimento */}
+                <div>
+                  <label className="rm-label">Data de nascimento</label>
+                  <div className="rm-grid-three">
+                    <input
+                      type="number"
+                      name="birth_day"
+                      placeholder="Dia"
+                      value={form.birth_day}
+                      onChange={handleChange}
+                      min={1}
+                      max={31}
+                      disabled={disabled}
+                      className={`rm-input ${errors.birth ? "has-error" : ""}`}
+                    />
+                    <input
+                      type="number"
+                      name="birth_month"
+                      placeholder="Mês"
+                      value={form.birth_month}
+                      onChange={handleChange}
+                      min={1}
+                      max={12}
+                      disabled={disabled}
+                      className={`rm-input ${errors.birth ? "has-error" : ""}`}
+                    />
+                    <input
+                      type="number"
+                      name="birth_year"
+                      placeholder="Ano"
+                      value={form.birth_year}
+                      onChange={handleChange}
+                      min={1930}
+                      max={new Date().getFullYear()}
+                      disabled={disabled}
+                      className={`rm-input ${errors.birth ? "has-error" : ""}`}
+                    />
+                  </div>
+
+                  {errors.birth && (
+                    <p className="rm-error">
+                      <AlertCircle size={12} /> {errors.birth}
                     </p>
                   )}
                 </div>
-              </div>
+              </>
+            ) : (
+              <>
+                {/* Morada */}
+                <Field
+                  label="Morada"
+                  name="morada"
+                  placeholder="Ex: Rua do Motor, 45"
+                  value={form.morada}
+                  onChange={handleChange}
+                  error={errors.morada}
+                  disabled={disabled}
+                />
 
-              {/* Nº Carta de Condução */}
-              <Field
-                label="Nº Carta de Condução"
-                name="numero_carta"
-                placeholder="Ex: ABC123456"
-                value={form.numero_carta}
-                onChange={handleChange}
-                error={errors.numero_carta}
-                disabled={disabled}
-              />
+                {/* Código postal + Localidade (auto-preenchida) */}
+                <div className="rm-grid-two">
+                  <div>
+                    <label className="rm-label">Código postal</label>
+                    <input
+                      type="text"
+                      name="codigo_postal"
+                      placeholder="0000-000"
+                      value={form.codigo_postal}
+                      onChange={handleCPChange}
+                      disabled={disabled}
+                      maxLength={8}
+                      className={`rm-input ${
+                        errors.codigo_postal ? "has-error" : ""
+                      }`}
+                    />
+                    {errors.codigo_postal && (
+                      <p className="rm-error">
+                        <AlertCircle size={12} /> {errors.codigo_postal}
+                      </p>
+                    )}
+                  </div>
 
-              {/* Data de nascimento */}
-              <div>
-                <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
-                  Data de nascimento
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  <input
-                    type="number"
-                    name="birth_day"
-                    placeholder="Dia"
-                    value={form.birth_day}
-                    onChange={handleChange}
-                    min={1}
-                    max={31}
-                    disabled={disabled}
-                    className={`w-full px-4 py-3 rounded-xl text-[14px] text-[#eaf0ff] placeholder-[#4e6a8a]/60 bg-white/[0.04] border outline-none transition-all duration-200 focus:bg-[#1a6eff]/[0.06] focus:border-[#1a6eff]/40 disabled:opacity-50 disabled:cursor-not-allowed ${errors.birth ? "border-red-500/40" : "border-white/[0.08]"}`}
-                  />
-                  <input
-                    type="number"
-                    name="birth_month"
-                    placeholder="Mês"
-                    value={form.birth_month}
-                    onChange={handleChange}
-                    min={1}
-                    max={12}
-                    disabled={disabled}
-                    className={`w-full px-4 py-3 rounded-xl text-[14px] text-[#eaf0ff] placeholder-[#4e6a8a]/60 bg-white/[0.04] border outline-none transition-all duration-200 focus:bg-[#1a6eff]/[0.06] focus:border-[#1a6eff]/40 disabled:opacity-50 disabled:cursor-not-allowed ${errors.birth ? "border-red-500/40" : "border-white/[0.08]"}`}
-                  />
-                  <input
-                    type="number"
-                    name="birth_year"
-                    placeholder="Ano"
-                    value={form.birth_year}
-                    onChange={handleChange}
-                    min={1930}
-                    max={new Date().getFullYear()}
-                    disabled={disabled}
-                    className={`w-full px-4 py-3 rounded-xl text-[14px] text-[#eaf0ff] placeholder-[#4e6a8a]/60 bg-white/[0.04] border outline-none transition-all duration-200 focus:bg-[#1a6eff]/[0.06] focus:border-[#1a6eff]/40 disabled:opacity-50 disabled:cursor-not-allowed ${errors.birth ? "border-red-500/40" : "border-white/[0.08]"}`}
-                  />
+                  <div>
+                    <label className="rm-label">Localidade</label>
+                    <div
+                      className={`rm-readonly-field ${
+                        form.localidade ? "" : "is-empty"
+                      }`}
+                    >
+                      {loadingCP ? (
+                        <Loader2 size={15} className="rm-loc-icon rm-spin" />
+                      ) : (
+                        <MapPin
+                          size={15}
+                          className={`rm-loc-icon ${
+                            form.localidade ? "is-found" : ""
+                          }`}
+                        />
+                      )}
+                      {form.localidade ||
+                        (loadingCP
+                          ? "A procurar..."
+                          : "Preencha o código postal")}
+                    </div>
+                    {form.localidade && (
+                      <p className="rm-loc-found">
+                        <CheckCircle2 size={11} /> Localidade encontrada
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                {errors.birth && (
-                  <p className="text-[11px] text-red-400 mt-1 pl-1 flex items-center gap-1">
-                    <AlertCircle size={12} /> {errors.birth}
-                  </p>
-                )}
-              </div>
+                {/* Password */}
+                <div>
+                  <label className="rm-label">Password</label>
+                  <div className="rm-input-wrap">
+                    <input
+                      type={showPw ? "text" : "password"}
+                      name="password"
+                      placeholder="Letras e dígitos, mín. 6 caracteres"
+                      value={form.password}
+                      onChange={handleChange}
+                      disabled={disabled}
+                      className={`rm-input rm-input-password ${
+                        errors.password ? "has-error" : ""
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPw(!showPw)}
+                      className="rm-eye-button"
+                    >
+                      {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  <p className="rm-help">Deve conter letras e dígitos</p>
+                  {errors.password && (
+                    <p className="rm-error">
+                      <AlertCircle size={12} /> {errors.password}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
 
-              {/* Botão continuar */}
+          {/* FOOTER / AÇÕES */}
+          <div className="rm-footer">
+            {step === 1 ? (
               <button
                 type="button"
                 onClick={handleNext}
-                className="w-full py-3.5 rounded-xl font-semibold text-white text-[14px] flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-[0_8px_32px_rgba(0,200,115,0.3)] hover:-translate-y-0.5 cursor-pointer mt-2"
-                style={{
-                  background: "linear-gradient(135deg, #00c873, #00a85e)",
-                }}
+                disabled={disabled}
+                className="rm-next-button"
               >
                 Continuar
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                <ArrowRight size={16} />
               </button>
-            </>
-          ) : (
-            <>
-              {/* Morada */}
-              <Field
-                label="Morada"
-                name="morada"
-                placeholder="Ex: Rua do Motor, 45"
-                value={form.morada}
-                onChange={handleChange}
-                error={errors.morada}
-                disabled={disabled}
-              />
-
-              {/* Código postal + Localidade (auto-preenchida) */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
-                    Código postal
-                  </label>
-                  <input
-                    type="text"
-                    name="codigo_postal"
-                    placeholder="0000-000"
-                    value={form.codigo_postal}
-                    onChange={handleCPChange}
-                    disabled={disabled}
-                    maxLength={8}
-                    className={`w-full px-4 py-3 rounded-xl text-[14px] text-[#eaf0ff] placeholder-[#4e6a8a]/60 bg-white/[0.04] border outline-none transition-all duration-200 tracking-wider font-semibold focus:bg-[#1a6eff]/[0.06] focus:border-[#1a6eff]/40 focus:shadow-[0_0_0_3px_rgba(26,110,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed ${
-                      errors.codigo_postal
-                        ? "border-red-500/40 bg-red-500/[0.04]"
-                        : "border-white/[0.08]"
-                    }`}
-                  />
-                  {errors.codigo_postal && (
-                    <p className="text-[11px] text-red-400 mt-1.5 pl-1 flex items-center gap-1">
-                      <AlertCircle size={12} /> {errors.codigo_postal}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
-                    Localidade
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={form.localidade}
-                      readOnly
-                      placeholder={
-                        loadingCP ? "A procurar..." : "Preencha o código postal"
-                      }
-                      className="w-full px-4 py-3 pl-10 rounded-xl text-[14px] text-[#eaf0ff] placeholder-[#4e6a8a]/40 bg-white/[0.02] border border-white/[0.06] outline-none cursor-default"
-                    />
-                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#4e6a8a]">
-                      {loadingCP ? (
-                        <Loader2
-                          size={14}
-                          className="animate-spin text-[#00c873]"
-                        />
-                      ) : (
-                        <MapPin
-                          size={14}
-                          className={form.localidade ? "text-[#00e887]" : ""}
-                        />
-                      )}
-                    </div>
-                  </div>
-                  {form.localidade && (
-                    <p className="text-[10px] text-[#00e887] mt-1 pl-1 flex items-center gap-1">
-                      <CheckCircle2 size={10} /> Localidade encontrada
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPw ? "text" : "password"}
-                    name="password"
-                    placeholder="Letras e dígitos, mín. 6 caracteres"
-                    value={form.password}
-                    onChange={handleChange}
-                    disabled={disabled}
-                    className={`w-full px-4 py-3 pr-12 rounded-xl text-[14px] text-[#eaf0ff] placeholder-[#4e6a8a]/60 bg-white/[0.04] border outline-none transition-all duration-200 focus:bg-[#1a6eff]/[0.06] focus:border-[#1a6eff]/40 focus:shadow-[0_0_0_3px_rgba(26,110,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed ${
-                      errors.password
-                        ? "border-red-500/40 bg-red-500/[0.04]"
-                        : "border-white/[0.08]"
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPw(!showPw)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4e6a8a] hover:text-[#8ba3c7] transition-colors cursor-pointer"
-                  >
-                    {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-                <p className="text-[10px] text-[#4e6a8a] mt-1 pl-1">
-                  Deve conter letras e dígitos
-                </p>
-                {errors.password && (
-                  <p className="text-[11px] text-red-400 mt-1 pl-1 flex items-center gap-1">
-                    <AlertCircle size={12} /> {errors.password}
-                  </p>
-                )}
-              </div>
-
-              {/* Botões */}
-              <div className="flex gap-3 mt-2">
+            ) : (
+              <>
                 <button
                   type="button"
                   onClick={() => setStep(1)}
                   disabled={disabled}
-                  className="flex-1 py-3.5 rounded-xl font-semibold text-[13px] text-[#8ba3c7] bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rm-back-button"
                 >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
+                  <ArrowLeft size={16} />
                   Voltar
                 </button>
+
                 <button
                   type="submit"
                   disabled={disabled}
-                  className="flex-[2] py-3.5 rounded-xl font-semibold text-[14px] text-white flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-[0_8px_32px_rgba(0,200,115,0.3)] hover:-translate-y-0.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
-                  style={{
-                    background: "linear-gradient(135deg, #00c873, #00a85e)",
-                  }}
+                  className="rm-submit-button"
                 >
                   {loading ? (
                     <>
-                      <Loader2 size={15} className="animate-spin" /> A
-                      registar...
+                      <Loader2 size={15} className="rm-spin" />A registar...
                     </>
                   ) : success ? (
                     <>
-                      <CheckCircle2 size={15} /> Registado!
+                      <CheckCircle2 size={15} />
+                      Registado!
                     </>
                   ) : (
                     "Registar Motorista"
                   )}
                 </button>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </form>
-
-        <div className="h-6" />
       </div>
-
-      <style>{`
-        @keyframes modalIn {
-          from { opacity: 0; transform: scale(0.95) translateY(10px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .scrollbar-none::-webkit-scrollbar { display: none; }
-        .scrollbar-none { scrollbar-width: none; }
-      `}</style>
     </div>
   );
 }
@@ -680,9 +605,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-[12px] font-semibold text-[#8ba3c7] mb-2 tracking-wide uppercase">
-        {label}
-      </label>
+      <label className="rm-label">{label}</label>
       <input
         type={type}
         name={name}
@@ -691,13 +614,11 @@ function Field({
         onChange={onChange}
         disabled={disabled}
         maxLength={maxLength}
-        className={`w-full px-4 py-3 rounded-xl text-[14px] text-[#eaf0ff] placeholder-[#4e6a8a]/60 bg-white/[0.04] border outline-none transition-all duration-200 focus:bg-[#1a6eff]/[0.06] focus:border-[#1a6eff]/40 focus:shadow-[0_0_0_3px_rgba(26,110,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed ${
-          error ? "border-red-500/40 bg-red-500/[0.04]" : "border-white/[0.08]"
-        }`}
+        className={`rm-input ${error ? "has-error" : ""}`}
       />
-      {hint && <p className="text-[10px] text-[#4e6a8a] mt-1 pl-1">{hint}</p>}
+      {hint && <p className="rm-help">{hint}</p>}
       {error && (
-        <p className="text-[11px] text-red-400 mt-1.5 pl-1 flex items-center gap-1">
+        <p className="rm-error">
           <AlertCircle size={12} /> {error}
         </p>
       )}

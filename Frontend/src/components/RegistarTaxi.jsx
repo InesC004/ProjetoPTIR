@@ -14,7 +14,7 @@ import {
   Loader2,
   CheckCircle2,
 } from "lucide-react";
-import "../css/RegistarTaxi.css";
+import "../css/registarTaxi.css";
 
 /* ═══════════════════════════════════════════════
    VALIDAÇÃO DE MATRÍCULA PORTUGUESA
