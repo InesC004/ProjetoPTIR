@@ -207,6 +207,7 @@ const precos = {
   async criar(payload) {
     return request("/api/precos", {
       method: "POST",
+      auth: true,
       body: payload,
     });
   },
@@ -215,6 +216,7 @@ const precos = {
   async atualizar(id, payload) {
     return request(`/api/precos/${id}`, {
       method: "PUT",
+      auth: true,
       body: payload,
     });
   },

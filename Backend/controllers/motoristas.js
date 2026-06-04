@@ -132,6 +132,80 @@ exports.getTodos = async (req, res) => {
   }
 }
 
+// editar motorista
+exports.update = async (req, res) => {
+  try {
+    const { id } = req.params
+    const { nome, nif, email, password, numero_carta, genero, birth_day, birth_month, birth_year, morada, codigo_postal } = req.body
+
+    const motorista = await Motorista.findById(id)
+    if (!motorista) {
+      return res.status(404).json({ success: false, message: 'Motorista não encontrado.' })
+    }
+
+    if (nif && !validarNIF(nif)) {
+      return res.status(400).json({ success: false, message: 'NIF inválido. Deve ter 9 dígitos.' })
+    }
+
+    if (email && !validarEmail(email)) {
+      return res.status(400).json({ success: false, message: 'Email inválido.' })
+    }
+
+    if (codigo_postal && !validarCodigoPostal(codigo_postal)) {
+      return res.status(400).json({ success: false, message: 'Código postal inválido. Formato: 1000-200.' })
+    }
+
+    if (password && password.length < 8) {
+      return res.status(400).json({ success: false, message: 'A password deve ter pelo menos 8 caracteres.' })
+    }
+
+    if (birth_day || birth_month || birth_year) {
+      if (!(birth_day && birth_month && birth_year)) {
+        return res.status(400).json({ success: false, message: 'Data de nascimento incompleta.' })
+      }
+      if (!validarIdade(birth_day, birth_month, birth_year)) {
+        return res.status(400).json({ success: false, message: 'O motorista deve ter pelo menos 18 anos.' })
+      }
+      motorista.data_nascimento = new Date(birth_year, birth_month - 1, birth_day)
+    }
+
+    const conflict = await Motorista.findOne({
+      $or: [
+        nif ? { nif } : null,
+        email ? { email } : null,
+        numero_carta ? { numero_carta } : null
+      ].filter(Boolean),
+      _id: { $ne: id }
+    })
+
+    if (conflict) {
+      return res.status(409).json({ success: false, message: 'NIF, email ou carta já registado.' })
+    }
+
+    if (nome) motorista.nome = nome
+    if (nif) motorista.nif = nif
+    if (email) motorista.email = email
+    if (numero_carta) motorista.numero_carta = numero_carta
+    if (genero) motorista.genero = genero
+    if (morada) motorista.morada = morada
+    if (codigo_postal) motorista.codigo_postal = codigo_postal
+
+    if (password) {
+      motorista.password = await bcrypt.hash(password, SALT_ROUNDS)
+    }
+
+    await motorista.save()
+
+    const responseMotorista = motorista.toObject()
+    delete responseMotorista.password
+
+    res.status(200).json({ success: true, message: 'Motorista atualizado com sucesso.', motorista: responseMotorista })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ success: false, message: 'Erro no servidor.' })
+  }
+}
+
 // apagar motorista
 exports.delete = async (req, res) => {
   try {

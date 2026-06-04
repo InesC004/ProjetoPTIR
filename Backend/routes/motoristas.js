@@ -12,6 +12,9 @@ router.post('/login', motoristasController.login)
 // listar todos os motoristas
 router.get('/todos', checkRole('gestor'), motoristasController.getTodos)
 
+// editar motorista — só gestores
+router.put('/:id', checkRole('gestor'), motoristasController.update)
+
 // apagar motorista — só gestores
 router.delete('/:id', checkRole('gestor'), motoristasController.delete)
 
