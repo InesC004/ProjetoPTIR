@@ -25,7 +25,4 @@ const modeloTaxiSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-const ModeloTaxi =
-  mongoose.models.modeloTaxi || mongoose.model("modeloTaxi", modeloTaxiSchema);
-
-module.exports = ModeloTaxi;
+module.exports = mongoose.model("modeloTaxi",  modeloTaxiSchema);
