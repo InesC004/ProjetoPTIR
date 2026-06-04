@@ -638,8 +638,13 @@ header {
 
   /* Título */
   .motorista-main h1 {
-    font-size: 1.8rem !important;
+    font-size: 1.6rem !important;
     line-height: 1.2;
+  }
+
+  .motorista-main p {
+    font-size: 0.8rem !important;
+
   }
 
   /* Cards */

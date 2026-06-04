@@ -445,3 +445,15 @@
 .tc-spin-blue {
   color: #2563eb;
 }
+
+
+@media (max-width: 768px) {
+
+  .tc-item-taxi {
+    font-family: "Syne", sans-serif;
+    font-weight: 700;
+    font-size: 0.59rem;
+  }
+
+
+}
