@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
 
-const ModeloTaxi = require("./models/modeloTaxi");
+const ModeloTaxi = require("../models/modeloTaxi");
 
 const dados = [
   {
