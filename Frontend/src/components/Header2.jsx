@@ -45,7 +45,6 @@ export default function Header({ isDashboard = false }) {
     { icon: "👤", label: "O meu perfil", path: "/profile" },
     { icon: "🚗", label: "As minhas viagens", path: "/trips" },
     { icon: "💳", label: "Carteira", path: "/wallet" },
-    { icon: "⚙️", label: "Definições", path: "/settings" },
   ];
 
   const primeiroNome = cliente.nome ? cliente.nome.split(" ")[0] : "Eu";

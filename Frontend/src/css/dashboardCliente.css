@@ -2446,3 +2446,247 @@ html body .dash-pagina .card-passo .passo-desc {
   color: #3d506a !important;
   -webkit-text-fill-color: #3d506a !important;
 }
+
+
+
+
+
+
+/* =========================
+   RESPONSIVO TELEMÓVEL
+   ========================= */
+
+@media (max-width: 900px) {
+
+  .hero {
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .painel-esquerdo,
+  .painel-mapa {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .titulo {
+    font-size: 2rem;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .descricao {
+    text-align: center;
+    font-size: 0.95rem;
+  }
+
+  .card-reserva {
+    width: 100%;
+    padding: 20px;
+  }
+
+  .caixa-mapa {
+    height: 400px;
+    min-height: 400px;
+  }
+
+  .barra-topo-mapa {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .btn-recomecar {
+    width: 100%;
+  }
+
+  .faixa-rota {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .grelha-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .card-feat,
+  .card-passo {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+
+  .hero {
+    padding: 10px;
+  }
+
+  .titulo {
+    font-size: 1.7rem;
+  }
+
+  .card-reserva {
+    padding: 15px;
+  }
+
+  .linha-input {
+    width: 100%;
+  }
+
+  .input-morada,
+  .btn-pedir,
+  .btn-localizacao {
+    width: 100%;
+  }
+
+  .caixa-mapa {
+    height: 320px;
+    min-height: 320px;
+    border-radius: 20px;
+  }
+
+  .barra-inferior-mapa {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+
+  .barra-esq {
+    flex-direction: column;
+
+  }
+
+  .barra-icone {
+    width: 26px!important;
+    height: 26px!important;
+  } 
+
+  .pedido-estado-card {
+    width: 100%;
+  }
+
+  .secao-rotulo {
+    margin-top: 60px;
+  }
+
+  .secao-titulo{
+    font-size:1.35rem!important;
+  }
+
+  .card-feat{
+    padding: 16px 20px!important;
+  }
+
+  .feat-num{
+    font-size: 2rem!important;
+  }
+  .feat-icone {
+      width: 38px!important;
+      height: 38px!important;
+  }
+
+  .feat-titulo{
+    font-size: 1rem!important;
+  }
+
+  .feat-desc{
+    font-size: 0.7rem!important;
+  }
+
+  .secao-centro2{
+    margin-top: -70px!important;
+  }
+  .popup-motorista {
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .popup-motorista-acoes {
+    flex-direction: column;
+  }
+
+  .btn-aceitar,
+  .btn-rejeitar {
+    width: 100%;
+  }
+
+  .pagamento-form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+}
+
+
+
+
+/* =========================
+   MENU EM BAIXO NO TELEMÓVEL
+========================= */
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .header-nav {
+    display: none !important;
+  }
+
+  .mobile-bottom-nav {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+
+    height: 76px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+
+    background: #071a35;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.25);
+
+    display: flex !important;
+    align-items: center;
+    justify-content: space-around;
+    gap: 6px;
+
+    z-index: 99999;
+  }
+
+  .mobile-bottom-nav button {
+    flex: 1;
+    height: 58px;
+    border: none;
+    background: transparent;
+    color: #8ba3c0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+
+    font-family: "DM Sans", sans-serif;
+    cursor: pointer;
+    border-radius: 16px;
+  }
+
+  .mobile-bottom-nav button:hover {
+    background: rgba(48, 240, 160, 0.08);
+    color: #30f0a0;
+  }
+
+  .mobile-bottom-nav span {
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .mobile-bottom-nav small {
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+}

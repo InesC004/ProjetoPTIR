@@ -1281,7 +1281,7 @@ export default function Dashboard() {
         </section>
 
         <section className="secao" style={{ paddingTop: 0 }}>
-          <div className="secao-centro">
+          <div className="secao-centro secao-centro2">
             {/*
               FIX AXE: removido style={{ color: "#00884f" }} inline que sobrepunha
               o .secao-rotulo do CSS. A cor #00884f está agora definida em .secao-rotulo-verde
