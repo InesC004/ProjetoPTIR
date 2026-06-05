@@ -9,7 +9,7 @@ const turnoSchema = new mongoose.Schema({
 
   taxi: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'taxi',
+    ref: 'Taxi',
     required: true
   },
 

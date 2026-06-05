@@ -116,6 +116,7 @@ export default function TurnosMotorista() {
   const [cancelandoId, setCancelandoId] = useState(null);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
+  const [, forceUpdate] = useState(0);
 
   const [form, setForm] = useState({
     taxi_id: "",
@@ -147,9 +148,28 @@ export default function TurnosMotorista() {
     }
   }
 
+  // Atualiza o estado visual: agendado / ativo / terminado
+  useEffect(() => {
+    const interval = setInterval(() => {
+      forceUpdate((v) => v + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Atualiza dados vindos do servidor
   useEffect(() => {
     carregarDados();
+
+    const interval = setInterval(() => {
+      carregarDados();
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
+    
+
+
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -194,6 +214,7 @@ export default function TurnosMotorista() {
       setSucesso(data.message || "Turno criado com sucesso.");
       setForm((prev) => ({ ...prev, taxi_id: "" }));
       await carregarDados();
+      window.dispatchEvent(new Event("turnosAtualizados"));
     } catch (err) {
       setErro(err.message || "Erro ao criar turno.");
     } finally {
@@ -219,6 +240,7 @@ export default function TurnosMotorista() {
       }
       setSucesso(data.message || "Turno cancelado com sucesso.");
       await carregarDados();
+      window.dispatchEvent(new Event("turnosAtualizados"));
     } catch (err) {
       setErro(err.message || "Não foi possível ligar ao servidor.");
     } finally {

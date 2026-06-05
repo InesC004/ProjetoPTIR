@@ -65,7 +65,12 @@ export default function PaginaMotorista() {
         const res = await fetch("http://localhost:8080/api/turnos/meus", {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
-        if (!res.ok) return;
+
+        if (!res.ok) {
+          setTurnoAtivo(null);
+          return;
+        }
+
         const data = await res.json().catch(() => ({}));
         const lista = Array.isArray(data)
           ? data
@@ -74,10 +79,11 @@ export default function PaginaMotorista() {
             : Array.isArray(data?.data)
               ? data.data
               : [];
+
         const agora = new Date();
         const ativo = lista.find((t) => {
-          if (t.estado === "cancelado" || t.status === "cancelado")
-            return false;
+          if (t.estado === "cancelado" || t.status === "cancelado") return false;
+
           const inicio = new Date(t.data_inicio || t.inicio);
           const fim = new Date(t.data_fim || t.fim);
           return inicio <= agora && fim >= agora;
@@ -87,10 +93,16 @@ export default function PaginaMotorista() {
         setTurnoAtivo(null);
       }
     }
+
     fetchTurnoAtivo();
-    const interval = setInterval(fetchTurnoAtivo, 60000);
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchTurnoAtivo, 3000);
+    window.addEventListener("turnosAtualizados", fetchTurnoAtivo);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("turnosAtualizados", fetchTurnoAtivo);
+    };
   }, []);
+    
 
   function getTaxiLabel(turno) {
     const taxi = turno?.taxi || turno?.taxi_id;
