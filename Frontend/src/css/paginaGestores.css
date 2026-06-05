@@ -1,11 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700;800&display=swap");
 
-/* =========================================================
-   Página Gestores - Responsive
-   Desktop: sidebar à esquerda
-   Tablet/Telemóvel: menu fixo em baixo
-   ========================================================= */
-
 .pg-page {
   --navy: #071a33;
   --blue: #2f7dff;
@@ -802,6 +796,53 @@
   }
 }
 
+.pg-turno-detalhes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pg-turno-detalhe-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #d6e4ff;
+  background: #f8fbff;
+}
+
+.pg-turno-detalhe-row span {
+  color: #6b86aa;
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pg-turno-detalhe-row strong {
+  color: #06152d;
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-align: right;
+  word-break: break-word;
+}
+
+@media (max-width: 700px) {
+  .pg-turno-detalhe-row {
+    padding: 9px 10px;
+  }
+
+  .pg-turno-detalhe-row span {
+    font-size: 0.68rem;
+  }
+
+  .pg-turno-detalhe-row strong {
+    font-size: 0.82rem;
+  }
+}
 /* =========================================================
    Telemóvel
    ========================================================= */
@@ -951,5 +992,389 @@
     max-width: none;
     font-size: 16px;
     min-height: 48px;
+  }
+}
+
+/* =========================================================
+   CORREÇÕES FINAIS — Relatórios e ecrãs pequenos
+   Colocar no fim do ficheiro.
+   ========================================================= */
+
+.pg-search-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 0 20px;
+}
+
+.pg-search-wrap .pg-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b86aa;
+  pointer-events: none;
+}
+
+.pg-search {
+  width: 100%;
+  max-width: none;
+  height: 48px;
+  box-sizing: border-box;
+  padding: 0 18px 0 46px;
+  border-radius: 16px;
+  border: 1px solid #cfe0f7;
+  background: rgba(255, 255, 255, 0.94);
+  color: #07142a;
+  font-weight: 800;
+  outline: none;
+}
+
+.pg-search::placeholder {
+  color: #6b86aa;
+}
+
+.pg-search:focus {
+  border-color: #1a6eff;
+  box-shadow: 0 0 0 4px rgba(26, 110, 255, 0.12);
+}
+
+.pg-relatorios {
+  width: 100%;
+  max-width: 1120px;
+}
+
+.pg-relatorios-topo {
+  align-items: flex-start;
+}
+
+.pg-filtros input {
+  box-sizing: border-box;
+}
+
+.pg-total-grid .pg-card {
+  min-width: 0;
+}
+
+.pg-total-grid .pg-card strong {
+  word-break: break-word;
+}
+
+.pg-sub {
+  align-items: start;
+}
+
+.pg-panel {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.pg-row {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.pg-row > span {
+  min-width: 0;
+}
+
+.pg-row > strong {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.pg-row span small {
+  overflow-wrap: anywhere;
+}
+
+.pg-turno-detalhes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pg-turno-detalhes > div {
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid #d6e4ff;
+  background: #f8fbff;
+  min-width: 0;
+}
+
+.pg-turno-detalhes span {
+  display: block;
+  margin-bottom: 5px;
+  color: #6b86aa;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pg-turno-detalhes strong {
+  display: block;
+  color: #06152d;
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+/* Tablet/iPad */
+@media (max-width: 1024px) {
+  .pg-main {
+    padding: 30px 22px
+      calc(var(--mobile-nav-h) + 34px + env(safe-area-inset-bottom));
+  }
+
+  .pg-relatorios {
+    max-width: 100%;
+  }
+
+  .pg-relatorios-topo {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .pg-relatorios-topo h3 {
+    font-size: 1.18rem;
+    line-height: 1.15;
+  }
+
+  .pg-relatorios-topo p {
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+
+  .pg-filtros {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .pg-filtros label {
+    width: 100%;
+  }
+
+  .pg-filtros input {
+    width: 100%;
+  }
+
+  .pg-tabs-relatorios {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 10px;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .pg-tabs-relatorios::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pg-tabs-relatorios button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    padding: 10px 14px;
+  }
+
+  .pg-search-wrap {
+    max-width: none;
+  }
+
+  .pg-total-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pg-sub {
+    grid-template-columns: 1fr;
+  }
+
+  .pg-panel {
+    padding: 20px;
+  }
+
+  .pg-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .pg-row > strong {
+    margin-left: auto;
+    white-space: normal;
+  }
+}
+
+/* Telemóvel */
+@media (max-width: 700px) {
+  .pg-main {
+    padding: 22px 14px
+      calc(var(--mobile-nav-h) + 28px + env(safe-area-inset-bottom));
+  }
+
+  .pg-title {
+    font-size: 1.45rem;
+    line-height: 1.08;
+  }
+
+  .pg-desc {
+    font-size: 0.86rem;
+    line-height: 1.45;
+    margin-bottom: 18px;
+  }
+
+  .pg-relatorios-topo {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .pg-relatorios-topo h3 {
+    font-size: 1rem;
+  }
+
+  .pg-relatorios-topo p {
+    font-size: 0.82rem;
+  }
+
+  .pg-filtros {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .pg-filtros input,
+  .pg-search {
+    min-height: 48px;
+    font-size: 16px;
+    border-radius: 14px;
+  }
+
+  .pg-tabs-relatorios {
+    margin-inline: -2px;
+    padding-inline: 2px;
+    gap: 8px;
+  }
+
+  .pg-tabs-relatorios button {
+    font-size: 0.72rem;
+    padding: 9px 12px;
+  }
+
+  .pg-total-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .pg-total-grid .pg-card {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .pg-total-grid .pg-card span {
+    font-size: 0.76rem;
+  }
+
+  .pg-total-grid .pg-card strong {
+    font-size: 1.25rem;
+  }
+
+  .pg-sub {
+    gap: 14px;
+  }
+
+  .pg-panel {
+    padding: 15px;
+    border-radius: 18px;
+  }
+
+  .pg-panel h4 {
+    font-size: 0.92rem;
+    margin-bottom: 12px;
+  }
+
+  .pg-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px 13px;
+    border-radius: 14px;
+  }
+
+  .pg-row > span {
+    width: 100%;
+    font-size: 0.9rem;
+    line-height: 1.3;
+  }
+
+  .pg-row span small {
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  .pg-row > strong {
+    width: 100%;
+    margin-left: 0;
+    text-align: left;
+    font-size: 0.86rem;
+    line-height: 1.35;
+    white-space: normal;
+    color: #0b5fe8;
+  }
+
+  .pg-row.active > strong {
+    color: #007b49;
+  }
+
+  .pg-empty {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .pg-turno-detalhes {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .pg-turno-detalhes > div {
+    padding: 12px 13px;
+    border-radius: 14px;
+  }
+
+  .pg-turno-detalhes span {
+    font-size: 0.68rem;
+  }
+
+  .pg-turno-detalhes strong {
+    font-size: 0.88rem;
+  }
+}
+
+/* Telemóveis muito pequenos */
+@media (max-width: 390px) {
+  .pg-main {
+    padding-inline: 12px;
+  }
+
+  .pg-title {
+    font-size: 1.32rem;
+  }
+
+  .pg-tabs-relatorios button {
+    font-size: 0.68rem;
+    padding: 8px 10px;
+  }
+
+  .pg-panel {
+    padding: 13px;
+  }
+
+  .pg-total-grid .pg-card {
+    padding: 14px;
   }
 }

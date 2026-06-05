@@ -274,7 +274,13 @@
 .tc-badge-ativo .tc-badge-dot {
   animation: tc-pulse 1.8s ease-in-out infinite;
 }
-
+.tc-alert-success strong {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #059669;
+}
 @keyframes tc-pulse {
   50% {
     opacity: 0.4;
@@ -446,14 +452,10 @@
   color: #2563eb;
 }
 
-
 @media (max-width: 768px) {
-
   .tc-item-taxi {
     font-family: "Syne", sans-serif;
     font-weight: 700;
     font-size: 0.59rem;
   }
-
-
 }

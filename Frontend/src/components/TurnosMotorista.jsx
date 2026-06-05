@@ -167,9 +167,16 @@ export default function TurnosMotorista() {
 
     return () => clearInterval(interval);
   }, []);
-    
 
+  useEffect(() => {
+    if (!sucesso) return;
 
+    const timer = setTimeout(() => {
+      setSucesso("");
+    }, 3500);
+
+    return () => clearTimeout(timer);
+  }, [sucesso]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -211,8 +218,17 @@ export default function TurnosMotorista() {
         }),
       });
       const data = await readJson(res);
-      setSucesso(data.message || "Turno criado com sucesso.");
-      setForm((prev) => ({ ...prev, taxi_id: "" }));
+
+      setErro("");
+
+      setSucesso(data.message || `Turno criado com sucesso para`);
+
+      setForm({
+        taxi_id: "",
+        inicio: toDateTimeLocalValue(),
+        fim: toDateTimeLocalValue(new Date(Date.now() + 8 * 60 * 60 * 1000)),
+      });
+
       await carregarDados();
       window.dispatchEvent(new Event("turnosAtualizados"));
     } catch (err) {
@@ -273,8 +289,12 @@ export default function TurnosMotorista() {
           )}
           {sucesso && (
             <div className="tc-alert tc-alert-success">
-              <CheckCircle2 size={16} className="tc-alert-icon" />
-              {sucesso}
+              <CheckCircle2 size={18} className="tc-alert-icon" />
+              <div>
+                <strong>Sucesso!</strong>
+                <br />
+                {sucesso}
+              </div>
             </div>
           )}
 

@@ -15,82 +15,169 @@ import {
 } from "lucide-react";
 import "../css/registarMotorista.css";
 
-/* ═══════════════════════════════════════════════
-   VALIDAÇÕES (restrições 4, 12, 13, 14, 15)
-   ═══════════════════════════════════════════════ */
-
-// Restrição 12: NIF tem de ter 9 dígitos e ser positivo
 function validarNIF(nif) {
-  if (!/^\d{9}$/.test(nif)) return false;
-  if (parseInt(nif, 10) <= 0) return false;
-  return true;
+  return /^\d{9}$/.test(nif) && parseInt(nif, 10) > 0;
 }
 
 function validarEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// Restrição 4: ano de nascimento tem de ser 18 ou mais anos anterior ao ano atual
-function validarIdade(dia, mes, ano) {
-  const anoAtual = new Date().getFullYear();
-  if (anoAtual - ano < 18) return false;
-  if (anoAtual - ano === 18) {
-    const hoje = new Date();
-    const nasc = new Date(ano, mes - 1, dia);
-    return hoje >= nasc;
-  }
-  return true;
+function validarCodigoPostal(cp) {
+  return /^\d{4}-\d{3}$/.test(cp);
 }
 
-// Restrição 15: senha tem de ter dígitos E letras, comprimento mínimo 6
+function validarIdade(dia, mes, ano) {
+  const d = Number(dia);
+  const m = Number(mes);
+  const y = Number(ano);
+
+  if (!d || !m || !y) return false;
+  if (d < 1 || d > 31 || m < 1 || m > 12) return false;
+  if (y < 1930 || y > new Date().getFullYear()) return false;
+
+  const nasc = new Date(y, m - 1, d);
+
+  if (
+    nasc.getFullYear() !== y ||
+    nasc.getMonth() !== m - 1 ||
+    nasc.getDate() !== d
+  ) {
+    return false;
+  }
+
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - nasc.getFullYear();
+
+  const aindaNaoFezAnos =
+    hoje.getMonth() < nasc.getMonth() ||
+    (hoje.getMonth() === nasc.getMonth() && hoje.getDate() < nasc.getDate());
+
+  if (aindaNaoFezAnos) idade--;
+
+  return idade >= 18;
+}
+
 function validarPassword(pw) {
+  if (!pw) return "Password obrigatória";
   if (pw.length < 6) return "Mínimo 6 caracteres";
   if (!/[a-zA-Z]/.test(pw)) return "Deve conter pelo menos uma letra";
   if (!/\d/.test(pw)) return "Deve conter pelo menos um dígito";
   return null;
 }
 
-// Código postal português: 0000-000
-function validarCodigoPostal(cp) {
-  return /^\d{4}-\d{3}$/.test(cp);
+function validarCampo(name, value, form) {
+  const atual = { ...form, [name]: value };
+
+  switch (name) {
+    case "name":
+      if (!value.trim()) return "Nome obrigatório";
+      if (value.trim().length < 3) return "Nome demasiado curto";
+      return null;
+
+    case "email":
+      if (!value.trim()) return "Email obrigatório";
+      if (!validarEmail(value)) return "Email inválido";
+      return null;
+
+    case "nif":
+      if (!value.trim()) return "NIF obrigatório";
+      if (!/^\d+$/.test(value)) return "O NIF só pode ter dígitos";
+      if (value.length !== 9) return "O NIF tem de ter 9 dígitos";
+      if (!validarNIF(value)) return "NIF inválido";
+      return null;
+
+    case "genero":
+      if (!value) return "Selecione o género";
+      return null;
+
+    case "numero_carta":
+      if (!value.trim()) return "Nº carta obrigatório";
+      if (value.trim().length < 5) return "Nº carta demasiado curto";
+      return null;
+
+    case "birth_day":
+    case "birth_month":
+    case "birth_year":
+      if (!atual.birth_day || !atual.birth_month || !atual.birth_year) {
+        return "Data de nascimento obrigatória";
+      }
+
+      if (
+        Number(atual.birth_day) < 1 ||
+        Number(atual.birth_day) > 31 ||
+        Number(atual.birth_month) < 1 ||
+        Number(atual.birth_month) > 12 ||
+        Number(atual.birth_year) < 1930 ||
+        Number(atual.birth_year) > new Date().getFullYear()
+      ) {
+        return "Data inválida";
+      }
+
+      if (!validarIdade(atual.birth_day, atual.birth_month, atual.birth_year)) {
+        return "O motorista deve ter pelo menos 18 anos";
+      }
+
+      return null;
+
+    case "morada":
+      if (!value.trim()) return "Morada obrigatória";
+      if (value.trim().length < 5) return "Morada demasiado curta";
+      return null;
+
+    case "codigo_postal":
+      if (!value.trim()) return "Código postal obrigatório";
+      if (!validarCodigoPostal(value)) return "Formato: 0000-000";
+      return null;
+
+    case "password":
+      return validarPassword(value);
+
+    default:
+      return null;
+  }
 }
 
-/* ═══════════════════════════════════════════════
-   COMPONENTE PRINCIPAL
-   ═══════════════════════════════════════════════ */
+const FORM_INICIAL = {
+  name: "",
+  nif: "",
+  email: "",
+  genero: "",
+  birth_day: "",
+  birth_month: "",
+  birth_year: "",
+  morada: "",
+  codigo_postal: "",
+  localidade: "",
+  password: "",
+  numero_carta: "",
+};
+
 export default function RegistarMotorista({ aberto, onFechar }) {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({
-    name: "",
-    nif: "",
-    email: "",
-    genero: "",
-    birth_day: "",
-    birth_month: "",
-    birth_year: "",
-    morada: "",
-    codigo_postal: "",
-    localidade: "",
-    password: "",
-    numero_carta: "",
-  });
+  const [form, setForm] = useState(FORM_INICIAL);
   const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
   const [success, setSuccess] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [loadingCP, setLoadingCP] = useState(false);
 
-  // Auto-preencher localidade a partir do código postal
+  const disabled = loading || success;
+
   const fetchLocalidade = useCallback(async (cp) => {
     if (!validarCodigoPostal(cp)) {
       setForm((prev) => ({ ...prev, localidade: "" }));
       return;
     }
+
     setLoadingCP(true);
+
     try {
       const [cp4, cp3] = cp.split("-");
       const res = await fetch(`https://json.geoapi.pt/cp/${cp4}-${cp3}`);
+
       if (res.ok) {
         const data = await res.json();
         const loc = data.Localidade || data.localidade || data.Distrito || "";
@@ -106,20 +193,71 @@ export default function RegistarMotorista({ aberto, onFechar }) {
   }, []);
 
   useEffect(() => {
-    if (form.codigo_postal.length === 8) {
+    if (form.codigo_postal.length === 8 && !errors.codigo_postal) {
       fetchLocalidade(form.codigo_postal);
     }
-  }, [form.codigo_postal, fetchLocalidade]);
+  }, [form.codigo_postal, errors.codigo_postal, fetchLocalidade]);
+
+  useEffect(() => {
+    if (!aberto) return;
+
+    setStep(1);
+    setForm(FORM_INICIAL);
+    setErrors({});
+    setTouched({});
+    setApiError("");
+    setSuccess(false);
+    setShowPw(false);
+  }, [aberto]);
 
   if (!aberto) return null;
 
-  const disabled = loading || success;
+  function campoErroKey(name) {
+    return ["birth_day", "birth_month", "birth_year"].includes(name)
+      ? "birth"
+      : name;
+  }
+
+  function atualizarErro(name, value, novoForm, marcarTouched = true) {
+    const key = campoErroKey(name);
+    const erro = validarCampo(name, value, novoForm);
+
+    setErrors((prev) => {
+      const novo = { ...prev };
+
+      if (erro) novo[key] = erro;
+      else delete novo[key];
+
+      return novo;
+    });
+
+    if (marcarTouched) {
+      setTouched((prev) => ({ ...prev, [key]: true }));
+    }
+  }
 
   function handleChange(e) {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
+
+    let novoValor = value;
+
+    if (name === "nif") novoValor = value.replace(/\D/g, "").slice(0, 9);
+    if (name === "birth_day") novoValor = value.replace(/\D/g, "").slice(0, 2);
+    if (name === "birth_month")
+      novoValor = value.replace(/\D/g, "").slice(0, 2);
+    if (name === "birth_year") novoValor = value.replace(/\D/g, "").slice(0, 4);
+
+    const novoForm = { ...form, [name]: novoValor };
+
+    setForm(novoForm);
+    atualizarErro(name, novoValor, novoForm);
+
     if (apiError) setApiError("");
+  }
+
+  function handleBlur(e) {
+    const { name, value } = e.target;
+    atualizarErro(name, value, form, true);
   }
 
   function formatCodigoPostal(value) {
@@ -130,91 +268,81 @@ export default function RegistarMotorista({ aberto, onFechar }) {
 
   function handleCPChange(e) {
     const formatted = formatCodigoPostal(e.target.value);
-    setForm((prev) => ({ ...prev, codigo_postal: formatted, localidade: "" }));
-    if (errors.codigo_postal)
-      setErrors((prev) => ({ ...prev, codigo_postal: null }));
+    const novoForm = { ...form, codigo_postal: formatted, localidade: "" };
+
+    setForm(novoForm);
+    atualizarErro("codigo_postal", formatted, novoForm);
+
+    if (apiError) setApiError("");
   }
 
-  /* ── Validação Step 1 ── */
   function validarStep1() {
+    const campos = [
+      "name",
+      "email",
+      "nif",
+      "genero",
+      "numero_carta",
+      "birth_day",
+    ];
     const errs = {};
 
-    if (!form.name.trim()) errs.name = "Nome obrigatório";
-
-    if (!form.email.trim()) errs.email = "Email obrigatório";
-    else if (!validarEmail(form.email)) errs.email = "Email inválido";
-
-    // Restrição 12: NIF 9 dígitos positivo
-    if (!form.nif.trim()) errs.nif = "NIF obrigatório";
-    else if (!validarNIF(form.nif))
-      errs.nif = "NIF inválido (9 dígitos, positivo)";
-
-    // Restrição 13: género feminino ou masculino
-    if (!form.genero) errs.genero = "Selecione o género";
-
-    // Restrição 14: número da carta identifica univocamente (validação no backend)
-    if (!form.numero_carta.trim()) errs.numero_carta = "Nº carta obrigatório";
-
-    // Restrição 4: 18+ anos
-    if (!form.birth_day || !form.birth_month || !form.birth_year) {
-      errs.birth = "Data de nascimento obrigatória";
-    } else {
-      const d = parseInt(form.birth_day, 10);
-      const m = parseInt(form.birth_month, 10);
-      const y = parseInt(form.birth_year, 10);
-      if (
-        d < 1 ||
-        d > 31 ||
-        m < 1 ||
-        m > 12 ||
-        y < 1930 ||
-        y > new Date().getFullYear()
-      ) {
-        errs.birth = "Data inválida";
-      } else if (!validarIdade(d, m, y)) {
-        errs.birth = "O motorista deve ter pelo menos 18 anos";
-      }
-    }
+    campos.forEach((campo) => {
+      const erro = validarCampo(campo, form[campo], form);
+      const key = campo === "birth_day" ? "birth" : campo;
+      if (erro) errs[key] = erro;
+    });
 
     return errs;
   }
 
-  /* ── Validação Step 2 ── */
   function validarStep2() {
+    const campos = ["morada", "codigo_postal", "password"];
     const errs = {};
 
-    if (!form.morada.trim()) errs.morada = "Morada obrigatória";
-
-    if (!form.codigo_postal.trim())
-      errs.codigo_postal = "Código postal obrigatório";
-    else if (!validarCodigoPostal(form.codigo_postal))
-      errs.codigo_postal = "Formato: 0000-000";
-
-    // Restrição 15: senha com dígitos e letras, min 6
-    if (!form.password) errs.password = "Password obrigatória";
-    else {
-      const pwErr = validarPassword(form.password);
-      if (pwErr) errs.password = pwErr;
-    }
+    campos.forEach((campo) => {
+      const erro = validarCampo(campo, form[campo], form);
+      if (erro) errs[campo] = erro;
+    });
 
     return errs;
   }
 
   function handleNext() {
     const errs = validarStep1();
+
+    setTouched((prev) => ({
+      ...prev,
+      name: true,
+      email: true,
+      nif: true,
+      genero: true,
+      numero_carta: true,
+      birth: true,
+    }));
+
     if (Object.keys(errs).length > 0) {
-      setErrors(errs);
+      setErrors((prev) => ({ ...prev, ...errs }));
       return;
     }
-    setErrors({});
+
     setStep(2);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+
     const errs = validarStep2();
+
+    setTouched((prev) => ({
+      ...prev,
+      morada: true,
+      codigo_postal: true,
+      password: true,
+    }));
+
     if (Object.keys(errs).length > 0) {
-      setErrors(errs);
+      setErrors((prev) => ({ ...prev, ...errs }));
       return;
     }
 
@@ -239,32 +367,29 @@ export default function RegistarMotorista({ aberto, onFechar }) {
 
     try {
       await api.motoristas.criar(payload);
+
       setSuccess(true);
+
       setTimeout(() => {
         setSuccess(false);
         setStep(1);
-        setForm({
-          name: "",
-          nif: "",
-          email: "",
-          genero: "",
-          birth_day: "",
-          birth_month: "",
-          birth_year: "",
-          morada: "",
-          codigo_postal: "",
-          localidade: "",
-          password: "",
-          numero_carta: "",
-        });
+        setForm(FORM_INICIAL);
         setErrors({});
+        setTouched({});
         onFechar();
       }, 2000);
-    } catch {
-      setApiError("Não foi possível conectar ao servidor.");
+    } catch (err) {
+      setApiError(
+        err?.message ||
+          "Não foi possível conectar ao servidor ou registar o motorista.",
+      );
     } finally {
       setLoading(false);
     }
+  }
+
+  function mostrarErro(campo) {
+    return touched[campo] && errors[campo] ? errors[campo] : null;
   }
 
   return (
@@ -272,12 +397,12 @@ export default function RegistarMotorista({ aberto, onFechar }) {
       <div className="rm-backdrop" onClick={onFechar} />
 
       <div className="rm-modal rm-scrollbar-none">
-        {/* HEADER */}
         <div className="rm-header">
           <div className="rm-title-wrap">
             <div className="rm-icon-box">
               <UserPlus size={18} strokeWidth={1.8} />
             </div>
+
             <div>
               <h3 className="rm-title">Registar Motorista</h3>
               <p className="rm-subtitle">Passo {step} de 2</p>
@@ -289,7 +414,6 @@ export default function RegistarMotorista({ aberto, onFechar }) {
           </button>
         </div>
 
-        {/* PROGRESSO */}
         <div className="rm-progress">
           <div className="rm-progress-track">
             <div
@@ -299,7 +423,6 @@ export default function RegistarMotorista({ aberto, onFechar }) {
           </div>
         </div>
 
-        {/* ALERTAS */}
         <div className="rm-alerts">
           {success && (
             <div className="rm-alert rm-alert-success">
@@ -316,23 +439,21 @@ export default function RegistarMotorista({ aberto, onFechar }) {
           )}
         </div>
 
-        {/* FORM */}
         <form onSubmit={handleSubmit}>
           <div className="rm-form">
             {step === 1 ? (
               <>
-                {/* Nome */}
                 <Field
                   label="Nome completo"
                   name="name"
                   placeholder="Ex: Carlos Silva"
                   value={form.name}
                   onChange={handleChange}
-                  error={errors.name}
+                  onBlur={handleBlur}
+                  error={mostrarErro("name")}
                   disabled={disabled}
                 />
 
-                {/* Email */}
                 <Field
                   label="Email"
                   name="email"
@@ -340,11 +461,11 @@ export default function RegistarMotorista({ aberto, onFechar }) {
                   placeholder="Ex: carlos@takecab.pt"
                   value={form.email}
                   onChange={handleChange}
-                  error={errors.email}
+                  onBlur={handleBlur}
+                  error={mostrarErro("email")}
                   disabled={disabled}
                 />
 
-                {/* NIF + Género */}
                 <div className="rm-grid-two">
                   <Field
                     label="NIF"
@@ -352,7 +473,8 @@ export default function RegistarMotorista({ aberto, onFechar }) {
                     placeholder="9 dígitos"
                     value={form.nif}
                     onChange={handleChange}
-                    error={errors.nif}
+                    onBlur={handleBlur}
+                    error={mostrarErro("nif")}
                     disabled={disabled}
                     maxLength={9}
                   />
@@ -363,37 +485,39 @@ export default function RegistarMotorista({ aberto, onFechar }) {
                       name="genero"
                       value={form.genero}
                       onChange={handleChange}
+                      onBlur={handleBlur}
                       disabled={disabled}
                       className={`rm-select ${
                         form.genero ? "" : "is-placeholder"
-                      } ${errors.genero ? "has-error" : ""}`}
+                      } ${mostrarErro("genero") ? "has-error" : ""}`}
                     >
                       <option value="">Selecionar</option>
                       <option value="Masculino">Masculino</option>
                       <option value="Feminino">Feminino</option>
                     </select>
-                    {errors.genero && (
+
+                    {mostrarErro("genero") && (
                       <p className="rm-error">
-                        <AlertCircle size={12} /> {errors.genero}
+                        <AlertCircle size={12} /> {mostrarErro("genero")}
                       </p>
                     )}
                   </div>
                 </div>
 
-                {/* Nº Carta de Condução */}
                 <Field
                   label="Nº Carta de Condução"
                   name="numero_carta"
                   placeholder="Ex: ABC123456"
                   value={form.numero_carta}
                   onChange={handleChange}
-                  error={errors.numero_carta}
+                  onBlur={handleBlur}
+                  error={mostrarErro("numero_carta")}
                   disabled={disabled}
                 />
 
-                {/* Data de nascimento */}
                 <div>
                   <label className="rm-label">Data de nascimento</label>
+
                   <div className="rm-grid-three">
                     <input
                       type="number"
@@ -401,80 +525,94 @@ export default function RegistarMotorista({ aberto, onFechar }) {
                       placeholder="Dia"
                       value={form.birth_day}
                       onChange={handleChange}
+                      onBlur={handleBlur}
                       min={1}
                       max={31}
                       disabled={disabled}
-                      className={`rm-input ${errors.birth ? "has-error" : ""}`}
+                      className={`rm-input ${
+                        mostrarErro("birth") ? "has-error" : ""
+                      }`}
                     />
+
                     <input
                       type="number"
                       name="birth_month"
                       placeholder="Mês"
                       value={form.birth_month}
                       onChange={handleChange}
+                      onBlur={handleBlur}
                       min={1}
                       max={12}
                       disabled={disabled}
-                      className={`rm-input ${errors.birth ? "has-error" : ""}`}
+                      className={`rm-input ${
+                        mostrarErro("birth") ? "has-error" : ""
+                      }`}
                     />
+
                     <input
                       type="number"
                       name="birth_year"
                       placeholder="Ano"
                       value={form.birth_year}
                       onChange={handleChange}
+                      onBlur={handleBlur}
                       min={1930}
                       max={new Date().getFullYear()}
                       disabled={disabled}
-                      className={`rm-input ${errors.birth ? "has-error" : ""}`}
+                      className={`rm-input ${
+                        mostrarErro("birth") ? "has-error" : ""
+                      }`}
                     />
                   </div>
 
-                  {errors.birth && (
+                  {mostrarErro("birth") && (
                     <p className="rm-error">
-                      <AlertCircle size={12} /> {errors.birth}
+                      <AlertCircle size={12} /> {mostrarErro("birth")}
                     </p>
                   )}
                 </div>
               </>
             ) : (
               <>
-                {/* Morada */}
                 <Field
                   label="Morada"
                   name="morada"
                   placeholder="Ex: Rua do Motor, 45"
                   value={form.morada}
                   onChange={handleChange}
-                  error={errors.morada}
+                  onBlur={handleBlur}
+                  error={mostrarErro("morada")}
                   disabled={disabled}
                 />
 
-                {/* Código postal + Localidade (auto-preenchida) */}
                 <div className="rm-grid-two">
                   <div>
                     <label className="rm-label">Código postal</label>
+
                     <input
                       type="text"
                       name="codigo_postal"
                       placeholder="0000-000"
                       value={form.codigo_postal}
                       onChange={handleCPChange}
+                      onBlur={handleBlur}
                       disabled={disabled}
                       maxLength={8}
                       className={`rm-input ${
-                        errors.codigo_postal ? "has-error" : ""
+                        mostrarErro("codigo_postal") ? "has-error" : ""
                       }`}
                     />
-                    {errors.codigo_postal && (
+
+                    {mostrarErro("codigo_postal") && (
                       <p className="rm-error">
-                        <AlertCircle size={12} /> {errors.codigo_postal}
+                        <AlertCircle size={12} /> {mostrarErro("codigo_postal")}
                       </p>
                     )}
                   </div>
 
                   <div>
                     <label className="rm-label">Localidade</label>
+
                     <div
                       className={`rm-readonly-field ${
                         form.localidade ? "" : "is-empty"
@@ -490,11 +628,13 @@ export default function RegistarMotorista({ aberto, onFechar }) {
                           }`}
                         />
                       )}
+
                       {form.localidade ||
                         (loadingCP
                           ? "A procurar..."
                           : "Preencha o código postal")}
                     </div>
+
                     {form.localidade && (
                       <p className="rm-loc-found">
                         <CheckCircle2 size={11} /> Localidade encontrada
@@ -503,9 +643,9 @@ export default function RegistarMotorista({ aberto, onFechar }) {
                   </div>
                 </div>
 
-                {/* Password */}
                 <div>
                   <label className="rm-label">Password</label>
+
                   <div className="rm-input-wrap">
                     <input
                       type={showPw ? "text" : "password"}
@@ -513,11 +653,13 @@ export default function RegistarMotorista({ aberto, onFechar }) {
                       placeholder="Letras e dígitos, mín. 6 caracteres"
                       value={form.password}
                       onChange={handleChange}
+                      onBlur={handleBlur}
                       disabled={disabled}
                       className={`rm-input rm-input-password ${
-                        errors.password ? "has-error" : ""
+                        mostrarErro("password") ? "has-error" : ""
                       }`}
                     />
+
                     <button
                       type="button"
                       onClick={() => setShowPw(!showPw)}
@@ -526,10 +668,12 @@ export default function RegistarMotorista({ aberto, onFechar }) {
                       {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
+
                   <p className="rm-help">Deve conter letras e dígitos</p>
-                  {errors.password && (
+
+                  {mostrarErro("password") && (
                     <p className="rm-error">
-                      <AlertCircle size={12} /> {errors.password}
+                      <AlertCircle size={12} /> {mostrarErro("password")}
                     </p>
                   )}
                 </div>
@@ -537,7 +681,6 @@ export default function RegistarMotorista({ aberto, onFechar }) {
             )}
           </div>
 
-          {/* FOOTER / AÇÕES */}
           <div className="rm-footer">
             {step === 1 ? (
               <button
@@ -588,15 +731,13 @@ export default function RegistarMotorista({ aberto, onFechar }) {
   );
 }
 
-/* ═══════════════════════════════════════════════
-   INPUT FIELD REUTILIZÁVEL
-   ═══════════════════════════════════════════════ */
 function Field({
   label,
   name,
   placeholder,
   value,
   onChange,
+  onBlur,
   error,
   disabled,
   type = "text",
@@ -606,17 +747,21 @@ function Field({
   return (
     <div>
       <label className="rm-label">{label}</label>
+
       <input
         type={type}
         name={name}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        onBlur={onBlur}
         disabled={disabled}
         maxLength={maxLength}
         className={`rm-input ${error ? "has-error" : ""}`}
       />
+
       {hint && <p className="rm-help">{hint}</p>}
+
       {error && (
         <p className="rm-error">
           <AlertCircle size={12} /> {error}

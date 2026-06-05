@@ -364,9 +364,22 @@ function SecRelatorios() {
 
     carregarTurnos();
   }, []);
-
+  function LinhaDetalhe({ label, valor }) {
+    return (
+      <div className="pg-turno-detalhe-row">
+        <span>{label}</span>
+        <strong>{valor}</strong>
+      </div>
+    );
+  }
   async function carregarRelatorio() {
-    if (tipo === "turnos") return;
+    if (tipo === "turnos") {
+      setResumo(null);
+      setLista([]);
+      setDetalhes([]);
+      setSub(null);
+      return;
+    }
 
     try {
       setLoadingRelatorios(true);
@@ -649,6 +662,8 @@ function SecRelatorios() {
             setTipo("taxi");
             setTotal("viagens");
             setSub(null);
+            setPesquisa("");
+            setDetalhes([]);
           }}
         >
           Táxis e motoristas
@@ -660,6 +675,8 @@ function SecRelatorios() {
             setTipo("reabastecimentos");
             setTotal("euros");
             setSub(null);
+            setPesquisa("");
+            setDetalhes([]);
           }}
         >
           Reabastecimentos
@@ -671,6 +688,8 @@ function SecRelatorios() {
             setTipo("turnos");
             setTotal("ativos");
             setSub(null);
+            setPesquisa("");
+            setDetalhes([]);
           }}
         >
           Turnos
@@ -793,11 +812,24 @@ function SecRelatorios() {
                 </span>
 
                 <strong>
-                  {item.preco_total ? `${item.preco_total}€ · ` : ""}
-                  {item.total_euros ? `${item.total_euros}€ · ` : ""}
-                  {item.km ? `${item.km} km · ` : ""}
-                  {item.horas ? `${item.horas}h` : ""}
-                  {item.total_horas ? `${item.total_horas}h` : ""}
+                  {tipo === "reabastecimentos" && (
+                    <>
+                      {item.litros != null ? `${item.litros} L · ` : ""}
+                      {item.kwh != null ? `${item.kwh} kWh · ` : ""}
+                      {item.euros != null ? `${item.euros}€ · ` : ""}
+                      {item.quilometros != null ? `${item.quilometros} km` : ""}
+                    </>
+                  )}
+
+                  {tipo !== "reabastecimentos" && (
+                    <>
+                      {item.preco_total ? `${item.preco_total}€ · ` : ""}
+                      {item.total_euros ? `${item.total_euros}€ · ` : ""}
+                      {item.km ? `${item.km} km · ` : ""}
+                      {item.horas ? `${item.horas}h` : ""}
+                      {item.total_horas ? `${item.total_horas}h` : ""}
+                    </>
+                  )}
                 </strong>
               </button>
             ))}
@@ -851,53 +883,40 @@ function SecRelatorios() {
               turnosPesquisa
                 .filter((turno) => turno._id === sub)
                 .map((turno) => (
-                  <div key={turno._id} className="pg-turno-detalhes">
-                    <div>
-                      <span>Motorista</span>
-                      <strong>{turno.motorista?.nome || "Sem nome"}</strong>
-                    </div>
-
-                    <div>
-                      <span>NIF</span>
-                      <strong>{turno.motorista?.nif || "—"}</strong>
-                    </div>
-
-                    <div>
-                      <span>Táxi</span>
-                      <strong>
-                        {turno.taxi?.marca} {turno.taxi?.modelo}
-                      </strong>
-                    </div>
-
-                    <div>
-                      <span>Matrícula</span>
-                      <strong>{turno.taxi?.matricula || "—"}</strong>
-                    </div>
-
-                    <div>
-                      <span>Início</span>
-                      <strong>{formatarData(turno.data_inicio)}</strong>
-                    </div>
-
-                    <div>
-                      <span>Fim</span>
-                      <strong>{formatarData(turno.data_fim)}</strong>
-                    </div>
-
-                    <div>
-                      <span>Estado</span>
-                      <strong>{estadoTurno(turno)}</strong>
-                    </div>
-
-                    <div>
-                      <span>Horas</span>
-                      <strong>{horasTurno(turno).toFixed(1)}h</strong>
-                    </div>
-
-                    <div>
-                      <span>Viagens associadas</span>
-                      <strong>{turno.viagens?.length || 0}</strong>
-                    </div>
+                  <div key={turno._id} className="pg-turno-detalhes-lista">
+                    <LinhaDetalhe
+                      label="Motorista"
+                      valor={turno.motorista?.nome || "Sem nome"}
+                    />
+                    <LinhaDetalhe
+                      label="NIF"
+                      valor={turno.motorista?.nif || "—"}
+                    />
+                    <LinhaDetalhe
+                      label="Táxi"
+                      valor={`${turno.taxi?.marca || ""} ${turno.taxi?.modelo || ""}`}
+                    />
+                    <LinhaDetalhe
+                      label="Matrícula"
+                      valor={turno.taxi?.matricula || "—"}
+                    />
+                    <LinhaDetalhe
+                      label="Início"
+                      valor={formatarData(turno.data_inicio)}
+                    />
+                    <LinhaDetalhe
+                      label="Fim"
+                      valor={formatarData(turno.data_fim)}
+                    />
+                    <LinhaDetalhe label="Estado" valor={estadoTurno(turno)} />
+                    <LinhaDetalhe
+                      label="Horas"
+                      valor={`${horasTurno(turno).toFixed(1)}h`}
+                    />
+                    <LinhaDetalhe
+                      label="Viagens associadas"
+                      valor={turno.viagens?.length || 0}
+                    />
                   </div>
                 ))}
           </div>

@@ -80,7 +80,7 @@ function getTipoMotor(turno) {
   return taxi.tipo_motor || "";
 }
 
-export default function ReabastecimentosMotorista( { turnoAtivo } ) {
+export default function ReabastecimentosMotorista({ turnoAtivo }) {
   const [turnos, setTurnos] = useState([]);
   const [reabastecimentos, setReabastecimentos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -98,11 +98,11 @@ export default function ReabastecimentosMotorista( { turnoAtivo } ) {
     quilometragem: "",
   });
 
-  const turnoAtual = useMemo(
-    () => turnos.find((t) => String(t._id) === String(turnoSelecionado)),
-    [turnos, turnoSelecionado],
-  );
+  const turnoAtual = useMemo(() => {
+    if (turnoAtivo) return turnoAtivo;
 
+    return turnos.find((t) => String(t._id) === String(turnoSelecionado));
+  }, [turnoAtivo, turnos, turnoSelecionado]);
   const isEletrico = getTipoMotor(turnoAtual) === "eletrico";
 
   async function carregarTurnos() {
@@ -119,7 +119,9 @@ export default function ReabastecimentosMotorista( { turnoAtivo } ) {
 
       setTurnos(lista);
 
-      if (!turnoSelecionado && lista[0]?._id) {
+      if (turnoAtivo?._id) {
+        setTurnoSelecionado(turnoAtivo._id);
+      } else if (!turnoSelecionado && lista[0]?._id) {
         setTurnoSelecionado(lista[0]._id);
       }
     } catch (err) {
@@ -291,7 +293,7 @@ export default function ReabastecimentosMotorista( { turnoAtivo } ) {
                   {turnoAtivo
                     ? `${formatDateTime(turnoAtivo.data_inicio || turnoAtivo.inicio)} · ${getTaxiLabel(turnoAtivo)}`
                     : "Sem turno ativo"}
-                </div>                
+                </div>
               </div>
 
               <div className="rc-field">
