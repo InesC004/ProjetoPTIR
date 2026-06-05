@@ -14,6 +14,7 @@ import {
   Clock,
   ChevronDown,
 } from "lucide-react";
+import "../css/configurarPrecos.css";
 
 /* ═══════════════════════════════════════════════
    DEFINIR PREÇOS (criar/editar)
@@ -121,68 +122,51 @@ export function DefinirPrecos({ aberto, onFechar }) {
   if (!aberto) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onFechar}
-      />
-      <div className="relative w-full max-w-[580px] mx-4 max-h-[90vh] overflow-y-auto rounded-2xl border border-[#1a6eff]/20 bg-[#0a1628]/95 backdrop-blur-2xl shadow-[0_32px_80px_rgba(0,0,0,0.5)] scrollbar-none">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#1a6eff]/30 to-transparent" />
-        <div className="flex items-center justify-between p-6 pb-4 sticky top-0 bg-[#0a1628]/95 backdrop-blur-xl z-10">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-[13px] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)]"
-              style={{
-                background: "linear-gradient(135deg, #1a6eff, #7c3aed)",
-              }}
-            >
+    <div className="cp-overlay">
+      <div className="cp-backdrop" onClick={onFechar} />
+
+      <div className="cp-modal cp-scrollbar-none">
+        <div className="cp-header">
+          <div className="cp-title-wrap">
+            <div className="cp-icon-box is-def">
               <DollarSign size={18} strokeWidth={1.8} />
             </div>
-            <div>
-              <h3 className="font-['Syne',sans-serif] text-[18px] font-bold text-[#eaf0ff]">
-                Definir Preços
-              </h3>
-              <p className="text-[12px] text-[#4e6a8a]">
+            <div className="cp-title-text">
+              <h3 className="cp-title">Definir Preços</h3>
+              <p className="cp-subtitle">
                 Preço por minuto e acréscimo noturno (21h–6h)
               </p>
             </div>
           </div>
-          <button
-            onClick={onFechar}
-            className="w-9 h-9 rounded-xl flex items-center justify-center border border-white/[0.06] bg-white/[0.03] text-[#8ba3c7] hover:bg-red-500/10 hover:border-red-500/25 hover:text-red-400 transition-all duration-200 cursor-pointer"
-          >
+          <button onClick={onFechar} className="cp-close-button">
             <X size={16} strokeWidth={2} />
           </button>
         </div>
-        <div className="px-6 pb-6">
+
+        <div className="cp-body">
           {error && (
-            <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-2">
+            <div className="cp-alert cp-alert-error">
               <AlertCircle size={16} /> {error}
             </div>
           )}
           {success && (
-            <div className="mb-4 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm flex items-center gap-2">
+            <div className="cp-alert cp-alert-success">
               <CheckCircle2 size={16} /> {success}
             </div>
           )}
+
           {loading ? (
-            <div className="flex items-center justify-center gap-3 py-10 text-[#8ba3c7] text-[14px]">
-              <Loader2 size={18} className="animate-spin" /> A carregar
-              preços...
+            <div className="cp-loading">
+              <Loader2 size={18} className="cp-spin" /> A carregar preços...
             </div>
           ) : (
             <>
-              <div className="mb-5 p-4 rounded-xl border border-[#1a6eff]/15 bg-[#1a6eff]/[0.04]">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="px-2.5 py-1 rounded-lg bg-[#1a6eff]/15 text-[#3d8bff] text-[11px] font-bold uppercase tracking-wider">
-                    Básico
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
+              {/* Básico */}
+              <div className="cp-section is-basico">
+                <span className="cp-badge is-basico">Básico</span>
+                <div className="cp-grid-two">
                   <div>
-                    <label className="block text-[11px] font-semibold text-[#8ba3c7] mb-1.5 uppercase tracking-wide">
-                      Preço / minuto (€)
-                    </label>
+                    <label className="cp-label">Preço / minuto (€)</label>
                     <input
                       type="number"
                       step="0.01"
@@ -195,13 +179,11 @@ export function DefinirPrecos({ aberto, onFechar }) {
                           preco_minuto: e.target.value,
                         }))
                       }
-                      className="w-full px-4 py-3 rounded-xl text-[14px] text-[#eaf0ff] placeholder-[#4e6a8a]/50 bg-white/[0.04] border border-white/[0.08] outline-none focus:border-[#1a6eff]/40 focus:bg-[#1a6eff]/[0.06]"
+                      className="cp-input"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-[#8ba3c7] mb-1.5 uppercase tracking-wide">
-                      Acréscimo noturno (%)
-                    </label>
+                    <label className="cp-label">Acréscimo noturno (%)</label>
                     <input
                       type="number"
                       step="1"
@@ -214,22 +196,18 @@ export function DefinirPrecos({ aberto, onFechar }) {
                           acrescimo_noturno: e.target.value,
                         }))
                       }
-                      className="w-full px-4 py-3 rounded-xl text-[14px] text-[#eaf0ff] placeholder-[#4e6a8a]/50 bg-white/[0.04] border border-white/[0.08] outline-none focus:border-[#1a6eff]/40 focus:bg-[#1a6eff]/[0.06]"
+                      className="cp-input"
                     />
                   </div>
                 </div>
               </div>
-              <div className="mb-6 p-4 rounded-xl border border-[#c64dff]/15 bg-[#c64dff]/[0.04]">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="px-2.5 py-1 rounded-lg bg-[#c64dff]/15 text-[#c64dff] text-[11px] font-bold uppercase tracking-wider">
-                    Luxuoso
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
+
+              {/* Luxuoso */}
+              <div className="cp-section is-luxuoso">
+                <span className="cp-badge is-luxuoso">Luxuoso</span>
+                <div className="cp-grid-two">
                   <div>
-                    <label className="block text-[11px] font-semibold text-[#8ba3c7] mb-1.5 uppercase tracking-wide">
-                      Preço / minuto (€)
-                    </label>
+                    <label className="cp-label">Preço / minuto (€)</label>
                     <input
                       type="number"
                       step="0.01"
@@ -242,13 +220,11 @@ export function DefinirPrecos({ aberto, onFechar }) {
                           preco_minuto: e.target.value,
                         }))
                       }
-                      className="w-full px-4 py-3 rounded-xl text-[14px] text-[#eaf0ff] placeholder-[#4e6a8a]/50 bg-white/[0.04] border border-white/[0.08] outline-none focus:border-[#c64dff]/40 focus:bg-[#c64dff]/[0.06]"
+                      className="cp-input is-luxuoso"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-[#8ba3c7] mb-1.5 uppercase tracking-wide">
-                      Acréscimo noturno (%)
-                    </label>
+                    <label className="cp-label">Acréscimo noturno (%)</label>
                     <input
                       type="number"
                       step="1"
@@ -261,27 +237,30 @@ export function DefinirPrecos({ aberto, onFechar }) {
                           acrescimo_noturno: e.target.value,
                         }))
                       }
-                      className="w-full px-4 py-3 rounded-xl text-[14px] text-[#eaf0ff] placeholder-[#4e6a8a]/50 bg-white/[0.04] border border-white/[0.08] outline-none focus:border-[#c64dff]/40 focus:bg-[#c64dff]/[0.06]"
+                      className="cp-input is-luxuoso"
                     />
                   </div>
                 </div>
               </div>
-              <div className="mb-5 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05] text-[12px] text-[#6b8baa]">
-                <Moon size={14} className="text-[#c64dff] shrink-0" />
+
+              <div className="cp-note">
+                <Moon
+                  size={14}
+                  className="cp-ico-moon"
+                  style={{ flex: "none" }}
+                />
                 Período noturno: 21:00 – 06:00. O acréscimo é aplicado em
                 percentagem sobre o preço/minuto.
               </div>
+
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full py-3.5 rounded-xl font-semibold text-[14px] text-white flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-[0_8px_32px_rgba(26,110,255,0.3)] hover:-translate-y-0.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-                style={{
-                  background: "linear-gradient(135deg, #1a6eff, #0052cc)",
-                }}
+                className="cp-btn cp-btn-primary"
               >
                 {saving ? (
                   <>
-                    <Loader2 size={16} className="animate-spin" /> A guardar...
+                    <Loader2 size={16} className="cp-spin" /> A guardar...
                   </>
                 ) : (
                   <>
@@ -292,7 +271,6 @@ export function DefinirPrecos({ aberto, onFechar }) {
             </>
           )}
         </div>
-        <style>{`.scrollbar-none::-webkit-scrollbar{display:none}.scrollbar-none{scrollbar-width:none}`}</style>
       </div>
     </div>
   );
@@ -328,58 +306,45 @@ export function ListarPrecos({ aberto, onFechar, onEditar }) {
   const luxuoso = precos.find((p) => p.nivel_conforto === "luxuoso");
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onFechar}
-      />
-      <div className="relative w-full max-w-[560px] mx-4 max-h-[90vh] overflow-y-auto rounded-2xl border border-[#1a6eff]/20 bg-[#0a1628]/95 backdrop-blur-2xl shadow-[0_32px_80px_rgba(0,0,0,0.5)] scrollbar-none">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00d4ff]/30 to-transparent" />
-        <div className="flex items-center justify-between p-6 pb-4 sticky top-0 bg-[#0a1628]/95 backdrop-blur-xl z-10">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-[13px] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)]"
-              style={{
-                background: "linear-gradient(135deg, #00d4ff, #1a6eff)",
-              }}
-            >
+    <div className="cp-overlay">
+      <div className="cp-backdrop" onClick={onFechar} />
+
+      <div className="cp-modal cp-scrollbar-none">
+        <div className="cp-header">
+          <div className="cp-title-wrap">
+            <div className="cp-icon-box is-cyan">
               <DollarSign size={18} strokeWidth={1.8} />
             </div>
-            <div>
-              <h3 className="font-['Syne',sans-serif] text-[18px] font-bold text-[#eaf0ff]">
-                Preços Atuais
-              </h3>
-              <p className="text-[12px] text-[#4e6a8a]">
+            <div className="cp-title-text">
+              <h3 className="cp-title">Preços Atuais</h3>
+              <p className="cp-subtitle">
                 Tabela de preços por nível de conforto
               </p>
             </div>
           </div>
-          <button
-            onClick={onFechar}
-            className="w-9 h-9 rounded-xl flex items-center justify-center border border-white/[0.06] bg-white/[0.03] text-[#8ba3c7] hover:bg-red-500/10 hover:border-red-500/25 hover:text-red-400 transition-all duration-200 cursor-pointer"
-          >
+          <button onClick={onFechar} className="cp-close-button">
             <X size={16} strokeWidth={2} />
           </button>
         </div>
-        <div className="px-6 pb-6">
+
+        <div className="cp-body">
           {error && (
-            <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-2">
+            <div className="cp-alert cp-alert-error">
               <AlertCircle size={16} /> {error}
             </div>
           )}
+
           {loading ? (
-            <div className="flex items-center justify-center gap-3 py-10 text-[#8ba3c7] text-[14px]">
-              <Loader2 size={18} className="animate-spin" /> A carregar...
+            <div className="cp-loading">
+              <Loader2 size={18} className="cp-spin" /> A carregar...
             </div>
           ) : precos.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
-                <DollarSign size={28} className="text-[#4e6a8a]" />
+            <div className="cp-empty">
+              <div className="cp-empty-icon">
+                <DollarSign size={28} />
               </div>
-              <p className="text-[15px] text-[#8ba3c7] font-medium mb-2">
-                Nenhum preço definido
-              </p>
-              <p className="text-[13px] text-[#4e6a8a] mb-5">
+              <p className="cp-empty-title">Nenhum preço definido</p>
+              <p className="cp-empty-text">
                 Defina os preços para começar a cobrar viagens.
               </p>
               <button
@@ -387,47 +352,37 @@ export function ListarPrecos({ aberto, onFechar, onEditar }) {
                   onFechar();
                   onEditar?.();
                 }}
-                className="px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white transition-all duration-200 hover:shadow-[0_8px_24px_rgba(26,110,255,0.3)] cursor-pointer"
-                style={{
-                  background: "linear-gradient(135deg, #1a6eff, #0052cc)",
-                }}
+                className="cp-btn cp-btn-primary cp-btn-inline"
               >
                 Definir Preços
               </button>
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
-              <PrecoCard
-                nivel="Básico"
-                cor="#1a6eff"
-                corBg="rgba(26,110,255,0.06)"
-                corBorder="rgba(26,110,255,0.18)"
-                dados={basico}
-              />
-              <PrecoCard
-                nivel="Luxuoso"
-                cor="#c64dff"
-                corBg="rgba(198,77,255,0.06)"
-                corBorder="rgba(198,77,255,0.18)"
-                dados={luxuoso}
-              />
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05] text-[12px] text-[#6b8baa]">
-                <Moon size={14} className="text-[#c64dff] shrink-0" />
+            <div className="cp-list">
+              <PrecoCard nivel="Básico" variante="basico" dados={basico} />
+              <PrecoCard nivel="Luxuoso" variante="luxuoso" dados={luxuoso} />
+
+              <div className="cp-note" style={{ marginBottom: 0 }}>
+                <Moon
+                  size={14}
+                  className="cp-ico-moon"
+                  style={{ flex: "none" }}
+                />
                 Período noturno: 21:00 – 06:00
               </div>
+
               <button
                 onClick={() => {
                   onFechar();
                   onEditar?.();
                 }}
-                className="w-full py-3 rounded-xl font-semibold text-[13px] text-[#3d8bff] flex items-center justify-center gap-2 transition-all duration-200 border border-[#1a6eff]/25 bg-[#1a6eff]/[0.08] hover:bg-[#1a6eff]/[0.15] cursor-pointer"
+                className="cp-btn cp-btn-soft"
               >
                 <Pencil size={15} /> Editar Preços
               </button>
             </div>
           )}
         </div>
-        <style>{`.scrollbar-none::-webkit-scrollbar{display:none}.scrollbar-none{scrollbar-width:none}`}</style>
       </div>
     </div>
   );
@@ -435,12 +390,6 @@ export function ListarPrecos({ aberto, onFechar, onEditar }) {
 
 /* ═══════════════════════════════════════════════
    SIMULAR CUSTO DE VIAGEM
-
-   - Carrega preços da BD
-   - Gestor seleciona um preço num dropdown que mostra
-     "Básico — 0.15€/min (noturno +20%)" etc.
-   - Define início e fim da viagem
-   - Calcula custo minuto a minuto (diurno vs noturno)
    ═══════════════════════════════════════════════ */
 export function SimularViagem({ aberto, onFechar }) {
   const [precos, setPrecos] = useState([]);
@@ -540,121 +489,99 @@ export function SimularViagem({ aberto, onFechar }) {
   if (!aberto) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onFechar}
-      />
-      <div className="relative w-full max-w-[560px] mx-4 max-h-[90vh] overflow-y-auto rounded-2xl border border-[#00d4ff]/20 bg-[#0a1628]/95 backdrop-blur-2xl shadow-[0_32px_80px_rgba(0,0,0,0.5)] scrollbar-none">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00d4ff]/30 to-transparent" />
+    <div className="cp-overlay">
+      <div className="cp-backdrop" onClick={onFechar} />
 
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-4 sticky top-0 bg-[#0a1628]/95 backdrop-blur-xl z-10">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-[13px] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)]"
-              style={{
-                background: "linear-gradient(135deg, #00d4ff, #1a6eff)",
-              }}
-            >
+      <div className="cp-modal cp-scrollbar-none">
+        <div className="cp-header">
+          <div className="cp-title-wrap">
+            <div className="cp-icon-box is-cyan">
               <Calculator size={18} strokeWidth={1.8} />
             </div>
-            <div>
-              <h3 className="font-['Syne',sans-serif] text-[18px] font-bold text-[#eaf0ff]">
-                Simular Viagem
-              </h3>
-              <p className="text-[12px] text-[#4e6a8a]">
+            <div className="cp-title-text">
+              <h3 className="cp-title">Simular Viagem</h3>
+              <p className="cp-subtitle">
                 Calcular custo de uma viagem fictícia
               </p>
             </div>
           </div>
-          <button
-            onClick={onFechar}
-            className="w-9 h-9 rounded-xl flex items-center justify-center border border-white/[0.06] bg-white/[0.03] text-[#8ba3c7] hover:bg-red-500/10 hover:border-red-500/25 hover:text-red-400 transition-all duration-200 cursor-pointer"
-          >
+          <button onClick={onFechar} className="cp-close-button">
             <X size={16} strokeWidth={2} />
           </button>
         </div>
 
-        <div className="px-6 pb-6">
+        <div className="cp-body">
           {error && (
-            <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-2">
+            <div className="cp-alert cp-alert-error">
               <AlertCircle size={16} /> {error}
             </div>
           )}
 
           {loading ? (
-            <div className="flex items-center justify-center gap-3 py-10 text-[#8ba3c7] text-[14px]">
-              <Loader2 size={18} className="animate-spin" /> A carregar...
+            <div className="cp-loading">
+              <Loader2 size={18} className="cp-spin" /> A carregar...
             </div>
           ) : precos.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
-                <DollarSign size={28} className="text-[#4e6a8a]" />
+            <div className="cp-empty">
+              <div className="cp-empty-icon">
+                <DollarSign size={28} />
               </div>
-              <p className="text-[15px] text-[#8ba3c7] font-medium mb-2">
-                Nenhum preço definido
-              </p>
-              <p className="text-[13px] text-[#4e6a8a]">
+              <p className="cp-empty-title">Nenhum preço definido</p>
+              <p className="cp-empty-text">
                 Defina os preços primeiro para poder simular viagens.
               </p>
             </div>
           ) : (
             <>
-              {/* ── Seletor de preço da BD ── */}
-              <div className="mb-5">
-                <label className="block text-[11px] font-semibold text-[#8ba3c7] mb-2 uppercase tracking-wide">
+              {/* Seletor de preço da BD */}
+              <div>
+                <label className="cp-label">
                   Preço por minuto (da base de dados)
                 </label>
-                <div className="relative">
+                <div className="cp-dropdown">
                   <button
                     type="button"
                     onClick={() => setDropdownOpen((v) => !v)}
-                    className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-[14px] border outline-none transition-all duration-200 text-left ${
-                      dropdownOpen
-                        ? "bg-[#1a6eff]/[0.06] border-[#1a6eff]/40 shadow-[0_0_0_3px_rgba(26,110,255,0.1)]"
-                        : precoSelecionado
-                          ? "bg-white/[0.04] border-[#1a6eff]/25"
-                          : "bg-white/[0.04] border-white/[0.08] hover:border-white/[0.15]"
-                    } cursor-pointer`}
+                    className={`cp-dropdown-button ${
+                      dropdownOpen ? "is-open" : ""
+                    } ${precoSelecionado ? "has-value" : ""}`}
                   >
                     {precoSelecionado ? (
-                      <span className="flex items-center gap-3 text-[#eaf0ff]">
+                      <span className="cp-dropdown-value">
                         <span
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                          className={`cp-pill ${
                             precoSelecionado.nivel_conforto === "basico"
-                              ? "bg-[#1a6eff]/15 text-[#3d8bff]"
-                              : "bg-[#c64dff]/15 text-[#c64dff]"
+                              ? "is-basico"
+                              : "is-luxuoso"
                           }`}
                         >
                           {formatNivel(precoSelecionado.nivel_conforto)}
                         </span>
-                        <span className="font-semibold">
+                        <span className="cp-price-strong">
                           {precoSelecionado.preco_minuto.toFixed(2)}€/min
                         </span>
                         {precoSelecionado.acrescimo_noturno > 0 && (
-                          <span className="text-[12px] text-[#8ba3c7]">
-                            <Moon
-                              size={11}
-                              className="inline mr-0.5 text-[#c64dff]"
-                            />
-                            +{precoSelecionado.acrescimo_noturno}% noturno
+                          <span className="cp-noturno-tag">
+                            <Moon size={11} className="cp-ico-moon" />+
+                            {precoSelecionado.acrescimo_noturno}% noturno
                           </span>
                         )}
                       </span>
                     ) : (
-                      <span className="text-[#4e6a8a]/60">
+                      <span className="cp-dropdown-placeholder">
                         Selecionar preço...
                       </span>
                     )}
                     <ChevronDown
                       size={16}
-                      className={`text-[#4e6a8a] transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+                      className={`cp-dropdown-chevron ${
+                        dropdownOpen ? "is-open" : ""
+                      }`}
                     />
                   </button>
 
                   {dropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-2 z-50 rounded-xl border border-[#1a6eff]/20 bg-[#0c1c38]/98 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden">
+                    <div className="cp-dropdown-menu">
                       {precos.map((p) => (
                         <button
                           key={p._id}
@@ -664,34 +591,27 @@ export function SimularViagem({ aberto, onFechar }) {
                             setDropdownOpen(false);
                             setResultado(null);
                           }}
-                          className={`w-full text-left px-4 py-3.5 flex items-center gap-3 transition-colors ${
-                            precoSelecionado?._id === p._id
-                              ? "bg-[#1a6eff]/15 text-[#eaf0ff]"
-                              : "text-[#c8d8ee] hover:bg-[#1a6eff]/10"
+                          className={`cp-dropdown-option ${
+                            precoSelecionado?._id === p._id ? "is-selected" : ""
                           }`}
                         >
                           <span
-                            className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                            className={`cp-pill ${
                               p.nivel_conforto === "basico"
-                                ? "bg-[#1a6eff]/15 text-[#3d8bff]"
-                                : "bg-[#c64dff]/15 text-[#c64dff]"
+                                ? "is-basico"
+                                : "is-luxuoso"
                             }`}
                           >
                             {formatNivel(p.nivel_conforto)}
                           </span>
-                          <span className="font-semibold text-[14px]">
+                          <span className="cp-price-strong">
                             {p.preco_minuto.toFixed(2)}€
-                            <span className="font-normal text-[#8ba3c7]">
-                              /min
-                            </span>
+                            <span className="cp-price-unit">/min</span>
                           </span>
                           {p.acrescimo_noturno > 0 && (
-                            <span className="text-[12px] text-[#8ba3c7] ml-auto">
-                              <Moon
-                                size={11}
-                                className="inline mr-0.5 text-[#c64dff]"
-                              />
-                              +{p.acrescimo_noturno}%
+                            <span className="cp-noturno-tag is-right">
+                              <Moon size={11} className="cp-ico-moon" />+
+                              {p.acrescimo_noturno}%
                             </span>
                           )}
                         </button>
@@ -701,32 +621,30 @@ export function SimularViagem({ aberto, onFechar }) {
                 </div>
               </div>
 
-              {/* ── Preço selecionado — resumo ── */}
+              {/* Resumo do preço selecionado */}
               {precoSelecionado && (
-                <div className="mb-5 p-3.5 rounded-xl border border-[#1a6eff]/12 bg-[#1a6eff]/[0.03] grid grid-cols-3 gap-3 text-center">
+                <div className="cp-summary">
                   <div>
-                    <div className="text-[10px] uppercase tracking-wider text-[#6b8baa] mb-1">
-                      Nível
-                    </div>
-                    <div className="text-[13px] font-semibold text-[#eaf0ff]">
+                    <div className="cp-summary-label">Nível</div>
+                    <div className="cp-summary-value">
                       {formatNivel(precoSelecionado.nivel_conforto)}
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider text-[#6b8baa] mb-1">
-                      <Sun size={10} className="text-[#ffb932]" />
+                    <div className="cp-summary-label">
+                      <Sun size={10} className="cp-ico-sun" />
                       Diurno
                     </div>
-                    <div className="text-[13px] font-semibold text-[#eaf0ff]">
+                    <div className="cp-summary-value">
                       {precoSelecionado.preco_minuto.toFixed(2)}€/min
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider text-[#6b8baa] mb-1">
-                      <Moon size={10} className="text-[#c64dff]" />
+                    <div className="cp-summary-label">
+                      <Moon size={10} className="cp-ico-moon" />
                       Noturno
                     </div>
-                    <div className="text-[13px] font-semibold text-[#c64dff]">
+                    <div className="cp-summary-value is-noturno">
                       {(
                         precoSelecionado.preco_minuto *
                         (1 + (precoSelecionado.acrescimo_noturno || 0) / 100)
@@ -737,12 +655,10 @@ export function SimularViagem({ aberto, onFechar }) {
                 </div>
               )}
 
-              {/* ── Hora início e fim ── */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              {/* Hora início e fim */}
+              <div className="cp-grid-two" style={{ marginBottom: 16 }}>
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#8ba3c7] mb-1.5 uppercase tracking-wide">
-                    Início da viagem
-                  </label>
+                  <label className="cp-label">Início da viagem</label>
                   <input
                     type="datetime-local"
                     value={inicio}
@@ -750,13 +666,11 @@ export function SimularViagem({ aberto, onFechar }) {
                       setInicio(e.target.value);
                       setResultado(null);
                     }}
-                    className="w-full px-3 py-3 rounded-xl text-[13px] text-[#eaf0ff] bg-white/[0.04] border border-white/[0.08] outline-none focus:border-[#1a6eff]/40 focus:bg-[#1a6eff]/[0.06]"
+                    className="cp-input"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#8ba3c7] mb-1.5 uppercase tracking-wide">
-                    Fim da viagem
-                  </label>
+                  <label className="cp-label">Fim da viagem</label>
                   <input
                     type="datetime-local"
                     value={fim}
@@ -764,77 +678,74 @@ export function SimularViagem({ aberto, onFechar }) {
                       setFim(e.target.value);
                       setResultado(null);
                     }}
-                    className="w-full px-3 py-3 rounded-xl text-[13px] text-[#eaf0ff] bg-white/[0.04] border border-white/[0.08] outline-none focus:border-[#1a6eff]/40 focus:bg-[#1a6eff]/[0.06]"
+                    className="cp-input"
                   />
                 </div>
               </div>
 
-              {/* Info */}
-              <div className="mb-5 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05] text-[12px] text-[#6b8baa]">
-                <Clock size={14} className="text-[#00d4ff] shrink-0" />A viagem
-                pode cruzar o período diurno e noturno, e até dias consecutivos.
+              <div className="cp-note">
+                <Clock
+                  size={14}
+                  className="cp-ico-clock"
+                  style={{ flex: "none" }}
+                />
+                A viagem pode cruzar o período diurno e noturno, e até dias
+                consecutivos.
               </div>
 
-              {/* Botão calcular */}
               <button
                 onClick={calcularCusto}
-                className="w-full py-3.5 rounded-xl font-semibold text-[14px] text-white flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-[0_8px_32px_rgba(0,212,255,0.3)] hover:-translate-y-0.5 cursor-pointer mb-5"
-                style={{
-                  background: "linear-gradient(135deg, #00d4ff, #1a6eff)",
-                }}
+                className="cp-btn cp-btn-cyan"
+                style={{ marginBottom: 20 }}
               >
                 <Calculator size={16} /> Calcular Custo
               </button>
 
               {/* Resultado */}
               {resultado && (
-                <div className="rounded-2xl border border-[#00d4ff]/20 bg-[#00d4ff]/[0.04] p-5 animate-[fadeUp_0.3s_ease_both]">
-                  <div className="text-center mb-4">
-                    <div className="text-[11px] uppercase tracking-wider text-[#6b8baa] mb-1">
-                      Custo total da viagem
-                    </div>
-                    <div className="font-['Syne',sans-serif] text-[36px] font-extrabold text-[#00d4ff]">
-                      {resultado.total.toFixed(2)}€
-                    </div>
-                    <div className="text-[12px] text-[#8ba3c7] mt-1">
-                      {resultado.totalMinutos} minutos ·{" "}
-                      {formatNivel(resultado.nivel)} · {resultado.precoMin}€/min
-                    </div>
+                <div className="cp-result">
+                  <div className="cp-result-total-label">
+                    Custo total da viagem
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-center">
-                      <div className="flex items-center justify-center gap-1.5 mb-1.5">
-                        <Sun size={13} className="text-[#ffb932]" />
-                        <span className="text-[10px] uppercase tracking-wider text-[#6b8baa] font-semibold">
-                          Diurno
-                        </span>
+                  <div className="cp-result-total">
+                    {resultado.total.toFixed(2)}€
+                  </div>
+                  <div className="cp-result-meta">
+                    {resultado.totalMinutos} minutos ·{" "}
+                    {formatNivel(resultado.nivel)} · {resultado.precoMin}€/min
+                  </div>
+
+                  <div className="cp-result-grid">
+                    <div className="cp-stat">
+                      <div className="cp-stat-head">
+                        <Sun size={13} className="cp-ico-sun" />
+                        Diurno
                       </div>
-                      <div className="font-['Syne',sans-serif] text-[18px] font-bold text-[#eaf0ff]">
+                      <div className="cp-stat-value">
                         {resultado.custoDiurno.toFixed(2)}€
                       </div>
-                      <div className="text-[11px] text-[#6b8baa] mt-0.5">
+                      <div className="cp-stat-sub">
                         {resultado.minutosDiurnos} min × {resultado.precoMin}€
                       </div>
                     </div>
-                    <div className="p-3 rounded-xl bg-[#c64dff]/[0.06] border border-[#c64dff]/15 text-center">
-                      <div className="flex items-center justify-center gap-1.5 mb-1.5">
-                        <Moon size={13} className="text-[#c64dff]" />
-                        <span className="text-[10px] uppercase tracking-wider text-[#6b8baa] font-semibold">
-                          Noturno
-                        </span>
+                    <div className="cp-stat is-noturno">
+                      <div className="cp-stat-head">
+                        <Moon size={13} className="cp-ico-moon" />
+                        Noturno
                       </div>
-                      <div className="font-['Syne',sans-serif] text-[18px] font-bold text-[#c64dff]">
+                      <div className="cp-stat-value">
                         {resultado.custoNoturno.toFixed(2)}€
                       </div>
-                      <div className="text-[11px] text-[#6b8baa] mt-0.5">
+                      <div className="cp-stat-sub">
                         {resultado.minutosNoturnos} min × {resultado.precoMin}€
                         × {(1 + resultado.acrescimo / 100).toFixed(2)}
                       </div>
                     </div>
                   </div>
+
                   {resultado.acrescimo > 0 && (
-                    <div className="mt-3 text-center text-[11px] text-[#8ba3c7]">
-                      <Moon size={12} className="inline mr-1 text-[#c64dff]" />
+                    <div className="cp-result-foot">
+                      <Moon size={12} className="cp-ico-moon" />
                       Acréscimo noturno de {resultado.acrescimo}% aplicado entre
                       21:00 e 06:00
                     </div>
@@ -844,77 +755,51 @@ export function SimularViagem({ aberto, onFechar }) {
             </>
           )}
         </div>
-        <style>{`.scrollbar-none::-webkit-scrollbar{display:none}.scrollbar-none{scrollbar-width:none}@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
       </div>
     </div>
   );
 }
 
 /* ── Card de preço individual ── */
-function PrecoCard({ nivel, cor, corBg, corBorder, dados }) {
+function PrecoCard({ nivel, variante, dados }) {
   if (!dados) {
     return (
-      <div className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
-        <div className="flex items-center gap-2 mb-2">
-          <span
-            className="px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider"
-            style={{
-              background: corBg,
-              color: cor,
-              border: `1px solid ${corBorder}`,
-            }}
-          >
-            {nivel}
-          </span>
-        </div>
-        <p className="text-[13px] text-[#4e6a8a]">Preço não definido</p>
+      <div className="cp-preco-card is-empty">
+        <span className={`cp-badge is-${variante}`}>{nivel}</span>
+        <p className="cp-preco-empty-text">Preço não definido</p>
       </div>
     );
   }
+
   const precoNoturno =
     dados.preco_minuto * (1 + (dados.acrescimo_noturno || 0) / 100);
+
   return (
-    <div
-      className="p-5 rounded-xl border"
-      style={{ borderColor: corBorder, background: corBg }}
-    >
-      <div className="flex items-center justify-between mb-4">
-        <span
-          className="px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider"
-          style={{ background: `${cor}22`, color: cor }}
-        >
-          {nivel}
-        </span>
-      </div>
-      <div className="grid grid-cols-2 gap-3 mb-3">
-        <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-center">
-          <div className="flex items-center justify-center gap-1.5 mb-1.5">
-            <Sun size={13} className="text-[#ffb932]" />
-            <span className="text-[10px] uppercase tracking-wider text-[#6b8baa] font-semibold">
-              Diurno
-            </span>
+    <div className={`cp-preco-card is-${variante}`}>
+      <span className={`cp-badge is-${variante}`}>{nivel}</span>
+
+      <div className="cp-preco-grid">
+        <div className="cp-stat">
+          <div className="cp-stat-head">
+            <Sun size={13} className="cp-ico-sun" />
+            Diurno
           </div>
-          <div className="font-['Syne',sans-serif] text-[22px] font-extrabold text-[#eaf0ff]">
-            {dados.preco_minuto.toFixed(2)}€
-          </div>
-          <div className="text-[11px] text-[#6b8baa] mt-0.5">por minuto</div>
+          <div className="cp-stat-value">{dados.preco_minuto.toFixed(2)}€</div>
+          <div className="cp-stat-sub">por minuto</div>
         </div>
-        <div className="p-3 rounded-xl bg-[#c64dff]/[0.06] border border-[#c64dff]/15 text-center">
-          <div className="flex items-center justify-center gap-1.5 mb-1.5">
-            <Moon size={13} className="text-[#c64dff]" />
-            <span className="text-[10px] uppercase tracking-wider text-[#6b8baa] font-semibold">
-              Noturno
-            </span>
+        <div className="cp-stat is-noturno">
+          <div className="cp-stat-head">
+            <Moon size={13} className="cp-ico-moon" />
+            Noturno
           </div>
-          <div className="font-['Syne',sans-serif] text-[22px] font-extrabold text-[#c64dff]">
-            {precoNoturno.toFixed(2)}€
-          </div>
-          <div className="text-[11px] text-[#6b8baa] mt-0.5">por minuto</div>
+          <div className="cp-stat-value">{precoNoturno.toFixed(2)}€</div>
+          <div className="cp-stat-sub">por minuto</div>
         </div>
       </div>
+
       {dados.acrescimo_noturno > 0 && (
-        <div className="text-center text-[11px] text-[#8ba3c7]">
-          <Moon size={11} className="inline mr-1 text-[#c64dff]" />
+        <div className="cp-preco-foot">
+          <Moon size={11} className="cp-ico-moon" />
           Acréscimo noturno: +{dados.acrescimo_noturno}%
         </div>
       )}
