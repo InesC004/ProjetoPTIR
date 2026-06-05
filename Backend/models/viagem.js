@@ -27,7 +27,7 @@ const viagemSchema = new mongoose.Schema(
 
     taxi_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "taxi",
+      ref: "Taxi",
     },
 
     origem_morada: {
