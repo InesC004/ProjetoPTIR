@@ -449,7 +449,9 @@ function SecRelatorios() {
       }
 
       if (tipo === "reabastecimentos") {
-        url = `http://localhost:8080/api/relatorios/reabastecimentos/${item.tipo_motor}${params}&tipo=${total}`;
+        const tipoMotor = item.tipo_motor || item._id;
+
+        url = `http://localhost:8080/api/relatorios/reabastecimentos/${tipoMotor}${params}&tipo=${total}`;
       }
 
       if (!url) return;
@@ -457,7 +459,13 @@ function SecRelatorios() {
       const res = await fetch(url, { headers });
       const dados = await res.json();
 
-      setDetalhes(dados.viagens || dados.detalhes || []);
+      setDetalhes(
+        dados.reabastecimentos ||
+          dados.detalhes ||
+          dados.viagens ||
+          dados.data ||
+          [],
+      );
     } catch (err) {
       console.error("Erro ao carregar detalhes:", err);
       setDetalhes([]);
@@ -669,16 +677,6 @@ function SecRelatorios() {
         </button>
       </div>
 
-      <div className="pg-busca-wrap">
-        <input
-          type="text"
-          placeholder=""
-          value={pesquisa}
-          onChange={(e) => setPesquisa(e.target.value)}
-          className="pg-busca"
-        />
-      </div>
-
       <div className="pg-total-grid">
         {totais[tipo].map(([id, label, valor]) => (
           <button
@@ -692,7 +690,6 @@ function SecRelatorios() {
           >
             <span>{label}</span>
             <strong>{valorResumo(id, valor)}</strong>
-            <small>Clique para ver detalhes</small>
           </button>
         ))}
       </div>
@@ -718,14 +715,14 @@ function SecRelatorios() {
               listaPesquisa.map((item) => {
                 const entidade =
                   item.motorista || item.taxi || item.cliente || {};
-                const id = entidade._id || item.tipo_motor;
+                const id = entidade._id || item.tipo_motor || item._id;
 
                 const nome =
                   entidade.nome ||
                   entidade.matricula ||
                   item.tipo_motor ||
+                  item._id ||
                   "Sem nome";
-
                 return (
                   <button
                     key={id}

@@ -214,7 +214,7 @@
 
 .pg-title {
   font-family: "Syne", sans-serif;
-  font-size: clamp(1.7rem, 2.4vw, 2.35rem);
+  font-size: clamp(1.55rem, 2vw, 2.15rem);
   line-height: 1.08;
   font-weight: 800;
   color: #07142a;
@@ -274,7 +274,7 @@
 
 .pg-card h3 {
   font-family: "Syne", sans-serif;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 800;
   margin: 0;
 }
@@ -805,7 +805,6 @@
 /* =========================================================
    Telemóvel
    ========================================================= */
-
 @media (max-width: 700px) {
   .pg-page {
     --header-h: 64px;
@@ -818,11 +817,10 @@
 
   .pg-logo img {
     height: 36px;
-    border-radius: 10px;
   }
 
   .pg-logo strong {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 
   .pg-logo small,
@@ -830,72 +828,60 @@
     display: none;
   }
 
-  .pg-logout {
-    padding: 9px 14px;
-    border-radius: 12px;
-  }
-
   .pg-main {
-    padding: 24px 16px
-      calc(var(--mobile-nav-h) + 30px + env(safe-area-inset-bottom));
+    padding: 24px 14px
+      calc(var(--mobile-nav-h) + 26px + env(safe-area-inset-bottom));
   }
 
   .pg-title {
-    font-size: 1.75rem;
-    line-height: 1.06;
-  }
-
-  .pg-tag {
-    font-size: 0.72rem;
-    margin-bottom: 10px;
+    font-size: 1.55rem;
+    line-height: 1.1;
   }
 
   .pg-desc {
-    font-size: 0.9rem;
-    line-height: 1.45;
-    margin-bottom: 24px;
-  }
-
-  .pg-card {
-    border-radius: 22px;
-    padding: 22px;
-  }
-
-  .pg-card-head {
+    font-size: 0.88rem;
     margin-bottom: 20px;
   }
 
-  .pg-card strong {
-    font-size: 1.4rem;
+  /* RELATÓRIOS */
+
+  .pg-relatorios-topo {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
   }
 
-  .pg-action {
-    min-height: 52px;
+  .pg-relatorios-topo h3 {
+    font-size: 1rem;
   }
 
-  .pg-relatorios-topo,
-  .pg-sub {
-    grid-template-columns: 1fr;
-    display: grid;
+  .pg-relatorios-topo p {
+    font-size: 0.82rem;
   }
 
   .pg-filtros {
-    width: 100%;
     flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .pg-filtros label {
+    width: 100%;
   }
 
   .pg-filtros input {
     width: 100%;
-  }
-
-  .pg-total-grid {
-    grid-template-columns: 1fr;
+    box-sizing: border-box;
+    min-height: 48px;
+    font-size: 16px;
   }
 
   .pg-tabs-relatorios {
     flex-wrap: nowrap;
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    padding-bottom: 6px;
     scrollbar-width: none;
   }
 
@@ -905,14 +891,45 @@
 
   .pg-tabs-relatorios button {
     flex: none;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    padding: 9px 12px;
+  }
+
+  .pg-total-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .pg-sub {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .pg-panel {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .pg-panel h4 {
+    font-size: 0.95rem;
   }
 
   .pg-row {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .pg-row strong {
+    white-space: normal;
   }
 
   .pg-row-metrics {
+    width: 100%;
     margin-left: 0;
+    justify-content: space-between;
   }
 
   .pg-turnos-grid {
@@ -920,38 +937,19 @@
   }
 
   .pg-turno-row {
-    grid-template-columns: 1fr auto;
-    row-gap: 8px;
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .pg-estado {
-    justify-self: end;
+    justify-self: start;
   }
 
   .pg-busca,
-  .pg-search,
-  .pg-filtros input {
+  .pg-search {
+    width: 100%;
+    max-width: none;
     font-size: 16px;
     min-height: 48px;
-  }
-}
-
-/* Ecrãs muito pequenos */
-
-@media (max-width: 390px) {
-  .pg-main {
-    padding-inline: 14px;
-  }
-
-  .pg-title {
-    font-size: 1.55rem;
-  }
-
-  .pg-nav-item {
-    font-size: 9.3px;
-  }
-
-  .pg-card {
-    padding: 20px;
   }
 }
