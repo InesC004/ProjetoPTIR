@@ -482,10 +482,19 @@
     width: 38px;
     height: 38px;
     flex-shrink: 0;
- 
- 
- 
- 
- 
+  }
+
+  .rc-card,
+  .rc-list-card,
+  .rc-form-card,
+  .rc-item,
+  .rc-card-head {
+    min-width: 0;
+  }
+
+  .rc-item,
+  .rc-item-meta-row,
+  .rc-card-sub {
+    overflow-wrap: anywhere;
   }
 }

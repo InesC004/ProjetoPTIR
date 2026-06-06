@@ -413,14 +413,73 @@
 @media (max-width: 720px) {
   .pm-toolbar {
     flex-direction: column;
+    gap: 14px;
+    padding: 18px 16px;
+    border-radius: 20px;
   }
 
   .pm-refresh {
     width: 100%;
   }
 
+  .pm-grid,
+  .pm-card,
+  .pm-card-body,
+  .pm-list,
+  .pm-item {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .pm-card {
+    border-radius: 20px;
+  }
+
+  .pm-card-head {
+    padding: 18px 16px 14px;
+    align-items: flex-start;
+  }
+
+  .pm-title-left {
+    min-width: 0;
+  }
+
+  .pm-card-body {
+    padding: 16px;
+  }
+
+  .pm-item {
+    padding: 15px;
+    border-radius: 18px;
+  }
+
+  .pm-item-top {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pm-status {
+    align-self: flex-start;
+  }
+
   .pm-metrics {
     grid-template-columns: 1fr;
+  }
+
+  .pm-metric,
+  .pm-extra,
+  .pm-item-title,
+  .pm-item-sub {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .pm-metric strong {
+    white-space: normal;
+  }
+
+  .pm-action {
+    min-height: 46px;
   }
 }
 .pm-status-cancelled {

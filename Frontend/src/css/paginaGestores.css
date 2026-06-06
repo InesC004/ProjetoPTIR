@@ -1378,3 +1378,83 @@
     padding: 14px;
   }
 }
+@media (max-width: 768px) {
+  .pg-header {
+    gap: 10px;
+  }
+
+  .pg-header-right {
+    gap: 8px;
+  }
+
+  .pg-logout {
+    min-height: 42px;
+    padding: 8px 12px;
+    border-radius: 11px;
+  }
+
+  .pg-main,
+  .pg-content,
+  .pg-relatorios,
+  .pg-panel,
+  .pg-card {
+    min-width: 0;
+  }
+
+  .pg-card {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .pg-action {
+    min-height: 50px;
+    padding-right: 14px;
+    overflow-wrap: anywhere;
+  }
+
+  .pg-row,
+  .pg-turno-row,
+  .pg-turno-detalhe-row {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .pg-row-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .pg-row-metrics strong {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .pg-turno-detalhes {
+    grid-template-columns: 1fr;
+  }
+
+  .pg-nav-item {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .pg-logo div {
+    display: none;
+  }
+
+  .pg-main {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .pg-nav-item {
+    font-size: 0;
+  }
+
+  .pg-nav-item svg {
+    width: 22px;
+    height: 22px;
+  }
+}

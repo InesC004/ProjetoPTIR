@@ -126,6 +126,16 @@ export default function Sidebar({ isOpen, onClose }) {
                   <div className="sidebar-brand-sub">Viagens premium</div>
                 </div>
               </div>
+              <button
+                type="button"
+                className="sidebar-fechar sidebar-fechar-animado"
+                onClick={onClose}
+                aria-label="Fechar menu"
+              >
+                <span aria-hidden="true" />
+                <span aria-hidden="true" />
+                <span aria-hidden="true" />
+              </button>
             </header>
 
             {/* Conteúdo */}

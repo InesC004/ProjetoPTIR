@@ -293,4 +293,22 @@
   .ft-section-head {
     padding: 16px 16px 12px;
   }
+
+  .ft-card,
+  .ft-list,
+  .ft-row,
+  .ft-section-head {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .ft-row {
+    align-items: flex-start;
+    overflow-wrap: anywhere;
+  }
+
+  .ft-meta-value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
 }

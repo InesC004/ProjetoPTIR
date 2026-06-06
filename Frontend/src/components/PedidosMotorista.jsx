@@ -55,6 +55,20 @@ function getConforto(pedido) {
   if (!pedido?.nivel_conforto) return "—";
   return pedido.nivel_conforto === "luxuoso" ? "Luxuoso" : "Básico";
 }
+
+function getPedidoTimestamp(pedido) {
+  const valor =
+    pedido?.createdAt ||
+    pedido?.created_at ||
+    pedido?.data_criacao ||
+    pedido?.data_pedido ||
+    pedido?.data ||
+    pedido?.updatedAt ||
+    pedido?.updated_at;
+  const timestamp = valor ? new Date(valor).getTime() : 0;
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
 export default function PedidosMotorista() {
   const [pedidos, setPedidos] = useState([]);
   const [aceites, setAceites] = useState([]);
@@ -67,11 +81,14 @@ export default function PedidosMotorista() {
 
   const pedidosOrdenados = useMemo(
     () =>
-      [...pedidos].sort(
-        (a, b) =>
+      [...pedidos].sort((a, b) => {
+        const porData = getPedidoTimestamp(b) - getPedidoTimestamp(a);
+        if (porData !== 0) return porData;
+        return (
           Number(a.distancia_km ?? 999999) -
-          Number(b.distancia_km ?? 999999),
-      ),
+          Number(b.distancia_km ?? 999999)
+        );
+      }),
     [pedidos],
   );
 

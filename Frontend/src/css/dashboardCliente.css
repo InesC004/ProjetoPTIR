@@ -2328,6 +2328,27 @@ input[type="number"].input-morada {
   border-color: rgba(26, 110, 255, 0.45);
   box-shadow: 0 0 0 3px rgba(26, 110, 255, 0.1);
 }
+
+.pagamento-externo-teste {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(26, 110, 255, 0.16);
+  background: #ffffff;
+}
+
+.pagamento-externo-teste strong {
+  color: #0d1829 !important;
+  font-weight: 900;
+}
+
+.pagamento-externo-teste span {
+  color: #3d506a !important;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
 /* FIX AXE: nota em fundo #f8fbff */
 .pagamento-nota {
   margin: 12px 0 0;
@@ -2689,4 +2710,122 @@ html body .dash-pagina .card-passo .passo-desc {
     line-height: 1;
   }
 
+}
+
+@media (max-width: 900px) {
+  .dash-pagina {
+    padding-bottom: calc(82px + env(safe-area-inset-bottom));
+  }
+
+  .hero {
+    grid-template-columns: 1fr !important;
+    gap: 22px;
+    padding: 84px 16px calc(96px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .painel-esquerdo {
+    order: 2;
+    position: static !important;
+    top: auto;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .painel-mapa {
+    order: 1;
+    position: static !important;
+    margin-top: 0;
+    height: auto;
+    min-height: 0;
+    transform: none !important;
+  }
+
+  .caixa-mapa {
+    position: relative !important;
+    height: min(56dvh, 460px);
+    min-height: 340px;
+    max-height: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    height: 64px;
+  }
+
+  .perfil-btn-wrap .perfil-menu {
+    position: fixed;
+    top: 72px;
+    left: 14px;
+    right: 14px;
+    width: auto;
+  }
+
+  .titulo {
+    font-size: clamp(1.85rem, 9vw, 2.55rem);
+    letter-spacing: 0;
+  }
+
+  .descricao {
+    max-width: none;
+  }
+
+  .card-reserva,
+  .pedido-estado-card,
+  .painel-mapa,
+  .caixa-mapa {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .painel-mapa,
+  .caixa-mapa,
+  .caixa-mapa .leaflet-container {
+    position: relative !important;
+    inset: auto !important;
+  }
+
+  .linha-input {
+    min-width: 0;
+  }
+
+  .barra-inferior-mapa {
+    align-items: stretch;
+  }
+
+  .mobile-bottom-nav {
+    height: calc(76px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 420px) {
+  .hero {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .caixa-mapa {
+    height: 330px;
+    min-height: 330px;
+  }
+
+  .mobile-bottom-nav small {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .painel-esquerdo,
+  .card-reserva {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .pedido-estado-card {
+    max-height: min(42dvh, 280px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
 }

@@ -767,12 +767,17 @@ export default function Dashboard() {
 
   async function responderMotorista(respostaCliente) {
     if (!pedidoAtual || getEstadoVisivel(pedidoAtual) !== "aceite") return;
+    const pedidoId = getMongoId(pedidoAtual);
+    if (!pedidoId) {
+      setErroPedido("Não foi possível identificar o pedido.");
+      return;
+    }
     const token = localStorage.getItem("token");
     setAResponderMotorista(true);
     setErroPedido("");
     try {
       const res = await fetch(
-        `http://localhost:8080/api/pedidos/${pedidoAtual._id}/responder`,
+        `http://localhost:8080/api/pedidos/${pedidoId}/responder`,
         {
           method: "PUT",
           headers: {
@@ -810,16 +815,35 @@ export default function Dashboard() {
       setErroPagamento("Não foi possível obter os dados do pagamento.");
       return;
     }
-    if (!validarFormularioPagamento()) return;
+    if (metodoPagamento !== "cartao" && !validarFormularioPagamento()) return;
     setAPagar(true);
     setErroPagamento("");
     try {
-      const data = await api.pagamentos.criar({
-        viagem_id: viagemId,
-        cliente_id: clienteId,
-        metodo: metodoPagamento,
-        valor,
-      });
+      let data;
+
+      if (metodoPagamento === "cartao") {
+        const intentData = await api.pagamentos.criarStripeIntent({
+          viagem_id: viagemId,
+          cliente_id: clienteId,
+          metodo: "cartao",
+          valor,
+          modo_teste: true,
+        });
+
+        data = await api.pagamentos.confirmarStripe({
+          pagamento_id: intentData.pagamento?._id,
+          stripe_payment_intent_id:
+            intentData.pagamento?.stripe_payment_intent_id,
+        });
+      } else {
+        data = await api.pagamentos.criar({
+          viagem_id: viagemId,
+          cliente_id: clienteId,
+          metodo: metodoPagamento,
+          valor,
+        });
+      }
+
       const pedidoPago = aplicarEstadoFrontend({
         ...pedidoAtual,
         ...(data?.pedido || {}),
@@ -1473,53 +1497,12 @@ export default function Dashboard() {
                 </button>
               </div>
               {metodoPagamento === "cartao" ? (
-                <div className="pagamento-form-grid">
-                  <label className="pagamento-campo pagamento-campo-full">
-                    <span>Nome no cartão</span>
-                    <input
-                      ref={nomeCartaoRef}
-                      type="text"
-                      placeholder="Nome do titular"
-                      autoComplete="cc-name"
-                      maxLength={60}
-                    />
-                  </label>
-                  <label className="pagamento-campo pagamento-campo-full">
-                    <span>Número do cartão</span>
-                    <input
-                      ref={numeroCartaoRef}
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="0000 0000 0000 0000"
-                      autoComplete="cc-number"
-                      maxLength={16}
-                      onInput={(e) => limitarDigitos(e, 16)}
-                    />
-                  </label>
-                  <label className="pagamento-campo">
-                    <span>Validade</span>
-                    <input
-                      ref={validadeCartaoRef}
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="MM/AA"
-                      autoComplete="cc-exp"
-                      maxLength={5}
-                      onInput={formatarValidadeCartao}
-                    />
-                  </label>
-                  <label className="pagamento-campo">
-                    <span>CVV</span>
-                    <input
-                      ref={cvvCartaoRef}
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="123"
-                      autoComplete="cc-csc"
-                      maxLength={3}
-                      onInput={(e) => limitarDigitos(e, 3)}
-                    />
-                  </label>
+                <div className="pagamento-externo-teste">
+                  <strong>Stripe teste</strong>
+                  <span>
+                    O pagamento é confirmado através da API de testes da
+                    Stripe. Não introduza dados reais de cartão.
+                  </span>
                 </div>
               ) : (
                 <div className="pagamento-form-grid">
@@ -1537,8 +1520,9 @@ export default function Dashboard() {
                 </div>
               )}
               <p className="pagamento-nota">
-                Estes dados servem apenas para validar a simulação. Não são
-                guardados.
+                {metodoPagamento === "cartao"
+                  ? "Ambiente de teste: usa o payment method de teste da Stripe."
+                  : "Estes dados servem apenas para validar a simulação. Não são guardados."}
               </p>
             </div>
             <div className="popup-motorista-acoes">
@@ -1556,7 +1540,11 @@ export default function Dashboard() {
                 onClick={efetuarPagamento}
                 disabled={aPagar}
               >
-                {aPagar ? "A processar..." : "Pagar"}
+                {aPagar
+                  ? "A processar..."
+                  : metodoPagamento === "cartao"
+                    ? "Pagar com Stripe teste"
+                    : "Pagar"}
               </button>
             </div>
             {erroPagamento && (

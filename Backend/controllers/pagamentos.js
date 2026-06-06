@@ -58,7 +58,7 @@ exports.createPaymentIntent = async (req, res) => {
       });
     }
 
-    const { viagem_id, cliente_id, valor, metodo } = req.body;
+    const { viagem_id, cliente_id, valor, metodo, modo_teste } = req.body;
 
     // validações básicas
     if (!viagem_id || !cliente_id || !valor || !metodo) {
@@ -102,9 +102,17 @@ exports.createPaymentIntent = async (req, res) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(valor * 100), // Stripe usa centavos
       currency: "eur",
+      payment_method_types: ["card"],
+      ...(modo_teste
+        ? {
+            payment_method: "pm_card_visa",
+            confirm: true,
+          }
+        : {}),
       metadata: {
         viagem_id: viagem_id.toString(),
         cliente_id: cliente_id.toString(),
+        modo_teste: modo_teste ? "true" : "false",
       },
     });
 

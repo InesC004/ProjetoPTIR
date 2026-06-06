@@ -10,7 +10,6 @@ import {
   Navigation,
   User,
   LogOut,
-  Settings,
   ChevronDown,
   Loader2,
   CheckCircle2,
@@ -124,6 +123,7 @@ export default function PaginaMotorista() {
 
   return (
     <div
+      className="motorista-page"
       style={{
         minHeight: "100vh",
         background: "var(--fundo)",
@@ -748,6 +748,24 @@ function guardarPedidoIgnorado(id) {
   );
 }
 
+function getPedidoTimestamp(pedido) {
+  const valor =
+    pedido?.createdAt ||
+    pedido?.created_at ||
+    pedido?.data_criacao ||
+    pedido?.data_pedido ||
+    pedido?.data ||
+    pedido?.updatedAt ||
+    pedido?.updated_at;
+  const timestamp = valor ? new Date(valor).getTime() : 0;
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function escolherPedidoMaisRecente(lista) {
+  if (lista.length <= 1) return lista[0] || null;
+  return [...lista].sort((a, b) => getPedidoTimestamp(b) - getPedidoTimestamp(a))[0];
+}
+
 function PedidoNovoFlutuante() {
   const [pedido, setPedido] = useState(null);
   const [aAceitar, setAAceitar] = useState(false);
@@ -774,14 +792,8 @@ function PedidoNovoFlutuante() {
       const data = await api.pedidos.listarDisponiveis();
       const lista = Array.isArray(data?.pedidos) ? data.pedidos : [];
       const ignorados = new Set(getPedidosIgnorados());
-      const proximo = lista.find((item) => !ignorados.has(getId(item)));
-      setPedido((atual) => {
-        if (!atual) return proximo || null;
-        const atualAindaDisponivel = lista.some(
-          (item) => getId(item) === getId(atual),
-        );
-        return atualAindaDisponivel ? atual : proximo || null;
-      });
+      const disponiveis = lista.filter((item) => !ignorados.has(getId(item)));
+      setPedido(escolherPedidoMaisRecente(disponiveis));
     } catch {
       setPedido(null);
     }

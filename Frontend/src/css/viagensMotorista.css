@@ -346,4 +346,27 @@
     font-size: 1rem;
   }
 
+  .vm-card,
+  .vm-list,
+  .vm-item,
+  .vm-toolbar {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .vm-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .vm-item,
+  .vm-row,
+  .vm-fatura-ok,
+  .vm-fatura-erro {
+    overflow-wrap: anywhere;
+  }
+
+  .vm-ended-actions {
+    grid-template-columns: 1fr !important;
+  }
 }

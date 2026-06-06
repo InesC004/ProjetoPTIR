@@ -458,4 +458,29 @@
     font-weight: 700;
     font-size: 0.59rem;
   }
+
+  .tc-card,
+  .tc-form-card,
+  .tc-list-card,
+  .tc-item,
+  .tc-toolbar {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .tc-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .tc-input,
+  .tc-select,
+  .tc-btn-submit {
+    font-size: 16px;
+  }
+
+  .tc-item,
+  .tc-active-banner {
+    overflow-wrap: anywhere;
+  }
 }

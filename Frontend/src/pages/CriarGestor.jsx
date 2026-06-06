@@ -125,9 +125,7 @@ export default function CriarGestor() {
           </div>
 
           {/* NIF + Email em linha */}
-          <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}
-          >
+          <div className="criar-gestor-linha">
             <div className="criar-gestor-campo">
               <label className="criar-gestor-label">NIF</label>
               <input
