@@ -597,9 +597,7 @@ export default function Dashboard() {
             motorista_tempo_chegada_min: data.motorista_tempo_chegada_min,
             viagem_distancia_km: data.viagem_distancia_km,
             viagem_tempo_estimado_min: data.viagem_tempo_estimado_min,
-            custo_estimado: data.viagem_tempo_estimado_min
-              ? (Number(data.viagem_tempo_estimado_min) * 0.75).toFixed(2)
-              : null,
+            custo_estimado: data.custo_estimado,
             taxi: data.taxi,
           });
           setPedidoAtual(pedidoAtualizado);

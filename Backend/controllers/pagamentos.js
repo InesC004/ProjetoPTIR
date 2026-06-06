@@ -1,6 +1,7 @@
 const Pagamento = require("../models/pagamento");
 const Pedido = require("../models/pedido");
 const Viagem = require("../models/viagem");
+const mongoose = require("mongoose");
 const os = require("os");
 
 let stripe;
@@ -9,6 +10,49 @@ if (process.env.STRIPE_SECRET_KEY) {
 }
 
 const HOSTNAME = os.hostname();
+
+async function obterDadosPagamento({ viagem_id, cliente_id }) {
+  const idValido = mongoose.isValidObjectId(viagem_id);
+  let pedido = null;
+  let viagem = null;
+
+  if (idValido) {
+    pedido = await Pedido.findOne({
+      cliente_id,
+      $or: [{ _id: viagem_id }, { viagem_id }],
+    });
+
+    viagem = await Viagem.findOne({
+      cliente_id,
+      $or: [{ _id: viagem_id }, { pedido_id: pedido?._id || viagem_id }],
+    });
+  }
+
+  if (!pedido && viagem) {
+    pedido = await Pedido.findOne({
+      _id: viagem.pedido_id,
+      cliente_id,
+    });
+  }
+
+  if (!pedido) {
+    pedido = await Pedido.findOne({
+      cliente_id,
+      viagem_id: viagem?._id,
+    });
+  }
+
+  const valorFinal = Number(
+    pedido?.preco_final ?? viagem?.preco_total ?? 0,
+  );
+
+  return {
+    pedido,
+    viagem,
+    viagemIdFinal: viagem?._id || pedido?.viagem_id || viagem_id,
+    valorFinal: Number(valorFinal.toFixed(2)),
+  };
+}
 
 async function marcarPedidoComoPago({ viagem_id, cliente_id }) {
   const pedido = await Pedido.findOneAndUpdate(
@@ -77,17 +121,30 @@ exports.createPaymentIntent = async (req, res) => {
       });
     }
 
+    const dadosPagamento = await obterDadosPagamento({ viagem_id, cliente_id });
+
+    if (dadosPagamento.valorFinal <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Valor final da viagem ainda não está disponível.",
+        servidor: HOSTNAME,
+      });
+    }
+
     // Se o método for dinheiro, multibanco ou mbway, não precisa de Payment Intent
     if (metodo !== "cartao") {
       const pagamento = new Pagamento({
-        viagem_id,
+        viagem_id: dadosPagamento.viagemIdFinal,
         cliente_id,
         metodo,
-        valor,
+        valor: dadosPagamento.valorFinal,
         estado: "confirmado",
       });
       await pagamento.save();
-      const pedido = await marcarPedidoComoPago({ viagem_id, cliente_id });
+      const pedido = await marcarPedidoComoPago({
+        viagem_id: dadosPagamento.viagemIdFinal,
+        cliente_id,
+      });
 
       return res.status(201).json({
         success: true,
@@ -100,17 +157,18 @@ exports.createPaymentIntent = async (req, res) => {
 
     // Para pagamentos com cartão, criar Payment Intent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(valor * 100), // Stripe usa centavos
+      amount: Math.round(dadosPagamento.valorFinal * 100), // Stripe usa centavos
       currency: "eur",
       payment_method_types: ["card"],
       ...(modo_teste
         ? {
-            payment_method: "pm_card_visa",
+            // payment_method: "pm_card_chargeDeclined", // para simular falha
+            payment_method: "pm_card_visa", // para simular sucesso
             confirm: true,
           }
         : {}),
       metadata: {
-        viagem_id: viagem_id.toString(),
+        viagem_id: dadosPagamento.viagemIdFinal.toString(),
         cliente_id: cliente_id.toString(),
         modo_teste: modo_teste ? "true" : "false",
       },
@@ -118,10 +176,10 @@ exports.createPaymentIntent = async (req, res) => {
 
     // Guardar o pagamento no banco com o Payment Intent ID
     const pagamento = new Pagamento({
-      viagem_id,
+      viagem_id: dadosPagamento.viagemIdFinal,
       cliente_id,
       metodo: "cartao",
-      valor,
+      valor: dadosPagamento.valorFinal,
       estado: "pendente",
       stripe_payment_intent_id: paymentIntent.id,
     });
@@ -245,16 +303,29 @@ exports.create = async (req, res) => {
       });
     }
 
+    const dadosPagamento = await obterDadosPagamento({ viagem_id, cliente_id });
+
+    if (dadosPagamento.valorFinal <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Valor final da viagem ainda não está disponível.",
+        servidor: HOSTNAME,
+      });
+    }
+
     const pagamento = new Pagamento({
-      viagem_id,
+      viagem_id: dadosPagamento.viagemIdFinal,
       cliente_id,
       metodo,
-      valor,
+      valor: dadosPagamento.valorFinal,
       estado: "confirmado",
     });
 
     await pagamento.save();
-    const pedido = await marcarPedidoComoPago({ viagem_id, cliente_id });
+    const pedido = await marcarPedidoComoPago({
+      viagem_id: dadosPagamento.viagemIdFinal,
+      cliente_id,
+    });
 
     res.status(201).json({
       success: true,

@@ -34,7 +34,7 @@ function calcularPreco(dataInicio, dataFim, precoMinuto, acrescimoNoturno) {
   const horaInicio = dataInicio.getHours()
 
   // horário noturno
-  if (horaInicio >= 22 || horaInicio < 6) {
+  if (horaInicio >= 21 || horaInicio < 6) {
     total += total * (acrescimoNoturno / 100)
   }
 

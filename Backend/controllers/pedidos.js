@@ -21,6 +21,17 @@ function haversine(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+function calcularPrecoPorMinutos(minutos, preco, dataReferencia = new Date()) {
+  const precoBase = minutos * Number(preco.preco_minuto || 0);
+  const hora = dataReferencia.getHours();
+  const eNoturno = hora >= 21 || hora < 6;
+  const multiplicadorNoturno = eNoturno
+    ? 1 + Number(preco.acrescimo_noturno || 0) / 100
+    : 1;
+
+  return Number((precoBase * multiplicadorNoturno).toFixed(2));
+}
+
 // ════════════════════════════════════════
 // criar pedido
 // ════════════════════════════════════════
@@ -746,14 +757,7 @@ exports.terminarViagem = async (req, res) => {
       });
     }
 
-    const precoBase = duracaoMinutos * Number(preco.preco_minuto || 0);
-
-    const hora = agora.getHours();
-    const eNoturno = hora >= 22 || hora < 7;
-
-    const precoFinal = eNoturno
-      ? precoBase + Number(preco.acrescimo_noturno || 0)
-      : precoBase;
+    const precoFinal = calcularPrecoPorMinutos(duracaoMinutos, preco, agora);
     pedido.estado = "concluido";
     pedido.data_fim_viagem = agora;
     pedido.morada_fim = pedido.destino_morada;
