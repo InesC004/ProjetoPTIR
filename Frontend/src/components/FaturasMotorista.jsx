@@ -9,6 +9,8 @@ import {
   Hash,
   Calendar,
   User,
+  Eye,
+  X,
 } from "lucide-react";
 import api from "../Api";
 import "../css/faturasMotorista.css";
@@ -59,6 +61,7 @@ export default function FaturasMotorista() {
   const [faturas, setFaturas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(null);
+  const [faturaSelecionada, setFaturaSelecionada] = useState(null);
 
   // Viagens terminadas que ainda não têm fatura emitida
   const [pendentes, setPendentes] = useState([]);
@@ -305,7 +308,7 @@ export default function FaturasMotorista() {
                       <User size={13} /> NIF Cliente
                     </span>
                     <span className="ft-meta-value">
-                      {f.nif_cliente || "—"}
+                      {f.nif_cliente  || f.cliente_nif || "—"}
                     </span>
                   </div>
 
@@ -327,11 +330,104 @@ export default function FaturasMotorista() {
                     </span>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  className="ft-btn ft-btn--detalhes"
+                  onClick={() => setFaturaSelecionada(f)}
+                >
+                  <Eye size={15} />
+                  Mais detalhes
+                </button>
               </article>
             ))}
           </div>
         )}
-      </section>
+            </section>
+
+      {faturaSelecionada && (
+        <div
+          className="ft-modal-overlay"
+          onClick={() => setFaturaSelecionada(null)}
+        >
+          <div
+            className="ft-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="ft-modal-close"
+              onClick={() => setFaturaSelecionada(null)}
+              aria-label="Fechar"
+            >
+              <X size={20} />
+            </button>
+
+            <p className="ft-eyebrow">Fatura emitida</p>
+            <h3 className="ft-modal-title">Detalhes da fatura</h3>
+
+            <div className="ft-modal-grid">
+              <div className="ft-modal-item">
+                <span>Número da fatura</span>
+                <strong>{getFaturaNumero(faturaSelecionada)}</strong>
+              </div>
+
+              <div className="ft-modal-item">
+                <span>Data de emissão</span>
+                <strong>
+                  {formatData(
+                    faturaSelecionada.data_emissao ||
+                      faturaSelecionada.data ||
+                      faturaSelecionada.createdAt,
+                  )}
+                </strong>
+              </div>
+
+              <div className="ft-modal-item">
+                <span>Valor total</span>
+                <strong>
+                  {formatEuros(
+                    faturaSelecionada.valor_total ??
+                      faturaSelecionada.valor,
+                  )}
+                </strong>
+              </div>
+
+              <div className="ft-modal-item">
+                <span>NIF do cliente</span>
+                <strong>
+                  {faturaSelecionada.nif_cliente ||
+                    faturaSelecionada.cliente_nif ||
+                    "—"}
+                </strong>
+              </div>
+
+              <div className="ft-modal-item">
+                <span>Nome do cliente</span>
+                <strong>
+                  {faturaSelecionada.cliente_id?.nome ||
+                    faturaSelecionada.cliente_nome ||
+                    faturaSelecionada.nome_cliente ||
+                    "—"}
+                </strong>
+              </div>
+
+              <div className="ft-modal-item">
+                <span>ID da fatura</span>
+                <strong>{faturaSelecionada._id || "—"}</strong>
+              </div>
+
+              <div className="ft-modal-item">
+                <span>ID da viagem</span>
+                <strong>
+                  {getMongoId(faturaSelecionada.viagem_id) ||
+                    getMongoId(faturaSelecionada.viagem) ||
+                    "—"}
+                </strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

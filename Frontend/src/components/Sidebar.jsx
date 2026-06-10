@@ -79,21 +79,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const visivel = mounted && isOpen;
 
-  const navItems = [
-    {
-      label: "Quer ser um Motorista?",
-      desc: "Junte-se à Equipa",
-      icon: "driver",
-      delay: 350,
-    },
-    { label: "Contacto", desc: "Contacte-nos", icon: "mail", delay: 400 },
-    {
-      label: "Suporte 24/7",
-      desc: "+351 xxx xxx xxx",
-      icon: "phone",
-      delay: 450,
-    },
-  ];
+  const navItems = [];
 
   return (
     <>
@@ -178,7 +164,6 @@ export default function Sidebar({ isOpen, onClose }) {
               <div
                 className={`sidebar-nav-wrap ${visivel ? "visivel" : "oculto"}`}
               >
-                <p className="sidebar-nav-label">Explorar</p>
                 <nav className="sidebar-nav">
                   {navItems.map((item) => (
                     <a

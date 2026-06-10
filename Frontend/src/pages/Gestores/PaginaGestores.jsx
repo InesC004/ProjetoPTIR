@@ -12,9 +12,12 @@ import {
   Trash2,
   DollarSign,
   Calculator,
+  Search,
+  RefreshCw,
 } from "lucide-react";
 
 import logo from "../../Pictures/logo1.jpeg";
+import api from "../../Api";
 import RegistarTaxi from "../../components/RegistarTaxi";
 import RegistarMotorista from "../../components/RegistarMotorista";
 import EditarTaxi from "../../components/EditarTaxi";
@@ -213,47 +216,268 @@ function PageHead({ t, s }) {
 }
 
 function SecDados(props) {
-  return (
-    <div className="pg-grid">
-      <Card Icon={Car} color="blue" title="Táxis">
-        <Action
-          Icon={Plus}
-          label="Registar táxi"
-          accent
-          onClick={props.onRegistarTaxi}
-        />
-        <Action
-          Icon={Pencil}
-          label="Editar táxi"
-          onClick={props.onEditarTaxi}
-        />
-        <Action
-          Icon={Trash2}
-          label="Remover táxi"
-          danger
-          onClick={props.onRemoverTaxi}
-        />
-      </Card>
+  const [taxis, setTaxis] = useState([]);
+  const [motoristas, setMotoristas] = useState([]);
+  const [pesquisa, setPesquisa] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState("");
 
-      <Card Icon={Users} color="green" title="Motoristas">
-        <Action
-          Icon={Plus}
-          label="Registar motorista"
-          accent
-          onClick={props.onRegistarMotorista}
-        />
-        <Action
-          Icon={Pencil}
-          label="Editar motorista"
-          onClick={props.onEditarMotorista}
-        />
-        <Action
-          Icon={Trash2}
-          label="Remover motorista"
-          danger
-          onClick={props.onRemoverMotorista}
-        />
-      </Card>
+  useEffect(() => {
+    carregarDisponiveis();
+  }, []);
+
+  async function carregarDisponiveis() {
+    try {
+      setLoading(true);
+      setErro("");
+
+      const [dadosTaxis, dadosMotoristas] = await Promise.all([
+        api.taxis.listar(),
+        api.motoristas.listar(),
+      ]);
+
+      const listaTaxis = Array.isArray(dadosTaxis)
+        ? dadosTaxis
+        : dadosTaxis.taxis || dadosTaxis.data || [];
+
+      const listaMotoristas = Array.isArray(dadosMotoristas)
+        ? dadosMotoristas
+        : dadosMotoristas.motoristas || dadosMotoristas.data || [];
+
+      setTaxis(listaTaxis);
+      setMotoristas(listaMotoristas);
+    } catch (err) {
+      console.error("Erro ao carregar táxis/motoristas:", err);
+      setErro(err.message || "Erro ao carregar dados.");
+      setTaxis([]);
+      setMotoristas([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function textoTaxi(taxi) {
+    return `
+      ${taxi.matricula || ""}
+      ${taxi.marca || ""}
+      ${taxi.modelo || ""}
+      ${taxi.tipo_motor || ""}
+      ${taxi.nivel_conforto || ""}
+      ${taxi.estado || ""}
+    `.toLowerCase();
+  }
+
+  function textoMotorista(motorista) {
+    return `
+      ${motorista.nome || ""}
+      ${motorista.nif || ""}
+      ${motorista.email || ""}
+      ${motorista.numero_carta || ""}
+      ${motorista.estado || ""}
+    `.toLowerCase();
+  }
+
+  function isTaxiDisponivel(taxi) {
+    const estado = (taxi.estado || "").toLowerCase();
+
+    if (!estado) return true;
+
+    return (
+      estado === "disponivel" ||
+      estado === "disponível" ||
+      estado === "livre" ||
+      estado === "ativo"
+    );
+  }
+
+  function isMotoristaDisponivel(motorista) {
+    const estado = (motorista.estado || motorista.status || "").toLowerCase();
+
+    if (!estado) return true;
+
+    return (
+      estado === "disponivel" ||
+      estado === "disponível" ||
+      estado === "livre" ||
+      estado === "ativo"
+    );
+  }
+
+  const pesquisaNormalizada = pesquisa.trim().toLowerCase();
+
+  const taxisDisponiveis = taxis
+    .filter(isTaxiDisponivel)
+    .filter((taxi) => textoTaxi(taxi).includes(pesquisaNormalizada));
+
+  const motoristasDisponiveis = motoristas
+    .filter(isMotoristaDisponivel)
+    .filter((motorista) =>
+      textoMotorista(motorista).includes(pesquisaNormalizada),
+    );
+
+  return (
+    <div className="pg-dados-wrap">
+      <div className="pg-grid">
+        <Card Icon={Car} color="blue" title="Táxis">
+          <Action
+            Icon={Plus}
+            label="Registar táxi"
+            accent
+            onClick={props.onRegistarTaxi}
+          />
+          <Action
+            Icon={Pencil}
+            label="Editar táxi"
+            onClick={props.onEditarTaxi}
+          />
+          <Action
+            Icon={Trash2}
+            label="Remover táxi"
+            danger
+            onClick={props.onRemoverTaxi}
+          />
+        </Card>
+
+        <Card Icon={Users} color="green" title="Motoristas">
+          <Action
+            Icon={Plus}
+            label="Registar motorista"
+            accent
+            onClick={props.onRegistarMotorista}
+          />
+          <Action
+            Icon={Pencil}
+            label="Editar motorista"
+            onClick={props.onEditarMotorista}
+          />
+          <Action
+            Icon={Trash2}
+            label="Remover motorista"
+            danger
+            onClick={props.onRemoverMotorista}
+          />
+        </Card>
+      </div>
+
+      <section className="pg-disponiveis pg-disponiveis-inline">
+        <div className="pg-disponiveis-topo">
+          <div>
+            <h3>Disponibilidade</h3>
+            <p>Lista de táxis e motoristas disponíveis.</p>
+          </div>
+
+          <button
+            className="pg-refresh"
+            onClick={carregarDisponiveis}
+            disabled={loading}
+          >
+            <RefreshCw size={16} />
+            {loading ? "A carregar..." : "Atualizar"}
+          </button>
+        </div>
+
+        <div className="pg-search-wrap">
+          <Search className="pg-search-icon" size={18} />
+          <input
+            className="pg-search"
+            type="text"
+            value={pesquisa}
+            onChange={(e) => setPesquisa(e.target.value)}
+            placeholder="Pesquisar por matrícula, nome, NIF, email..."
+          />
+        </div>
+
+        {erro && <p className="pg-alerta-erro">{erro}</p>}
+
+        <div className="pg-disponiveis-grid">
+          <div className="pg-panel">
+            <h4>
+              Táxis disponíveis ({loading ? "..." : taxisDisponiveis.length})
+            </h4>
+
+            {loading && <p className="pg-empty">A carregar táxis...</p>}
+
+            {!loading && taxisDisponiveis.length === 0 && (
+              <p className="pg-empty">Nenhum táxi disponível encontrado.</p>
+            )}
+
+            {!loading && taxisDisponiveis.length > 0 && (
+              <div className="pg-lista-cards">
+                {taxisDisponiveis.map((taxi) => (
+                  <div
+                    key={taxi._id || taxi.matricula}
+                    className="pg-mini-card"
+                  >
+                    <div className="pg-mini-icon blue">
+                      <Car size={18} />
+                    </div>
+
+                    <div className="pg-mini-info">
+                      <strong>{taxi.matricula || "Sem matrícula"}</strong>
+                      <span>
+                        {taxi.marca || "Sem marca"} {taxi.modelo || ""}
+                      </span>
+
+                      <div className="pg-mini-tags">
+                        {taxi.tipo_motor && <small>{taxi.tipo_motor}</small>}
+                        {taxi.nivel_conforto && (
+                          <small>{taxi.nivel_conforto}</small>
+                        )}
+                        {taxi.estado && <small>{taxi.estado}</small>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="pg-panel">
+            <h4>
+              Motoristas disponíveis (
+              {loading ? "..." : motoristasDisponiveis.length})
+            </h4>
+
+            {loading && <p className="pg-empty">A carregar motoristas...</p>}
+
+            {!loading && motoristasDisponiveis.length === 0 && (
+              <p className="pg-empty">
+                Nenhum motorista disponível encontrado.
+              </p>
+            )}
+
+            {!loading && motoristasDisponiveis.length > 0 && (
+              <div className="pg-lista-cards">
+                {motoristasDisponiveis.map((motorista) => (
+                  <div
+                    key={motorista._id || motorista.nif}
+                    className="pg-mini-card"
+                  >
+                    <div className="pg-mini-icon green">
+                      <Users size={18} />
+                    </div>
+
+                    <div className="pg-mini-info">
+                      <strong>{motorista.nome || "Sem nome"}</strong>
+                      <span>{motorista.email || "Sem email"}</span>
+
+                      <div className="pg-mini-tags">
+                        {motorista.nif && <small>NIF {motorista.nif}</small>}
+                        {motorista.numero_carta && (
+                          <small>Carta {motorista.numero_carta}</small>
+                        )}
+                        {(motorista.estado || motorista.status) && (
+                          <small>{motorista.estado || motorista.status}</small>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
