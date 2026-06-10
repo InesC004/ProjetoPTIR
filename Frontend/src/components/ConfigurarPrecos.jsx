@@ -14,7 +14,7 @@ import {
   Clock,
   ChevronDown,
 } from "lucide-react";
-import "../css/configurarPrecos.css";
+import "../css/paginaGestores.css";
 
 /* ═══════════════════════════════════════════════
    DEFINIR PREÇOS (criar/editar)
