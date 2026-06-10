@@ -312,3 +312,103 @@
     overflow-wrap: anywhere;
   }
 }
+/* ── Botão para abrir detalhes ── */
+.ft-btn--detalhes {
+  width: 100%;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.ft-btn--detalhes:hover {
+  background: #dbeafe;
+}
+
+/* ── Modal de detalhes da fatura ── */
+.ft-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.ft-modal {
+  position: relative;
+  width: min(100%, 620px);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.22);
+}
+
+.ft-modal-title {
+  margin: 0 0 20px;
+  color: #06112a;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.ft-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #475569;
+  cursor: pointer;
+}
+
+.ft-modal-close:hover {
+  background: #e2e8f0;
+}
+
+.ft-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ft-modal-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #e5edf8;
+  border-radius: 10px;
+  background: #f8fafd;
+}
+
+.ft-modal-item span {
+  color: #8ba3c0;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ft-modal-item strong {
+  color: #1e293b;
+  font-size: 0.84rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .ft-modal {
+    padding: 20px;
+  }
+
+  .ft-modal-grid {
+    grid-template-columns: 1fr;
+  }
+}
