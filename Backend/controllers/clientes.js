@@ -14,6 +14,14 @@ exports.register = async (req, res) => {
   try {
     const { name, nif, email, gender, birth_day, birth_month, birth_year, address, postal_code, access_password } = req.body
 
+    if (!/^\d{4}-\d{3}$/.test(String(postal_code || ''))) {
+      return res.status(400).json({
+        success: false,
+        message: 'Código Postal inválido. Use o formato 0000-000.',
+        servidor: HOSTNAME
+      })
+    }
+
     const existing = await Cliente.findOne({ $or: [{ nif }, { email }] })
     if (existing) return res.status(409).json({ success: false, message: 'NIF ou email já registado.' })
 

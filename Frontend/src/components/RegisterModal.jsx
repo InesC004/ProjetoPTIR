@@ -2,6 +2,7 @@
 import { useState } from "react";
 import image from "../Pictures/carroRegistro.jpg";
 import api from "../Api";
+import "../css/loginModal.css";
 
 export default function RegisterModal({ isOpen, onClose }) {
   const [step, setStep] = useState(1);
@@ -24,12 +25,31 @@ export default function RegisterModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const handleChange = (e) =>
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]:
+        e.target.name === "postal_code"
+          ? formatarCodigoPostal(e.target.value)
+          : e.target.value,
+    }));
+
+  function formatarCodigoPostal(valor) {
+    const digitos = valor.replace(/\D/g, "").slice(0, 7);
+    if (digitos.length <= 4) return digitos;
+    return `${digitos.slice(0, 4)}-${digitos.slice(4)}`;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    if (!/^\d{4}-\d{3}$/.test(formData.postal_code)) {
+      setError("Código Postal inválido. Use o formato 0000-000.");
+      setLoading(false);
+      return;
+    }
+
     try {
       await api.auth.registarCliente(formData);
       setSuccess(true);
@@ -61,7 +81,7 @@ export default function RegisterModal({ isOpen, onClose }) {
     <>
       <div className="modal-fundo" onClick={onClose} />
       <div className="modal-centro">
-        <div className="modal-caixa">
+        <div className="modal-caixa modal-caixa-registo">
           {/* Imagem lateral */}
           <div className="modal-imagem">
             <img src={image} alt="TakeCab" />
@@ -244,6 +264,10 @@ export default function RegisterModal({ isOpen, onClose }) {
                       value={formData.postal_code}
                       onChange={handleChange}
                       placeholder="0000-000"
+                      inputMode="numeric"
+                      maxLength={8}
+                      pattern="\d{4}-\d{3}"
+                      title="Use o formato 0000-000"
                       required
                     />
                   </div>

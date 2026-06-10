@@ -52,7 +52,7 @@ export default function LoginModal({ isOpen, onClose }) {
     <>
       <div className="modal-fundo" onClick={onClose} />
       <div className="modal-centro">
-        <div className="modal-caixa">
+        <div className="modal-caixa modal-caixa-login">
           {/* Imagem lateral */}
           <div className="modal-imagem">
             <img src={image} alt="TakeCab" />
@@ -73,8 +73,7 @@ export default function LoginModal({ isOpen, onClose }) {
               ✕
             </button>
 
-            <h2 className="modal-titulo">Entrar</h2>
-            <p className="modal-sub">Entrar na sua conta</p>
+            <p className="modal-sub modal-sub-login">Entrar na sua conta</p>
 
             {error && <div className="modal-erro">{error}</div>}
 

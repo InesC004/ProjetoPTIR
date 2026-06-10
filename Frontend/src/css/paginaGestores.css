@@ -510,6 +510,16 @@
 .pg-busca-wrap,
 .pg-search-wrap {
   margin: 18px 0 22px;
+  position: relative;
+  max-width: 460px;
+}
+
+.pg-search-wrap svg {
+  position: absolute;
+  left: 16px;
+  top: 15px;
+  color: #6b86aa;
+  pointer-events: none;
 }
 
 .pg-busca,
@@ -525,6 +535,21 @@
   font-weight: 800;
   color: #07142a;
   outline: none;
+}
+
+.pg-search {
+  padding-left: 46px;
+  margin-bottom: 0;
+}
+
+.pg-alert {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid #ffd1d1;
+  background: #fff5f5;
+  color: #b42318;
+  font-weight: 800;
 }
 
 .pg-busca::placeholder,

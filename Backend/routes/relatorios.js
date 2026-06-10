@@ -3,6 +3,9 @@ const router = express.Router()
 const relatoriosController = require('../controllers/relatorios')
 const checkRole = require('../middleware/checkRole')
 
+// Motorista — relatório próprio
+router.get('/motorista/me', checkRole('motorista'), relatoriosController.getRelatorioMotoristaAutenticado)
+
 // US14 — táxis e motoristas
 router.get('/viagens/totais', checkRole('gestor'), relatoriosController.getTotaisViagens)
 router.get('/viagens/por-motorista', checkRole('gestor'), relatoriosController.getSubtotaisPorMotorista)

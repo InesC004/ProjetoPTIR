@@ -554,6 +554,8 @@ function SecRelatorios() {
   const [lista, setLista] = useState([]);
   const [detalhes, setDetalhes] = useState([]);
   const [loadingRelatorios, setLoadingRelatorios] = useState(false);
+  const [loadingDetalhes, setLoadingDetalhes] = useState(false);
+  const [erroRelatorios, setErroRelatorios] = useState("");
 
   const hoje = new Date().toISOString().slice(0, 10);
   const [dataInicio, setDataInicio] = useState(hoje);
@@ -602,11 +604,13 @@ function SecRelatorios() {
       setLista([]);
       setDetalhes([]);
       setSub(null);
+      setErroRelatorios("");
       return;
     }
 
     try {
       setLoadingRelatorios(true);
+      setErroRelatorios("");
 
       const token = localStorage.getItem("token");
       const params = `?data_inicio=${dataInicio}&data_fim=${dataFim}`;
@@ -644,14 +648,27 @@ function SecRelatorios() {
       const dadosTotais = await resTotais.json();
       const dadosLista = await resLista.json();
 
+      if (!resTotais.ok || !resLista.ok) {
+        throw new Error(
+          dadosTotais.message ||
+            dadosLista.message ||
+            "Não foi possível carregar o relatório.",
+        );
+      }
+
       setResumo(dadosTotais);
       setLista(dadosLista.subtotais || []);
       setDetalhes([]);
       setSub(null);
     } catch (err) {
       console.error("Erro ao carregar relatório:", err);
+      setErroRelatorios(
+        err.message || "Não foi possível carregar o relatório.",
+      );
       setResumo(null);
       setLista([]);
+      setDetalhes([]);
+      setSub(null);
     } finally {
       setLoadingRelatorios(false);
     }
@@ -661,6 +678,8 @@ function SecRelatorios() {
     if (!item) return;
 
     try {
+      setLoadingDetalhes(true);
+      setErroRelatorios("");
       const token = localStorage.getItem("token");
       const params = `?data_inicio=${dataInicio}&data_fim=${dataFim}`;
 
@@ -696,6 +715,10 @@ function SecRelatorios() {
       const res = await fetch(url, { headers });
       const dados = await res.json();
 
+      if (!res.ok) {
+        throw new Error(dados.message || "Não foi possível carregar detalhes.");
+      }
+
       setDetalhes(
         dados.reabastecimentos ||
           dados.detalhes ||
@@ -705,11 +728,15 @@ function SecRelatorios() {
       );
     } catch (err) {
       console.error("Erro ao carregar detalhes:", err);
+      setErroRelatorios(err.message || "Não foi possível carregar detalhes.");
       setDetalhes([]);
+    } finally {
+      setLoadingDetalhes(false);
     }
   }
 
   function formatarData(data) {
+    if (!data) return "Sem data";
     return new Date(data).toLocaleString("pt-PT", {
       day: "2-digit",
       month: "short",
@@ -828,6 +855,14 @@ function SecRelatorios() {
   };
 
   const atual = dados[tipo];
+  const placeholderPesquisa =
+    tipo === "clientes"
+      ? "Pesquisar cliente, NIF ou email"
+      : tipo === "turnos"
+        ? "Pesquisar motorista, NIF ou matrícula"
+        : tipo === "reabastecimentos"
+          ? "Pesquisar tipo de motor ou táxi"
+          : "Pesquisar motorista, NIF, táxi ou matrícula";
 
   function valorResumo(id, valorTurnos) {
     if (tipo === "turnos") return valorTurnos;
@@ -894,6 +929,19 @@ function SecRelatorios() {
         </button>
 
         <button
+          className={tipo === "clientes" ? "active" : ""}
+          onClick={() => {
+            setTipo("clientes");
+            setTotal("euros");
+            setSub(null);
+            setPesquisa("");
+            setDetalhes([]);
+          }}
+        >
+          Clientes e faturação
+        </button>
+
+        <button
           className={tipo === "reabastecimentos" ? "active" : ""}
           onClick={() => {
             setTipo("reabastecimentos");
@@ -937,6 +985,18 @@ function SecRelatorios() {
         ))}
       </div>
 
+      <div className="pg-search-wrap">
+        <Search size={18} />
+        <input
+          className="pg-search"
+          value={pesquisa}
+          onChange={(e) => setPesquisa(e.target.value)}
+          placeholder={placeholderPesquisa}
+        />
+      </div>
+
+      {erroRelatorios && <p className="pg-alert">{erroRelatorios}</p>}
+
       {tipo !== "turnos" && (
         <div className="pg-sub">
           <div className="pg-panel">
@@ -950,9 +1010,11 @@ function SecRelatorios() {
               <p className="pg-empty">A carregar relatório...</p>
             )}
 
-            {!loadingRelatorios && listaPesquisa.length === 0 && (
-              <p className="pg-empty">Sem dados neste período.</p>
-            )}
+            {!loadingRelatorios &&
+              !erroRelatorios &&
+              listaPesquisa.length === 0 && (
+                <p className="pg-empty">Sem dados neste período.</p>
+              )}
 
             {!loadingRelatorios &&
               listaPesquisa.map((item) => {
@@ -1008,55 +1070,62 @@ function SecRelatorios() {
               </p>
             )}
 
-            {sub && detalhes.length === 0 && (
+            {loadingDetalhes && (
+              <p className="pg-empty">A carregar detalhes...</p>
+            )}
+
+            {sub && !loadingDetalhes && detalhes.length === 0 && (
               <p className="pg-empty">Sem detalhes para apresentar.</p>
             )}
 
-            {detalhes.map((item) => (
-              <button key={item._id || item.taxi?._id} className="pg-row">
-                <span>
-                  {tipo === "reabastecimentos"
-                    ? item.taxi?.matricula || "Táxi"
-                    : `Viagem ${item._id?.slice(-5) || ""}`}
+            {!loadingDetalhes &&
+              detalhes.map((item) => (
+                <button key={item._id || item.taxi?._id} className="pg-row">
+                  <span>
+                    {tipo === "reabastecimentos"
+                      ? item.taxi?.matricula || "Táxi"
+                      : `Viagem ${item._id?.slice(-5) || ""}`}
 
-                  <small>
-                    {tipo === "clientes" &&
-                      `${item.taxi?.matricula || "Sem matrícula"} · ${
-                        item.motorista?.nome || "Sem motorista"
-                      }`}
+                    <small>
+                      {tipo === "clientes" &&
+                        `${formatarData(item.data_inicio)} · ${
+                          item.taxi?.matricula || "Sem matrícula"
+                        } · ${item.motorista?.nome || "Sem motorista"}`}
 
-                    {tipo === "taxi" &&
-                      `${item.taxi?.matricula || item.motorista?.nome || ""} · ${
-                        item.cliente?.nome || "Sem cliente"
-                      }`}
+                      {tipo === "taxi" &&
+                        `${formatarData(item.data_inicio)} · ${
+                          item.taxi?.matricula || item.motorista?.nome || ""
+                        } · ${item.cliente?.nome || "Sem cliente"}`}
 
-                    {tipo === "reabastecimentos" &&
-                      `${item.taxi?.marca || ""} ${item.taxi?.modelo || ""}`}
-                  </small>
-                </span>
+                      {tipo === "reabastecimentos" &&
+                        `${item.taxi?.marca || ""} ${item.taxi?.modelo || ""}`}
+                    </small>
+                  </span>
 
-                <strong>
-                  {tipo === "reabastecimentos" && (
-                    <>
-                      {item.litros != null ? `${item.litros} L · ` : ""}
-                      {item.kwh != null ? `${item.kwh} kWh · ` : ""}
-                      {item.euros != null ? `${item.euros}€ · ` : ""}
-                      {item.quilometros != null ? `${item.quilometros} km` : ""}
-                    </>
-                  )}
+                  <strong>
+                    {tipo === "reabastecimentos" && (
+                      <>
+                        {item.litros != null ? `${item.litros} L · ` : ""}
+                        {item.kwh != null ? `${item.kwh} kWh · ` : ""}
+                        {item.euros != null ? `${item.euros}€ · ` : ""}
+                        {item.quilometros != null
+                          ? `${item.quilometros} km`
+                          : ""}
+                      </>
+                    )}
 
-                  {tipo !== "reabastecimentos" && (
-                    <>
-                      {item.preco_total ? `${item.preco_total}€ · ` : ""}
-                      {item.total_euros ? `${item.total_euros}€ · ` : ""}
-                      {item.km ? `${item.km} km · ` : ""}
-                      {item.horas ? `${item.horas}h` : ""}
-                      {item.total_horas ? `${item.total_horas}h` : ""}
-                    </>
-                  )}
-                </strong>
-              </button>
-            ))}
+                    {tipo !== "reabastecimentos" && (
+                      <>
+                        {item.preco_total ? `${item.preco_total}€ · ` : ""}
+                        {item.total_euros ? `${item.total_euros}€ · ` : ""}
+                        {item.km ? `${item.km} km · ` : ""}
+                        {item.horas ? `${item.horas}h` : ""}
+                        {item.total_horas ? `${item.total_horas}h` : ""}
+                      </>
+                    )}
+                  </strong>
+                </button>
+              ))}
           </div>
         </div>
       )}

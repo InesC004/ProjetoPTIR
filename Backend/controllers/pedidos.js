@@ -837,6 +837,7 @@ exports.terminarViagem = async (req, res) => {
       : await Viagem.findOne({ pedido_id: pedido._id });
 
     if (viagem) {
+      viagem.estado = "concluida";
       viagem.data_fim = agora;
       viagem.km = Number(quilometros.toFixed(2));
       viagem.preco_total = Number(precoFinal.toFixed(2));

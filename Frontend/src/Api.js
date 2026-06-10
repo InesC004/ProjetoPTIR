@@ -359,6 +359,23 @@ const pagamentos = {
 };
 
 // =============================================================================
+// Relatórios
+// =============================================================================
+
+const relatorios = {
+  async motoristaMeu({ data_inicio, data_fim } = {}) {
+    const params = new URLSearchParams();
+    if (data_inicio) params.set("data_inicio", data_inicio);
+    if (data_fim) params.set("data_fim", data_fim);
+    const query = params.toString();
+
+    return request(`/api/relatorios/motorista/me${query ? `?${query}` : ""}`, {
+      auth: true,
+    });
+  },
+};
+
+// =============================================================================
 // Serviços externos
 // =============================================================================
 
@@ -447,6 +464,7 @@ const api = {
   externos,
   faturas,
   pagamentos,
+  relatorios,
 };
 
 export default api;

@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   MapPin,
   Users,
+  BarChart3,
 } from "lucide-react";
 import logo from "../Pictures/logo1.jpeg";
 import TurnosMotorista from "../components/TurnosMotorista";
@@ -25,12 +26,14 @@ import PedidosMotorista from "../components/PedidosMotorista";
 import ViagensMotorista from "../components/ViagensMotorista";
 import FaturasMotorista from "../components/FaturasMotorista";
 import TransmissorLocalizacaoMotorista from "../components/TransmissorLocalizacaoMotorista";
+import RelatorioMotorista from "../components/RelatorioMotorista";
 
 const NAV = [
   { id: "turno", label: "Requisitar Táxi", Icon: CarFront, tag: "Turno" },
   { id: "pedidos", label: "Pedidos de Táxi", Icon: Navigation, tag: "Pedidos" },
   { id: "viagem", label: "Viagens", Icon: Route, tag: "Viagem" },
   { id: "fatura", label: "Faturas", Icon: Receipt, tag: "Faturação" },
+  { id: "relatorio", label: "Relatório", Icon: BarChart3, tag: "Análise" },
   { id: "reabastecimento", label: "Reabastecimento", Icon: Fuel, tag: "Táxi" },
 ];
 
@@ -658,6 +661,8 @@ export default function PaginaMotorista() {
                 "Registe e consulte as suas viagens com clientes."}
               {active === "fatura" &&
                 "Emita e consulte faturas das viagens realizadas."}
+              {active === "relatorio" &&
+                "Acompanhe o seu desempenho, faturação, quilómetros e reabastecimentos."}
               {active === "reabastecimento" &&
                 "Registe reabastecimentos de combustível ou energia elétrica."}
             </p>
@@ -668,6 +673,7 @@ export default function PaginaMotorista() {
             {active === "pedidos" && <PedidosMotorista />}
             {active === "viagem" && <ViagensMotorista />}
             {active === "fatura" && <FaturasMotorista />}
+            {active === "relatorio" && <RelatorioMotorista />}
             {active === "__placeholder__" && (
               <SecPlaceholder
                 icone="🧾"

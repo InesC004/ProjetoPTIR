@@ -1,9 +1,33 @@
 // controllers/relatorios.js
+const mongoose = require("mongoose");
 const Viagem = require("../models/viagem");
 const Reabastecimento = require("../models/reabastecimento");
+const Turno = require("../models/turno");
+require("../models/cliente");
+require("../models/motorista");
+require("../models/taxi");
 
 const os = require("os");
 const HOSTNAME = os.hostname();
+
+function responderErro(res, err) {
+  console.error(err);
+  res.status(500).json({
+    success: false,
+    message: err.message || "Erro no servidor",
+    servidor: HOSTNAME,
+  });
+}
+
+function validarObjectId(res, id, nome) {
+  if (mongoose.Types.ObjectId.isValid(id)) return true;
+  res.status(400).json({
+    success: false,
+    message: `${nome} inválido.`,
+    servidor: HOSTNAME,
+  });
+  return false;
+}
 
 // Helper para obter início e fim do dia de hoje (caso não enviem datas na query)
 function periodoHoje() {
@@ -22,6 +46,165 @@ function normalizarTipoMotor(tipo) {
     .toLowerCase();
 }
 
+function horasEntre(inicio, fim) {
+  if (!inicio || !fim) return 0;
+  return (new Date(fim) - new Date(inicio)) / (1000 * 60 * 60);
+}
+
+function arredondar(valor, casas = 2) {
+  return Number((Number(valor) || 0).toFixed(casas));
+}
+
+function chaveDia(data) {
+  return new Date(data).toISOString().slice(0, 10);
+}
+
+function filtroViagensConcluidas(inicio, fim, extras = {}) {
+  return {
+    data_inicio: { $gte: inicio },
+    data_fim: { $lte: fim },
+    $or: [{ estado: "concluida" }, { data_fim: { $ne: null } }],
+    ...extras,
+  };
+}
+
+// Relatório próprio do motorista autenticado
+exports.getRelatorioMotoristaAutenticado = async (req, res) => {
+  try {
+    let { data_inicio, data_fim } = req.query;
+    const inicio = data_inicio
+      ? new Date(`${data_inicio}T00:00:00.000`)
+      : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const fim = data_fim
+      ? new Date(`${data_fim}T23:59:59.999`)
+      : periodoHoje().fim;
+
+    const motoristaId = req.user.id;
+
+    const viagens = await Viagem.find(
+      filtroViagensConcluidas(inicio, fim, { motorista_id: motoristaId }),
+    )
+      .populate("cliente_id", "nome nif")
+      .populate("taxi_id", "matricula marca modelo")
+      .sort({ data_inicio: -1 });
+
+    const turnos = await Turno.find({
+      motorista: motoristaId,
+      data_inicio: { $lte: fim },
+      data_fim: { $gte: inicio },
+    }).select("_id data_inicio data_fim taxi");
+
+    const turnoIds = turnos.map((turno) => turno._id);
+
+    const reabastecimentos = await Reabastecimento.find({
+      turno: { $in: turnoIds },
+      data_inicio: { $lte: fim },
+      data_fim: { $gte: inicio },
+    })
+      .populate("taxi", "matricula marca modelo tipo_motor")
+      .sort({ data_inicio: -1 });
+
+    const totalViagens = viagens.length;
+    const totalKm = viagens.reduce((acc, v) => acc + (Number(v.km) || 0), 0);
+    const totalHoras = viagens.reduce(
+      (acc, v) => acc + horasEntre(v.data_inicio, v.data_fim),
+      0,
+    );
+    const totalFaturado = viagens.reduce(
+      (acc, v) => acc + (Number(v.preco_total) || 0),
+      0,
+    );
+    const viagensPagas = viagens.filter((v) => v.pagamento_estado === "pago").length;
+    const totalReabastecimentos = reabastecimentos.length;
+    const totalReabastecimentoEuros = reabastecimentos.reduce(
+      (acc, r) => acc + (Number(r.euros) || 0),
+      0,
+    );
+    const totalLitros = reabastecimentos.reduce(
+      (acc, r) => acc + (Number(r.litros) || 0),
+      0,
+    );
+    const totalKwh = reabastecimentos.reduce(
+      (acc, r) => acc + (Number(r.kwh) || 0),
+      0,
+    );
+
+    const porDiaMap = {};
+    viagens.forEach((v) => {
+      const dia = chaveDia(v.data_inicio);
+      if (!porDiaMap[dia]) {
+        porDiaMap[dia] = {
+          data: dia,
+          viagens: 0,
+          km: 0,
+          horas: 0,
+          faturado: 0,
+        };
+      }
+      porDiaMap[dia].viagens += 1;
+      porDiaMap[dia].km += Number(v.km) || 0;
+      porDiaMap[dia].horas += horasEntre(v.data_inicio, v.data_fim);
+      porDiaMap[dia].faturado += Number(v.preco_total) || 0;
+    });
+
+    const porDia = Object.values(porDiaMap)
+      .sort((a, b) => a.data.localeCompare(b.data))
+      .map((dia) => ({
+        ...dia,
+        km: arredondar(dia.km),
+        horas: arredondar(dia.horas),
+        faturado: arredondar(dia.faturado),
+      }));
+
+    res.json({
+      success: true,
+      servidor: HOSTNAME,
+      periodo: { inicio, fim },
+      totais: {
+        total_viagens: totalViagens,
+        total_km: arredondar(totalKm),
+        total_horas: arredondar(totalHoras),
+        total_faturado: arredondar(totalFaturado),
+        preco_medio: totalViagens ? arredondar(totalFaturado / totalViagens) : 0,
+        km_medio: totalViagens ? arredondar(totalKm / totalViagens) : 0,
+        viagens_pagas: viagensPagas,
+        viagens_pagamento_pendente: totalViagens - viagensPagas,
+        total_reabastecimentos: totalReabastecimentos,
+        total_reabastecimento_euros: arredondar(totalReabastecimentoEuros),
+        total_litros: arredondar(totalLitros),
+        total_kwh: arredondar(totalKwh),
+      },
+      por_dia: porDia,
+      viagens: viagens.map((v) => ({
+        _id: v._id,
+        data_inicio: v.data_inicio,
+        data_fim: v.data_fim,
+        horas: arredondar(horasEntre(v.data_inicio, v.data_fim)),
+        km: arredondar(v.km),
+        preco_total: arredondar(v.preco_total),
+        pagamento_estado: v.pagamento_estado,
+        origem_morada: v.origem_morada,
+        destino_morada: v.destino_morada,
+        cliente: v.cliente_id,
+        taxi: v.taxi_id,
+      })),
+      reabastecimentos: reabastecimentos.map((r) => ({
+        _id: r._id,
+        data_inicio: r.data_inicio,
+        data_fim: r.data_fim,
+        horas: arredondar(horasEntre(r.data_inicio, r.data_fim)),
+        quilometros: arredondar(r.quilometros),
+        euros: arredondar(r.euros),
+        litros: arredondar(r.litros),
+        kwh: arredondar(r.kwh),
+        taxi: r.taxi,
+      })),
+    });
+  } catch (err) {
+    responderErro(res, err);
+  }
+};
+
 // ══════════════════════════════════════════════
 // US14 — Relatório de táxis e motoristas
 // ══════════════════════════════════════════════
@@ -33,11 +216,7 @@ exports.getTotaisViagens = async (req, res) => {
     const inicio = data_inicio ? new Date(`${data_inicio}T00:00:00.000`) : periodoHoje().inicio;
     const fim = data_fim ? new Date(`${data_fim}T23:59:59.999`) : periodoHoje().fim;
 
-    const viagens = await Viagem.find({
-      data_inicio: { $gte: inicio },
-      data_fim: { $lte: fim },
-      estado: "concluida"
-    });
+    const viagens = await Viagem.find(filtroViagensConcluidas(inicio, fim));
 
     const totalViagens = viagens.length;
     const totalKm = viagens.reduce((acc, v) => acc + (v.km || 0), 0);
@@ -57,8 +236,7 @@ exports.getTotaisViagens = async (req, res) => {
       total_horas: parseFloat(totalHoras.toFixed(2)),
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor", servidor: HOSTNAME });
+    responderErro(res, err);
   }
 };
 
@@ -69,12 +247,11 @@ exports.getSubtotaisPorMotorista = async (req, res) => {
     const inicio = data_inicio ? new Date(`${data_inicio}T00:00:00.000`) : periodoHoje().inicio;
     const fim = data_fim ? new Date(`${data_fim}T23:59:59.999`) : periodoHoje().fim;
 
-    const viagens = await Viagem.find({
-      data_inicio: { $gte: inicio },
-      data_fim: { $lte: fim },
-      estado: "concluida",
-      motorista_id: { $exists: true, $ne: null },
-    }).populate("motorista_id", "nome nif");
+    const viagens = await Viagem.find(
+      filtroViagensConcluidas(inicio, fim, {
+        motorista_id: { $exists: true, $ne: null },
+      }),
+    ).populate("motorista_id", "nome nif");
 
     const mapaMotoristas = {};
     for (const v of viagens) {
@@ -108,8 +285,7 @@ exports.getSubtotaisPorMotorista = async (req, res) => {
 
     res.json({ success: true, servidor: HOSTNAME, periodo: { inicio, fim }, subtotais: resultado });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor", servidor: HOSTNAME });
+    responderErro(res, err);
   }
 };
 
@@ -120,12 +296,11 @@ exports.getSubtotaisPorTaxi = async (req, res) => {
     const inicio = data_inicio ? new Date(`${data_inicio}T00:00:00.000`) : periodoHoje().inicio;
     const fim = data_fim ? new Date(`${data_fim}T23:59:59.999`) : periodoHoje().fim;
 
-    const viagens = await Viagem.find({
-      data_inicio: { $gte: inicio },
-      data_fim: { $lte: fim },
-      estado: "concluida",
-      taxi_id: { $exists: true, $ne: null },
-    }).populate("taxi_id", "matricula marca modelo");
+    const viagens = await Viagem.find(
+      filtroViagensConcluidas(inicio, fim, {
+        taxi_id: { $exists: true, $ne: null },
+      }),
+    ).populate("taxi_id", "matricula marca modelo");
 
     const mapaTaxis = {};
     for (const v of viagens) {
@@ -159,8 +334,7 @@ exports.getSubtotaisPorTaxi = async (req, res) => {
 
     res.json({ success: true, servidor: HOSTNAME, periodo: { inicio, fim }, subtotais: resultado });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor", servidor: HOSTNAME });
+    responderErro(res, err);
   }
 };
 
@@ -168,25 +342,66 @@ exports.getSubtotaisPorTaxi = async (req, res) => {
 exports.getDetalhesMotorista = async (req, res) => {
   try {
     const { motorista_id } = req.params;
+    if (!validarObjectId(res, motorista_id, "Motorista")) return;
+
     let { data_inicio, data_fim } = req.query;
     const inicio = data_inicio ? new Date(`${data_inicio}T00:00:00.000`) : periodoHoje().inicio;
     const fim = data_fim ? new Date(`${data_fim}T23:59:59.999`) : periodoHoje().fim;
 
+    const viagens = await Viagem.aggregate([
+      {
+        $match: filtroViagensConcluidas(inicio, fim, {
+          motorista_id: new mongoose.Types.ObjectId(motorista_id),
+        }),
+      },
+      {
+        $lookup: {
+          from: "taxis",
+          localField: "taxi_id",
+          foreignField: "_id",
+          as: "taxi",
+        },
+      },
+      {
+        $lookup: {
+          from: "clientes",
+          localField: "cliente_id",
+          foreignField: "_id",
+          as: "cliente",
+        },
+      },
+      { $unwind: { path: "$taxi", preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: "$cliente", preserveNullAndEmptyArrays: true } },
+      { $sort: { data_inicio: -1 } },
+      {
+        $project: {
+          _id: 1,
+          data_inicio: 1,
+          data_fim: 1,
+          km: 1,
+          taxi: {
+            _id: "$taxi._id",
+            matricula: "$taxi.matricula",
+            marca: "$taxi.marca",
+            modelo: "$taxi.modelo",
+          },
+          cliente: {
+            _id: "$cliente._id",
+            nome: "$cliente.nome",
+            nif: "$cliente.nif",
+          },
+        },
+      },
+    ]);
 
     const resultado = viagens.map((v) => ({
-      _id: v._id,
-      data_inicio: v.data_inicio,
-      data_fim: v.data_fim,
-      km: v.km,
-      horas: v.data_inicio && v.data_fim ? parseFloat(((new Date(v.data_fim) - new Date(v.data_inicio)) / (1000 * 60 * 60)).toFixed(2)) : 0,
-      taxi: v.taxi_id,
-      cliente: v.cliente_id,
+      ...v,
+      horas: arredondar(horasEntre(v.data_inicio, v.data_fim)),
     }));
 
     res.json({ success: true, servidor: HOSTNAME, periodo: { inicio, fim }, viagens: resultado });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor", servidor: HOSTNAME });
+    responderErro(res, err);
   }
 };
 
@@ -194,19 +409,18 @@ exports.getDetalhesMotorista = async (req, res) => {
 exports.getDetalhesTaxi = async (req, res) => {
   try {
     const { taxi_id } = req.params;
+    if (!validarObjectId(res, taxi_id, "Táxi")) return;
+
     let { data_inicio, data_fim } = req.query;
     const inicio = data_inicio ? new Date(`${data_inicio}T00:00:00.000`) : periodoHoje().inicio;
     const fim = data_fim ? new Date(`${data_fim}T23:59:59.999`) : periodoHoje().fim;
 
-    const viajes = await Viagem.find({
-      taxi_id,
-      data_inicio: { $gte: inicio },
-      data_fim: { $lte: fim },
-      estado: "concluida"
-    })
-    .populate("motorista_id", "nome nif")
-    .populate("cliente_id", "nome nif")
-    .sort({ data_inicio: -1 });
+    const viajes = await Viagem.find(
+      filtroViagensConcluidas(inicio, fim, { taxi_id }),
+    )
+      .populate("motorista_id", "nome nif")
+      .populate("cliente_id", "nome nif")
+      .sort({ data_inicio: -1 });
 
     const resultado = viajes.map((v) => ({
       _id: v._id,
@@ -220,8 +434,7 @@ exports.getDetalhesTaxi = async (req, res) => {
 
     res.json({ success: true, servidor: HOSTNAME, periodo: { inicio, fim }, viagens: resultado });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor", servidor: HOSTNAME });
+    responderErro(res, err);
   }
 };
 
@@ -238,8 +451,7 @@ exports.getDetalhesViagem = async (req, res) => {
     if (!viagem) return res.status(404).json({ success: false, message: "Viagem não encontrada.", servidor: HOSTNAME });
     res.json({ success: true, servidor: HOSTNAME, viagem });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor", servidor: HOSTNAME });
+    responderErro(res, err);
   }
 };
 
@@ -254,12 +466,11 @@ exports.getTotalEurosViagens = async (req, res) => {
     const inicio = data_inicio ? new Date(`${data_inicio}T00:00:00.000`) : periodoHoje().inicio;
     const fim = data_fim ? new Date(`${data_fim}T23:59:59.999`) : periodoHoje().fim;
 
-    const viagens = await Viagem.find({
-      data_inicio: { $gte: inicio },
-      data_fim: { $lte: fim },
-      estado: "concluida",
-      preco_total: { $exists: true, $ne: null },
-    });
+    const viagens = await Viagem.find(
+      filtroViagensConcluidas(inicio, fim, {
+        preco_total: { $exists: true, $ne: null },
+      }),
+    );
 
     const totalEuros = viagens.reduce((acc, v) => acc + (v.preco_total || 0), 0);
 
@@ -270,8 +481,7 @@ exports.getTotalEurosViagens = async (req, res) => {
       total_euros: parseFloat(totalEuros.toFixed(2)),
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor", servidor: HOSTNAME });
+    responderErro(res, err);
   }
 };
 
@@ -282,12 +492,11 @@ exports.getSubtotaisPorCliente = async (req, res) => {
     const inicio = data_inicio ? new Date(`${data_inicio}T00:00:00.000`) : periodoHoje().inicio;
     const fim = data_fim ? new Date(`${data_fim}T23:59:59.999`) : periodoHoje().fim;
 
-    const viagens = await Viagem.find({
-      data_inicio: { $gte: inicio },
-      data_fim: { $lte: fim },
-      estado: "concluida",
-      cliente_id: { $exists: true, $ne: null },
-    }).populate("cliente_id", "nome nif email");
+    const viagens = await Viagem.find(
+      filtroViagensConcluidas(inicio, fim, {
+        cliente_id: { $exists: true, $ne: null },
+      }),
+    ).populate("cliente_id", "nome nif email");
 
     const mapaClientes = {};
     for (const v of viagens) {
@@ -313,8 +522,7 @@ exports.getSubtotaisPorCliente = async (req, res) => {
 
     res.json({ success: true, servidor: HOSTNAME, periodo: { inicio, fim }, subtotais: resultado });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor", servidor: HOSTNAME });
+    responderErro(res, err);
   }
 };
 
@@ -322,19 +530,18 @@ exports.getSubtotaisPorCliente = async (req, res) => {
 exports.getDetalhesCliente = async (req, res) => {
   try {
     const { cliente_id } = req.params;
+    if (!validarObjectId(res, cliente_id, "Cliente")) return;
+
     let { data_inicio, data_fim } = req.query;
     const inicio = data_inicio ? new Date(`${data_inicio}T00:00:00.000`) : periodoHoje().inicio;
     const fim = data_fim ? new Date(`${data_fim}T23:59:59.999`) : periodoHoje().fim;
 
-    const viagens = await Viagem.find({
-      cliente_id,
-      data_inicio: { $gte: inicio },
-      data_fim: { $lte: fim },
-      estado: "concluida"
-    })
-    .populate("taxi_id", "matricula marca modelo")
-    .populate("motorista_id", "nome nif")
-    .sort({ preco_total: -1 });
+    const viagens = await Viagem.find(
+      filtroViagensConcluidas(inicio, fim, { cliente_id }),
+    )
+      .populate("taxi_id", "matricula marca modelo")
+      .populate("motorista_id", "nome nif")
+      .sort({ preco_total: -1 });
 
     const resultado = viagens.map((v) => ({
       _id: v._id,
@@ -348,8 +555,7 @@ exports.getDetalhesCliente = async (req, res) => {
 
     res.json({ success: true, servidor: HOSTNAME, periodo: { inicio, fim }, viagens: resultado });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor", servidor: HOSTNAME });
+    responderErro(res, err);
   }
 };
 
@@ -381,8 +587,7 @@ exports.getTotaisReabastecimentos = async (req, res) => {
       total_horas: Number(totalHoras.toFixed(2)),
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor", servidor: HOSTNAME });
+    responderErro(res, err);
   }
 };
 
@@ -420,8 +625,7 @@ exports.getSubtotaisPorTipoMotor = async (req, res) => {
 
     res.json({ success: true, servidor: HOSTNAME, periodo: { inicio, fim }, subtotais: resultado });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor", servidor: HOSTNAME });
+    responderErro(res, err);
   }
 };
 
@@ -467,7 +671,6 @@ exports.getDetalhesPorTipoMotor = async (req, res) => {
 
     res.json({ success: true, servidor: HOSTNAME, periodo: { inicio, fim }, detalhes: resultado });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor", servidor: HOSTNAME });
+    responderErro(res, err);
   }
 };
