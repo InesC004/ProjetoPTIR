@@ -37,14 +37,23 @@ function getMorada(valor) {
 }
 
 function getDistancia(pedido) {
-  const distancia = pedido?.distancia_km ?? pedido?.distancia;
+  const distancia = 
+    pedido?.quilometros_percorridos ??
+    pedido?.viagem_distancia_km ??
+    pedido?.distancia_km ??
+    pedido?.distancia ??
+    pedido?.viagem_id?.km;
   if (distancia === undefined || distancia === null || distancia === "")
     return "—";
   return `${Number(distancia).toFixed(2)} km`;
 }
 
 function getTempo(pedido) {
-  const tempo = pedido?.tempo_estimado_min ?? pedido?.tempo_estimado;
+  const tempo = 
+    pedido?.duracao_minutos ??
+    pedido?.viagem_tempo_estimado_min ??
+    pedido?.tempo_estimado_min ??
+    pedido?.tempo_estimado;
   if (tempo === undefined || tempo === null || tempo === "") return "—";
   return `${Math.round(Number(tempo))} min`;
 }
