@@ -280,19 +280,31 @@ export default function PedidosMotorista() {
             const data = await api.pedidos.obter(id);
             const pedidoAtualizado = data?.pedido || data;
 
+            const distanciaViagem =
+              data?.viagem_distancia_km ??
+              pedidoAtualizado?.quilometros_percorridos ??
+              pedidoAtualizado?.distancia_km ??
+              pedidoAtualizado?.distancia ??
+              pedido?.viagem_distancia_km ??
+              pedido?.distancia_km ??
+              pedido?.distancia;
+
+            const tempoViagem =
+              data?.viagem_tempo_estimado_min ??
+              pedidoAtualizado?.duracao_minutos ??
+              pedidoAtualizado?.tempo_estimado_min ??
+              pedidoAtualizado?.tempo_estimado ??
+              pedido?.viagem_tempo_estimado_min ??
+              pedido?.tempo_estimado_min ??
+              pedido?.tempo_estimado;
+
             return {
               ...pedido,
               ...pedidoAtualizado,
-              distancia_km:
-                pedido.distancia_km ??
-                pedido.distancia ??
-                pedidoAtualizado?.distancia_km ??
-                pedidoAtualizado?.distancia,
-              tempo_estimado_min:
-                pedido.tempo_estimado_min ??
-                pedido.tempo_estimado ??
-                pedidoAtualizado?.tempo_estimado_min ??
-                pedidoAtualizado?.tempo_estimado,
+              viagem_distancia_km: distanciaViagem,
+              viagem_tempo_estimado_min: tempoViagem,
+              distancia_km: distanciaViagem,
+              tempo_estimado_min: tempoViagem,
             };
           } catch {
             return {
@@ -383,7 +395,20 @@ export default function PedidosMotorista() {
       const jaExiste = viagensAtuais.some((v) => getId(v) === id);
 
       const novaViagem = {
-        ...(data?.pedido || pedido),
+        ...pedido,
+        ...(data?.pedido || {}),
+        viagem_id:
+          data?.pedido?.viagem_id ||
+          data?.viagem?._id ||
+          pedido?.viagem_id,
+        distancia_km:
+          pedido?.viagem_distancia_km ??
+          pedido?.distancia_km ??
+          pedido?.distancia,
+        tempo_estimado_min:
+          pedido?.viagem_tempo_estimado_min ??
+          pedido?.tempo_estimado_min ??
+          pedido?.tempo_estimado,
         estado: "em_viagem",
         estadoViagem: "em_curso",
         data_inicio: new Date().toISOString(),
