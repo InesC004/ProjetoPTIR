@@ -2545,27 +2545,3 @@ body {
 .criar-gestor-voltar:hover {
   color: var(--branco);
 }
-/* Letras pretas no login e no registo */
-.modal-caixa,
-.modal-form-area,
-.modal-titulo,
-.modal-sub,
-.modal-label,
-.modal-input,
-.modal-select,
-.modal-select option,
-.modal-fechar {
-  color: #000000;
-}
-
-.modal-input::placeholder {
-  color: #4b5563;
-}.modal-form-area p,
-.modal-form-area span,
-.modal-form-area small,
-.modal-form-area a {
-  color: #000000;
-}.modal-btn,
-.modal-btn-primary {
-  color: #ffffff;
-}
