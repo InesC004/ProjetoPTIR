@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useRef } from "react";
 import Header from "../components/Header2";
+import MapaSeguimentoCliente from "../components/MapaSeguimentoCliente";
 import api from "../Api";
 import "../css/dashboardCliente.css";
 
@@ -1189,6 +1190,9 @@ export default function Dashboard() {
                     >
                       Cancelar pedido
                     </button>
+                  )}
+                  {["confirmado", "em_viagem"].includes(estadoPedido) && (
+                    <MapaSeguimentoCliente pedido={pedidoAtual} />
                   )}
                 </div>
               )}

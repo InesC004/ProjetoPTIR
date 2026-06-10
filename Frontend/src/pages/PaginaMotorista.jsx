@@ -24,6 +24,7 @@ import "../css/paginaMotorista.css";
 import PedidosMotorista from "../components/PedidosMotorista";
 import ViagensMotorista from "../components/ViagensMotorista";
 import FaturasMotorista from "../components/FaturasMotorista";
+import TransmissorLocalizacaoMotorista from "../components/TransmissorLocalizacaoMotorista";
 
 const NAV = [
   { id: "turno", label: "Requisitar Táxi", Icon: CarFront, tag: "Turno" },
@@ -131,6 +132,7 @@ export default function PaginaMotorista() {
         color: "var(--branco)",
       }}
     >
+      <TransmissorLocalizacaoMotorista />
       <div className="fundo-grelha" />
       <div
         style={{

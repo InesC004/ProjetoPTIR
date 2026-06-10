@@ -1,8 +1,10 @@
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
+const http = require("http");
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const { Server } = require("socket.io");
 const os = require("os");
 const HOSTNAME = os.hostname();
 
@@ -21,10 +23,22 @@ const webhooksRoutes = require("./routes/webhooks");
 const relatoriosRoutes = require("./routes/relatorios");
 const faturasRoutes = require("./routes/faturas");
 const modelosTaxiRoutes = require("./routes/modelosTaxi");
+const {
+  configurarSocketLocalizacao,
+} = require("./sockets/localizacao");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 const MONGO_URI = process.env.MONGO_URI;
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PUT"],
+  },
+});
+
+configurarSocketLocalizacao(io);
 
 // ===========================
 // Conectar ao MongoDB
@@ -116,6 +130,6 @@ app.use((err, req, res, next) => {
 // ===========================
 // Iniciar servidor
 // ===========================
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Servidor [${HOSTNAME}] a correr na porta ${PORT}`);
 });

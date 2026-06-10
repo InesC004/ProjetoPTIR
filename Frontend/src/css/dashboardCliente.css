@@ -972,6 +972,127 @@ input[type="number"].input-morada {
   margin-bottom: 12px;
 }
 
+.tracking-card {
+  margin-top: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(26, 110, 255, 0.16);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 10px 30px rgba(13, 24, 41, 0.08);
+}
+
+.tracking-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 10px;
+}
+
+.tracking-card-head strong {
+  display: block;
+  color: var(--texto);
+  font-size: 0.95rem;
+}
+
+.tracking-card-head p {
+  margin: 4px 0 0;
+  color: var(--texto-sub);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.tracking-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 201, 110, 0.26);
+  background: rgba(0, 201, 110, 0.1);
+  color: #087341;
+  padding: 5px 9px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.tracking-live::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00c96e;
+  box-shadow: 0 0 8px rgba(0, 201, 110, 0.85);
+}
+
+.tracking-live.off {
+  border-color: rgba(107, 139, 170, 0.24);
+  background: rgba(107, 139, 170, 0.1);
+  color: #52677d;
+}
+
+.tracking-live.off::before {
+  background: #8ba1b7;
+  box-shadow: none;
+}
+
+.tracking-addresses {
+  display: grid;
+  gap: 8px;
+  padding: 0 14px 14px;
+}
+
+.tracking-addresses div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  border-radius: 12px;
+  background: rgba(26, 110, 255, 0.06);
+  border: 1px solid rgba(26, 110, 255, 0.1);
+  padding: 9px 11px;
+}
+
+.tracking-addresses span {
+  color: #47617f;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.tracking-addresses strong {
+  color: var(--texto);
+  font-size: 0.86rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.tracking-map {
+  height: 260px;
+  border-top: 1px solid rgba(26, 110, 255, 0.12);
+}
+
+.tracking-leaflet {
+  width: 100%;
+  height: 100%;
+}
+
+.tracking-card .leaflet-container {
+  font-family: "DM Sans", sans-serif;
+  background: #edf4fb;
+}
+
+.tracking-error {
+  margin: 0;
+  padding: 10px 14px 12px;
+  color: #9f1d1d;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 /* Estatísticas rápidas */
 .estatisticas {
   display: flex;

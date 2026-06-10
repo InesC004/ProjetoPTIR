@@ -4,6 +4,10 @@ const Pedido = require("../models/pedido");
 const Viagem = require("../models/viagem");
 const Turno = require("../models/turno");
 const Preco = require("../models/preco");
+const {
+  emitirEventoPedido,
+  limparLocalizacaoPedido,
+} = require("../sockets/localizacao");
 
 function haversine(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -297,26 +301,6 @@ exports.cancelarAceitacao = async (req, res) => {
       });
     }
 
-    if (resposta === "confirmar" && pedido.estado === "confirmado") {
-      return res.json({
-        success: true,
-        message: "Motorista confirmado com sucesso.",
-        pedido,
-      });
-    }
-
-    if (
-      resposta === "rejeitar" &&
-      pedido.estado === "pendente" &&
-      !pedido.motorista_id
-    ) {
-      return res.json({
-        success: true,
-        message: "Motorista rejeitado com sucesso.",
-        pedido,
-      });
-    }
-
     if (pedido.estado !== "aceite") {
       return res.status(400).json({
         success: false,
@@ -329,6 +313,11 @@ exports.cancelarAceitacao = async (req, res) => {
     pedido.motorista_id = null;
 
     await pedido.save();
+    limparLocalizacaoPedido(pedido._id);
+    emitirEventoPedido(pedido._id, "pedido:cancelled", {
+      estado: pedido.estado,
+      motivo: "aceitacao_cancelada",
+    });
 
     res.json({
       success: true,
@@ -382,6 +371,26 @@ exports.responderMotorista = async (req, res) => {
       });
     }
 
+    if (resposta === "confirmar" && pedido.estado === "confirmado") {
+      return res.json({
+        success: true,
+        message: "Motorista confirmado com sucesso.",
+        pedido,
+      });
+    }
+
+    if (
+      resposta === "rejeitar" &&
+      pedido.estado === "pendente" &&
+      !pedido.motorista_id
+    ) {
+      return res.json({
+        success: true,
+        message: "Motorista rejeitado com sucesso.",
+        pedido,
+      });
+    }
+
     if (pedido.estado !== "aceite") {
       return res.status(400).json({
         success: false,
@@ -397,6 +406,17 @@ exports.responderMotorista = async (req, res) => {
     }
 
     await pedido.save();
+    if (resposta === "confirmar") {
+      emitirEventoPedido(pedido._id, "pedido:confirmed", {
+        estado: pedido.estado,
+      });
+    } else {
+      limparLocalizacaoPedido(pedido._id);
+      emitirEventoPedido(pedido._id, "pedido:cancelled", {
+        estado: pedido.estado,
+        motivo: "motorista_rejeitado",
+      });
+    }
 
     res.json({
       success: true,
@@ -453,6 +473,11 @@ exports.cancelar = async (req, res) => {
     pedido.estado = "cancelado";
 
     await pedido.save();
+    limparLocalizacaoPedido(pedido._id);
+    emitirEventoPedido(pedido._id, "pedido:cancelled", {
+      estado: pedido.estado,
+      motivo: "pedido_cancelado",
+    });
 
     res.json({
       success: true,
@@ -650,6 +675,9 @@ exports.iniciarViagem = async (req, res) => {
     pedido.estado = "em_viagem";
     pedido.data_inicio_viagem = new Date();
     await pedido.save();
+    emitirEventoPedido(pedido._id, "pedido:started", {
+      estado: pedido.estado,
+    });
 
     let viagem = pedido.viagem_id
       ? await Viagem.findById(pedido.viagem_id)
@@ -766,6 +794,10 @@ exports.terminarViagem = async (req, res) => {
     pedido.preco_final = Number(precoFinal.toFixed(2));
     pedido.pagamento_estado = "pendente";
     await pedido.save();
+    limparLocalizacaoPedido(pedido._id);
+    emitirEventoPedido(pedido._id, "pedido:finished", {
+      estado: pedido.estado,
+    });
 
     const viagem = pedido.viagem_id
       ? await Viagem.findById(pedido.viagem_id)
