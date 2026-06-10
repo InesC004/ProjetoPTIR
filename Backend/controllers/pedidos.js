@@ -646,6 +646,39 @@ exports.getHistoricoMotorista = async (req, res) => {
   }
 };
 
+// pedido ativo do motorista
+exports.getAtivoMotorista = async (req, res) => {
+  try {
+    const pedido = await Pedido.findOne({
+      motorista_id: req.user.id,
+      estado: { $in: ["confirmado", "em_viagem"] },
+    })
+      .populate("cliente_id", "nome nif")
+      .populate("motorista_id", "nome nif")
+      .populate("viagem_id")
+      .sort({ updatedAt: -1 });
+
+    if (!pedido) {
+      return res.status(404).json({
+        success: false,
+        message: "Não tens pedido ativo.",
+      });
+    }
+
+    res.json({
+      success: true,
+      pedido,
+    });
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Erro no servidor.",
+    });
+  }
+};
+
 // iniciar viagem
 exports.iniciarViagem = async (req, res) => {
   try {

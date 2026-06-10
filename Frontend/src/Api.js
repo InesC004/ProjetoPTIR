@@ -292,6 +292,12 @@ const pedidos = {
       auth: true,
     });
   },
+
+  async obterAtivoMotorista() {
+    return request("/api/pedidos/motorista/ativo", {
+      auth: true,
+    });
+  },
 };
 
 // =============================================================================

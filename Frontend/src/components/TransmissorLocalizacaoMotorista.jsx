@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import api from "../Api";
 import { getSocket } from "../socket";
 
 function getId(pedido) {
@@ -26,8 +27,16 @@ export default function TransmissorLocalizacaoMotorista() {
   const [pedidoAtivo, setPedidoAtivo] = useState(() => obterPedidoAtivo());
 
   useEffect(() => {
-    function atualizar() {
-      const proximo = obterPedidoAtivo();
+    async function atualizar() {
+      let proximo = obterPedidoAtivo();
+
+      try {
+        const data = await api.pedidos.obterAtivoMotorista();
+        proximo = data?.pedido || proximo;
+      } catch {
+        // Sem pedido ativo no backend, mantém a leitura local como fallback.
+      }
+
       setPedidoAtivo((atual) => {
         if (getId(atual) === getId(proximo) && atual?.estado === proximo?.estado) {
           return atual;

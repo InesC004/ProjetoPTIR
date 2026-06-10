@@ -35,6 +35,12 @@ router.get(
   pedidosController.getHistoricoMotorista,
 );
 
+router.get(
+  "/motorista/ativo",
+  checkRole("motorista"),
+  pedidosController.getAtivoMotorista,
+);
+
 router.put(
   "/:id/iniciar-viagem",
   checkRole("motorista"),

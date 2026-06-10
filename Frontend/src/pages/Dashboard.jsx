@@ -1,8 +1,8 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useRef } from "react";
 import Header from "../components/Header2";
-import MapaSeguimentoCliente from "../components/MapaSeguimentoCliente";
 import api from "../Api";
+import { getSocket } from "../socket";
 import "../css/dashboardCliente.css";
 
 
@@ -143,15 +143,25 @@ async function desenharRota(refs, origem, destino) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE: Mapa Interativo
 // ═══════════════════════════════════════════════════════════════════════════════
-function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
+function MapaInterativo({
+  apiRef,
+  aoDefinirPartida,
+  aoDefinirDestino,
+  pedidoSeguimento,
+  posicaoMotorista,
+}) {
   const divRef = useRef(null);
   const mapRef = useRef(null);
   const leafletRef = useRef(null);
   const marcadorPartida = useRef(null);
   const marcadorDestino = useRef(null);
   const marcadorPosicao = useRef(null);
+  const marcadorMotorista = useRef(null);
   const camadaRotaRef = useRef(null);
   const estadoRef = useRef("partida");
+  const pedidoSeguimentoRef = useRef(null);
+  const zoomInicialSeguimentoRef = useRef(null);
+  const [mapaPronto, setMapaPronto] = useState(false);
 
   const refs = { mapRef, camadaRotaRef, leafletRef };
 
@@ -172,6 +182,12 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
           camadaRotaRef.current.remove();
           camadaRotaRef.current = null;
         }
+        if (marcadorMotorista.current) {
+          marcadorMotorista.current.remove();
+          marcadorMotorista.current = null;
+        }
+        pedidoSeguimentoRef.current = null;
+        zoomInicialSeguimentoRef.current = null;
         aoDefinirPartida(null, "");
         aoDefinirDestino(null, "");
       },
@@ -261,6 +277,7 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
       ).addTo(mapa);
       L.control.zoom({ position: "bottomright" }).addTo(mapa);
       mapRef.current = mapa;
+      setMapaPronto(true);
 
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -291,6 +308,8 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
       }
 
       mapa.on("click", async (evento) => {
+        if (estadoRef.current === "seguimento") return;
+
         const { lat, lng } = evento.latlng;
 
         if (estadoRef.current === "partida") {
@@ -351,11 +370,163 @@ function MapaInterativo({ apiRef, aoDefinirPartida, aoDefinirDestino }) {
         mapRef.current.remove();
         mapRef.current = null;
       }
+      setMapaPronto(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const L = leafletRef.current;
+    const mapa = mapRef.current;
+    const estado = pedidoSeguimento?.estado_visivel || pedidoSeguimento?.estado;
+    const ativo = ["confirmado", "em_viagem"].includes(estado);
+
+    if (!mapaPronto || !L || !mapa || !pedidoSeguimento || !ativo) {
+      if (marcadorMotorista.current) {
+        marcadorMotorista.current.remove();
+        marcadorMotorista.current = null;
+      }
+      if (estadoRef.current === "seguimento") {
+        estadoRef.current = marcadorPartida.current ? "concluido" : "partida";
+      }
+      pedidoSeguimentoRef.current = null;
+      zoomInicialSeguimentoRef.current = null;
+      return;
+    }
+
+    const pedidoId = getMongoId(pedidoSeguimento);
+    const origem =
+      pedidoSeguimento.origem_lat != null && pedidoSeguimento.origem_lng != null
+        ? L.latLng(
+            Number(pedidoSeguimento.origem_lat),
+            Number(pedidoSeguimento.origem_lng),
+          )
+        : null;
+    const destino =
+      pedidoSeguimento.destino_lat != null &&
+      pedidoSeguimento.destino_lng != null
+        ? L.latLng(
+            Number(pedidoSeguimento.destino_lat),
+            Number(pedidoSeguimento.destino_lng),
+          )
+        : null;
+
+    if (!pedidoId || !origem || !destino) return;
+
+    estadoRef.current = "seguimento";
+
+    if (pedidoSeguimentoRef.current !== pedidoId) {
+      pedidoSeguimentoRef.current = pedidoId;
+
+      if (marcadorPartida.current) marcadorPartida.current.remove();
+      if (marcadorDestino.current) marcadorDestino.current.remove();
+      if (camadaRotaRef.current) {
+        camadaRotaRef.current.remove();
+        camadaRotaRef.current = null;
+      }
+
+      marcadorPartida.current = L.marker(origem, {
+        icon: criarIcone(L, "#00c96e", "📍", 40),
+        alt: "Morada do cliente",
+      })
+        .addTo(mapa)
+        .bindTooltip("Cliente", { direction: "top" });
+      aplicarAriaLabel(marcadorPartida.current, "Morada do cliente");
+
+      marcadorDestino.current = L.marker(destino, {
+        icon: criarIcone(L, "#1a6eff", "🏁", 40),
+        alt: "Destino da viagem",
+      })
+        .addTo(mapa)
+        .bindTooltip("Destino", { direction: "top" });
+      aplicarAriaLabel(marcadorDestino.current, "Destino da viagem");
+
+      desenharRota(refs, origem, destino);
+    }
+
+    if (posicaoMotorista) {
+      const posicao = L.latLng(posicaoMotorista.lat, posicaoMotorista.lng);
+
+      if (!marcadorMotorista.current) {
+        marcadorMotorista.current = L.marker(posicao, {
+          icon: criarIcone(L, "#101828", "🚕", 46),
+          zIndexOffset: 1000,
+          alt: "Localização do motorista",
+        })
+          .addTo(mapa)
+          .bindTooltip("Motorista", { direction: "top" });
+        aplicarAriaLabel(marcadorMotorista.current, "Localização do motorista");
+      } else {
+        marcadorMotorista.current.setLatLng(posicao);
+      }
+
+      if (zoomInicialSeguimentoRef.current !== pedidoId) {
+        mapa.fitBounds(L.latLngBounds([origem, destino, posicao]), {
+          padding: [90, 70],
+        });
+        zoomInicialSeguimentoRef.current = pedidoId;
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pedidoSeguimento, posicaoMotorista, mapaPronto]);
+
   return <div ref={divRef} style={{ position: "absolute", inset: 0 }} />;
+}
+
+function PainelSeguimento({
+  className = "",
+  pedido,
+  posicaoMotorista,
+  erroSeguimento,
+}) {
+  return (
+    <div className={`mapa-seguimento-painel ${className}`}>
+      <div className="mapa-seguimento-topo">
+        <div>
+          <span className="mapa-seguimento-eyebrow">Motorista</span>
+          <strong>
+            {posicaoMotorista
+              ? "A caminho em tempo real"
+              : "A aguardar GPS do motorista"}
+          </strong>
+        </div>
+        <span
+          className={
+            posicaoMotorista
+              ? "mapa-seguimento-live"
+              : "mapa-seguimento-live off"
+          }
+        >
+          {posicaoMotorista ? "online" : "a aguardar"}
+        </span>
+      </div>
+
+      <div className="mapa-seguimento-linhas">
+        <div>
+          <span className="linha-ponto cliente" />
+          <p>
+            <span>Cliente</span>
+            <strong>
+              {pedido?.origem_morada || "Morada de partida não indicada"}
+            </strong>
+          </p>
+        </div>
+        <div>
+          <span className="linha-ponto destino" />
+          <p>
+            <span>Destino</span>
+            <strong>
+              {pedido?.destino_morada || "Morada de destino não indicada"}
+            </strong>
+          </p>
+        </div>
+      </div>
+
+      {erroSeguimento && (
+        <p className="mapa-seguimento-erro">{erroSeguimento}</p>
+      )}
+    </div>
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -490,6 +661,10 @@ export default function Dashboard() {
   const [erroPagamento, setErroPagamento] = useState("");
   const [metodoPagamento, setMetodoPagamento] = useState("cartao");
   const [aResponderMotorista, setAResponderMotorista] = useState(false);
+  const [posicaoMotorista, setPosicaoMotorista] = useState(null);
+  const [erroSeguimento, setErroSeguimento] = useState("");
+  const pedidoAtualId = getMongoId(pedidoAtual);
+  const estadoPedidoAtual = getEstadoVisivel(pedidoAtual);
 
   function apenasDigitos(valor) {
     return valor.replace(/\D/g, "");
@@ -615,6 +790,57 @@ export default function Dashboard() {
   }, [pedidoAtual]);
 
   useEffect(() => {
+    const pedidoId = pedidoAtualId;
+    const podeAcompanhar = ["confirmado", "em_viagem"].includes(
+      estadoPedidoAtual,
+    );
+
+    if (!pedidoId || !podeAcompanhar) {
+      setPosicaoMotorista(null);
+      setErroSeguimento("");
+      return undefined;
+    }
+
+    const socket = getSocket();
+
+    function receberLocalizacao(payload) {
+      if (payload?.pedidoId !== pedidoId) return;
+      setPosicaoMotorista({
+        lat: Number(payload.lat),
+        lng: Number(payload.lng),
+        accuracy: payload.accuracy,
+        timestamp: payload.timestamp,
+      });
+      setErroSeguimento("");
+    }
+
+    function pararSeguimento(payload) {
+      if (payload?.pedidoId !== pedidoId) return;
+      setPosicaoMotorista(null);
+    }
+
+    function receberErro(payload) {
+      if (!payload?.pedidoId || payload.pedidoId === pedidoId) {
+        setErroSeguimento(payload?.message || "Erro no acompanhamento.");
+      }
+    }
+
+    socket.emit("pedido:join", { pedidoId });
+    socket.on("motorista:localizacao:update", receberLocalizacao);
+    socket.on("pedido:finished", pararSeguimento);
+    socket.on("pedido:cancelled", pararSeguimento);
+    socket.on("tracking:error", receberErro);
+
+    return () => {
+      socket.emit("pedido:leave", { pedidoId });
+      socket.off("motorista:localizacao:update", receberLocalizacao);
+      socket.off("pedido:finished", pararSeguimento);
+      socket.off("pedido:cancelled", pararSeguimento);
+      socket.off("tracking:error", receberErro);
+    };
+  }, [pedidoAtualId, estadoPedidoAtual]);
+
+  useEffect(() => {
     function atualizarPedidoCliente() {
       setPedidoAtual((atual) => aplicarEstadoFrontend(atual));
     }
@@ -673,12 +899,23 @@ export default function Dashboard() {
 
   const semPartida = !moradaPartida;
   const semDestino = !moradaDestino;
-  const textoDica = semPartida
-    ? "1º clique = Partida  ·  2º clique = Destino"
-    : semDestino
-      ? "Clique para definir o destino"
-      : "Arraste os marcadores para ajustar";
-  const corDica = semPartida ? "#00e887" : semDestino ? "#3d8bff" : "#c64dff";
+  const modoSeguimento = ["confirmado", "em_viagem"].includes(
+    estadoPedidoAtual,
+  );
+  const textoDica = modoSeguimento
+    ? "Acompanhe o motorista no mapa"
+    : semPartida
+      ? "1º clique = Partida  ·  2º clique = Destino"
+      : semDestino
+        ? "Clique para definir o destino"
+        : "Arraste os marcadores para ajustar";
+  const corDica = modoSeguimento
+    ? "#101828"
+    : semPartida
+      ? "#00e887"
+      : semDestino
+        ? "#3d8bff"
+        : "#c64dff";
 
   function reiniciar() {
     setPartida(null);
@@ -901,7 +1138,7 @@ export default function Dashboard() {
     },
   ];
 
-  const estadoPedido = getEstadoVisivel(pedidoAtual);
+  const estadoPedido = estadoPedidoAtual;
   const pedidoBloqueiaNovaViagem = Boolean(
     pedidoAtual && estadoPedido !== "concluido",
   );
@@ -1191,15 +1428,21 @@ export default function Dashboard() {
                       Cancelar pedido
                     </button>
                   )}
-                  {["confirmado", "em_viagem"].includes(estadoPedido) && (
-                    <MapaSeguimentoCliente pedido={pedidoAtual} />
-                  )}
                 </div>
               )}
             </div>
           </div>
 
           <div className="painel-mapa animar-dir">
+            {["confirmado", "em_viagem"].includes(estadoPedido) && (
+              <PainelSeguimento
+                className="mapa-seguimento-mobile"
+                pedido={pedidoAtual}
+                posicaoMotorista={posicaoMotorista}
+                erroSeguimento={erroSeguimento}
+              />
+            )}
+
             <div className="caixa-mapa">
               <MapaInterativo
                 apiRef={apiMapa}
@@ -1211,6 +1454,8 @@ export default function Dashboard() {
                   setDestino(c);
                   setMoradaDestino(m);
                 }}
+                pedidoSeguimento={pedidoAtual}
+                posicaoMotorista={posicaoMotorista}
               />
               <div className="barra-topo-mapa">
                 <div className="dica-mapa" aria-live="polite">
@@ -1235,12 +1480,20 @@ export default function Dashboard() {
                     </button>
                   )}
               </div>
+              {["confirmado", "em_viagem"].includes(estadoPedido) && (
+                <PainelSeguimento
+                  className="mapa-seguimento-overlay"
+                  pedido={pedidoAtual}
+                  posicaoMotorista={posicaoMotorista}
+                  erroSeguimento={erroSeguimento}
+                />
+              )}
               {aCalcular && (
                 <div className="a-calcular" aria-hidden="true">
                   <div className="spinner" />A calcular rota…
                 </div>
               )}
-              {dadosRota && !aCalcular && (
+              {dadosRota && !aCalcular && !modoSeguimento && (
                 <div className="card-rota" aria-hidden="true">
                   <div className="rc-label">Tempo de viagem</div>
                   <div className="rc-valor">{fmtTempo(dadosRota.duracaoS)}</div>
