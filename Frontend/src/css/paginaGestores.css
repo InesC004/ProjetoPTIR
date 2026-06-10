@@ -1458,3 +1458,316 @@
     height: 22px;
   }
 }
+
+/* =========================================================
+   Gestão de Dados — aba de táxis e motoristas disponíveis
+   ========================================================= */
+
+.pg-dados-wrap {
+  width: 100%;
+}
+
+.pg-dados-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.pg-dados-tabs button {
+  padding: 11px 17px;
+  border-radius: 999px;
+  border: 1px solid rgba(26, 110, 255, 0.18);
+  background: rgba(255, 255, 255, 0.82);
+  color: #49658b;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.pg-dados-tabs button:hover,
+.pg-dados-tabs button.active {
+  background: #06152d;
+  color: #ffffff;
+  border-color: #06152d;
+}
+
+.pg-disponiveis {
+  width: 100%;
+  max-width: 1120px;
+}
+
+.pg-disponiveis-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.pg-disponiveis-topo h3 {
+  margin: 0 0 6px;
+  font-family: "Syne", sans-serif;
+  color: #06152d;
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.pg-disponiveis-topo p {
+  margin: 0;
+  color: #5f789d;
+  font-weight: 700;
+}
+
+.pg-refresh {
+  min-height: 42px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1a6eff, #0052cc);
+  color: #ffffff;
+  font-weight: 900;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 12px 26px rgba(26, 110, 255, 0.18);
+  transition: 0.2s ease;
+}
+
+.pg-refresh:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px rgba(26, 110, 255, 0.24);
+}
+
+.pg-alerta-erro {
+  padding: 13px 16px;
+  margin: 0 0 16px;
+  border-radius: 14px;
+  background: #fff1f1;
+  border: 1px solid #ffd1d1;
+  color: #d93636;
+  font-weight: 900;
+}
+
+.pg-disponiveis-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.pg-lista-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pg-mini-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 14px;
+  border-radius: 17px;
+  border: 1px solid #d6e4ff;
+  background: #f8fbff;
+  min-width: 0;
+}
+
+.pg-mini-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+}
+
+.pg-mini-icon.blue {
+  background: linear-gradient(135deg, #1a6eff, #63a3ff);
+  box-shadow: 0 10px 22px rgba(26, 110, 255, 0.22);
+}
+
+.pg-mini-icon.green {
+  background: linear-gradient(135deg, #00c878, #00a85e);
+  box-shadow: 0 10px 22px rgba(0, 201, 110, 0.2);
+}
+
+.pg-mini-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.pg-mini-info strong {
+  display: block;
+  color: #06152d;
+  font-size: 0.98rem;
+  font-weight: 900;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.pg-mini-info span {
+  display: block;
+  margin-top: 3px;
+  color: #5f789d;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.pg-mini-tags {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-top: 9px;
+}
+
+.pg-mini-tags small {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #eaf3ff;
+  color: #0b5fe8;
+  border: 1px solid #cfe0f7;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: capitalize;
+}
+
+/* Responsivo da aba de disponíveis */
+
+@media (max-width: 1024px) {
+  .pg-disponiveis {
+    max-width: 100%;
+  }
+
+  .pg-disponiveis-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pg-disponiveis-topo {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pg-refresh {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 700px) {
+  .pg-dados-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+  }
+
+  .pg-dados-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pg-dados-tabs button {
+    flex: 0 0 auto;
+    padding: 10px 13px;
+    font-size: 0.76rem;
+    white-space: nowrap;
+  }
+
+  .pg-disponiveis-topo h3 {
+    font-size: 1.05rem;
+  }
+
+  .pg-disponiveis-topo p {
+    font-size: 0.84rem;
+    line-height: 1.45;
+  }
+
+  .pg-mini-card {
+    padding: 12px;
+    border-radius: 15px;
+  }
+
+  .pg-mini-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .pg-mini-info strong {
+    font-size: 0.9rem;
+  }
+
+  .pg-mini-info span {
+    font-size: 0.78rem;
+  }
+}
+
+/* =========================================================
+   Gestão de Dados — tudo na mesma página
+   ========================================================= */
+
+.pg-dados-wrap > .pg-grid {
+  margin-bottom: 28px;
+}
+
+.pg-disponiveis-inline {
+  max-width: none;
+  padding: 24px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(26, 110, 255, 0.14);
+  box-shadow: 0 24px 60px rgba(16, 42, 82, 0.08);
+}
+
+.pg-disponiveis-inline .pg-search-wrap {
+  max-width: none;
+}
+
+.pg-refresh:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.pg-lista-cards {
+  max-height: 430px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.pg-lista-cards::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pg-lista-cards::-webkit-scrollbar-thumb {
+  background: #cfe0f7;
+  border-radius: 999px;
+}
+
+@media (max-width: 1024px) {
+  .pg-disponiveis-inline {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 700px) {
+  .pg-dados-wrap > .pg-grid {
+    margin-bottom: 20px;
+  }
+
+  .pg-disponiveis-inline {
+    padding: 15px;
+    border-radius: 20px;
+  }
+
+  .pg-lista-cards {
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
+  }
+}
