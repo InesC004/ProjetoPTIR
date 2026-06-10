@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import image from "../Pictures/carroRegistro.jpg";
 import api from "../Api";
+import "../css/loginModal.css";
 
 export default function LoginModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({ nif: "", access_password: "" });
@@ -114,8 +115,6 @@ export default function LoginModal({ isOpen, onClose }) {
                   </button>
                 </div>
               </div>
-
-
 
               <button
                 type="submit"
