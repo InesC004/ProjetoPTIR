@@ -89,13 +89,6 @@ const auth = {
     });
   },
 
-  /** Completar perfil Auth0 de cliente. */
-  async completarPerfilCliente(payload) {
-    return request("/api/clientes/completar", {
-      method: "PUT",
-      body: payload,
-    });
-  },
 };
 
 // =============================================================================
