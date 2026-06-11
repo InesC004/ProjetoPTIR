@@ -1,10 +1,9 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useRef } from "react";
 import Header from "../components/Header2";
-import api, { apiUrl } from "../Api";
+import api from "../Api";
 import { getSocket } from "../socket";
 import "../css/dashboardCliente.css";
-
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // UTILITÁRIOS
@@ -696,6 +695,7 @@ export default function Dashboard() {
   const [comentarioAvaliacao, setComentarioAvaliacao] = useState("");
   const [aAvaliar, setAAvaliar] = useState(false);
   const [erroAvaliacao, setErroAvaliacao] = useState("");
+  const [mensagemPagamentoSucesso, setMensagemPagamentoSucesso] = useState("");
   const pedidoAtualId = getMongoId(pedidoAtual);
   const estadoPedidoAtual = getEstadoVisivel(pedidoAtual);
 
@@ -705,6 +705,19 @@ export default function Dashboard() {
 
   function limitarDigitos(evento, limite) {
     evento.target.value = apenasDigitos(evento.target.value).slice(0, limite);
+  }
+
+  function formatarValidadeCartao(evento) {
+    const digitos = apenasDigitos(evento.target.value).slice(0, 4);
+    evento.target.value =
+      digitos.length > 2
+        ? `${digitos.slice(0, 2)}/${digitos.slice(2)}`
+        : digitos;
+  }
+
+  function formatarNumeroCartao(evento) {
+    const digitos = apenasDigitos(evento.target.value).slice(0, 16);
+    evento.target.value = digitos.replace(/(\d{4})(?=\d)/g, "$1 ");
   }
 
   function validadeCartaoValida(valor) {
@@ -751,7 +764,7 @@ export default function Dashboard() {
       try {
         const token = localStorage.getItem("token");
         const resposta = await fetch(
-          apiUrl("/api/pedidos/ativo"),
+          "http://localhost:8080/api/pedidos/ativo",
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -784,7 +797,7 @@ export default function Dashboard() {
       try {
         const token = localStorage.getItem("token");
         const res = await fetch(
-          apiUrl(`/api/pedidos/${pedidoAtual._id}`),
+          `http://localhost:8080/api/pedidos/${pedidoAtual._id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -978,7 +991,7 @@ export default function Dashboard() {
     setAPedir(true);
     try {
       const token = localStorage.getItem("token");
-      const resposta = await fetch(apiUrl("/api/pedidos/create"), {
+      const resposta = await fetch("http://localhost:8080/api/pedidos/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1014,7 +1027,7 @@ export default function Dashboard() {
     if (!pedidoAtual) return;
     const token = localStorage.getItem("token");
     const res = await fetch(
-      apiUrl(`/api/pedidos/${pedidoAtual._id}/cancelar`),
+      `http://localhost:8080/api/pedidos/${pedidoAtual._id}/cancelar`,
       {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
@@ -1040,7 +1053,7 @@ export default function Dashboard() {
     setErroPedido("");
     try {
       const res = await fetch(
-        apiUrl(`/api/pedidos/${pedidoId}/responder`),
+        `http://localhost:8080/api/pedidos/${pedidoId}/responder`,
         {
           method: "PUT",
           headers: {
@@ -1077,34 +1090,23 @@ export default function Dashboard() {
       setErroPagamento("Não foi possível obter os dados do pagamento.");
       return;
     }
-    if (metodoPagamento !== "cartao" && !validarFormularioPagamento()) return;
+    if (!validarFormularioPagamento()) return;
     setAPagar(true);
     setErroPagamento("");
     try {
-      let data;
+      const intentData = await api.pagamentos.criarStripeIntent({
+        viagem_id: viagemId,
+        cliente_id: clienteId,
+        metodo: metodoPagamento,
+        valor,
+        modo_teste: true,
+      });
 
-      if (metodoPagamento === "cartao") {
-        const intentData = await api.pagamentos.criarStripeIntent({
-          viagem_id: viagemId,
-          cliente_id: clienteId,
-          metodo: "cartao",
-          valor,
-          modo_teste: true,
-        });
-
-        data = await api.pagamentos.confirmarStripe({
-          pagamento_id: intentData.pagamento?._id,
-          stripe_payment_intent_id:
-            intentData.pagamento?.stripe_payment_intent_id,
-        });
-      } else {
-        data = await api.pagamentos.criar({
-          viagem_id: viagemId,
-          cliente_id: clienteId,
-          metodo: metodoPagamento,
-          valor,
-        });
-      }
+      const data = await api.pagamentos.confirmarStripe({
+        pagamento_id: intentData.pagamento?._id,
+        stripe_payment_intent_id:
+          intentData.pagamento?.stripe_payment_intent_id,
+      });
 
       const pedidoPago = aplicarEstadoFrontend({
         ...pedidoAtual,
@@ -1119,6 +1121,7 @@ export default function Dashboard() {
       atualizarViagemMotoristaComoPaga(pedidoPago);
       setPedidoAtual(pedidoPago);
       setMostrarPopupPagamento(false);
+      setMensagemPagamentoSucesso("Pagamento confirmado com sucesso.");
       if (!viagemJaAvaliada(pedidoPago)) {
         setNotaAvaliacao(0);
         setComentarioAvaliacao("");
@@ -1477,6 +1480,11 @@ export default function Dashboard() {
                       "A viagem terminou. O pagamento está pendente."}
                     {estadoPedido === "concluido" && "Viagem concluída e paga."}
                   </p>
+                  {estadoPedido === "concluido" && mensagemPagamentoSucesso && (
+                    <p className="pagamento-sucesso-inline">
+                      {mensagemPagamentoSucesso}
+                    </p>
+                  )}
                   {estadoPedido === "pagamento_pendente" && (
                     <button
                       className="btn-localizacao"
@@ -1701,7 +1709,9 @@ export default function Dashboard() {
                 <strong className="popup-rating">
                   <span aria-hidden="true">★</span>
                   {getRatingMotorista(pedidoAtual.motorista_id).texto}
-                  <small>{getRatingMotorista(pedidoAtual.motorista_id).detalhe}</small>
+                  <small>
+                    {getRatingMotorista(pedidoAtual.motorista_id).detalhe}
+                  </small>
                 </strong>
               </div>
               <div className="popup-linha">
@@ -1760,7 +1770,7 @@ export default function Dashboard() {
           aria-modal="true"
           aria-labelledby="popup-pagamento-titulo"
         >
-          <div className="popup-motorista">
+          <div className="popup-motorista popup-pagamento">
             <div className="popup-motorista-header">
               <div>
                 <h2 id="popup-pagamento-titulo">Viagem terminada</h2>
@@ -1772,38 +1782,39 @@ export default function Dashboard() {
                 💳
               </div>
             </div>
-            <div className="popup-motorista-info">
-              <div className="popup-linha">
-                <span>Origem</span>
-                <strong>{pedidoAtual.origem_morada || "—"}</strong>
-              </div>
-              <div className="popup-linha">
-                <span>Destino</span>
-                <strong>{pedidoAtual.destino_morada || "—"}</strong>
-              </div>
-              <div className="popup-linha">
-                <span>Duração</span>
+            <div className="popup-motorista-info pagamento-resumo">
+              <div className="pagamento-rota">
+                <span>Trajeto</span>
                 <strong>
-                  {pedidoAtual.duracao_minutos
-                    ? `${pedidoAtual.duracao_minutos} min`
-                    : "—"}
+                  {pedidoAtual.origem_morada || "Origem"} →{" "}
+                  {pedidoAtual.destino_morada || "Destino"}
                 </strong>
               </div>
-              <div className="popup-linha">
-                <span>Quilómetros</span>
-                <strong>
-                  {pedidoAtual.quilometros_percorridos
-                    ? `${pedidoAtual.quilometros_percorridos} km`
-                    : "—"}
-                </strong>
-              </div>
-              <div className="popup-linha">
-                <span>Total a pagar</span>
-                <strong>
-                  {pedidoAtual.preco_final
-                    ? `${pedidoAtual.preco_final} €`
-                    : "A calcular"}
-                </strong>
+              <div className="pagamento-resumo-grid">
+                <div>
+                  <span>Duração</span>
+                  <strong>
+                    {pedidoAtual.duracao_minutos
+                      ? `${pedidoAtual.duracao_minutos} min`
+                      : "—"}
+                  </strong>
+                </div>
+                <div>
+                  <span>Km</span>
+                  <strong>
+                    {pedidoAtual.quilometros_percorridos
+                      ? `${pedidoAtual.quilometros_percorridos} km`
+                      : "—"}
+                  </strong>
+                </div>
+                <div>
+                  <span>Total</span>
+                  <strong>
+                    {pedidoAtual.preco_final
+                      ? `${pedidoAtual.preco_final} €`
+                      : "A calcular"}
+                  </strong>
+                </div>
               </div>
             </div>
             <div className="pagamento-simulado">
@@ -1838,12 +1849,56 @@ export default function Dashboard() {
                 </button>
               </div>
               {metodoPagamento === "cartao" ? (
-                <div className="pagamento-externo-teste">
-                  <strong>Stripe teste</strong>
-                  <span>
-                    O pagamento é confirmado através da API de testes da
-                    Stripe. Não introduza dados reais de cartão.
-                  </span>
+                <div className="pagamento-form-grid pagamento-cartao-grid">
+                  <label className="pagamento-campo pagamento-campo-full">
+                    <span>Nome no cartão</span>
+                    <input
+                      ref={nomeCartaoRef}
+                      type="text"
+                      placeholder="Nome Apelido"
+                      autoComplete="cc-name"
+                      disabled={aPagar}
+                    />
+                  </label>
+                  <label className="pagamento-campo pagamento-campo-full">
+                    <span>Número do cartão</span>
+                    <input
+                      ref={numeroCartaoRef}
+                      type="tel"
+                      inputMode="numeric"
+                      placeholder="4242 4242 4242 4242"
+                      autoComplete="cc-number"
+                      maxLength={19}
+                      onInput={formatarNumeroCartao}
+                      disabled={aPagar}
+                    />
+                  </label>
+                  <label className="pagamento-campo">
+                    <span>Validade</span>
+                    <input
+                      ref={validadeCartaoRef}
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="MM/AA"
+                      autoComplete="cc-exp"
+                      maxLength={5}
+                      onInput={formatarValidadeCartao}
+                      disabled={aPagar}
+                    />
+                  </label>
+                  <label className="pagamento-campo">
+                    <span>CVV</span>
+                    <input
+                      ref={cvvCartaoRef}
+                      type="password"
+                      inputMode="numeric"
+                      placeholder="123"
+                      autoComplete="cc-csc"
+                      maxLength={3}
+                      onInput={(e) => limitarDigitos(e, 3)}
+                      disabled={aPagar}
+                    />
+                  </label>
                 </div>
               ) : (
                 <div className="pagamento-form-grid">
@@ -1852,18 +1907,20 @@ export default function Dashboard() {
                     <input
                       ref={telefoneMbwayRef}
                       type="tel"
+                      inputMode="numeric"
                       placeholder="912 345 678"
                       autoComplete="tel"
                       maxLength={9}
                       onInput={(e) => limitarDigitos(e, 9)}
+                      disabled={aPagar}
                     />
                   </label>
                 </div>
               )}
               <p className="pagamento-nota">
                 {metodoPagamento === "cartao"
-                  ? "Ambiente de teste: usa o payment method de teste da Stripe."
-                  : "Estes dados servem apenas para validar a simulação. Não são guardados."}
+                  ? "Os dados são apenas validados localmente. A confirmação usa o Stripe em modo teste."
+                  : "O número MB Way é apenas validado localmente. A confirmação usa o Stripe em modo teste."}
               </p>
             </div>
             <div className="popup-motorista-acoes">
@@ -1885,14 +1942,11 @@ export default function Dashboard() {
                   ? "A processar..."
                   : metodoPagamento === "cartao"
                     ? "Pagar com Stripe teste"
-                    : "Pagar"}
+                    : "Pagar MB Way teste"}
               </button>
             </div>
             {erroPagamento && (
-              <p
-                role="alert"
-                style={{ color: "#c62828", marginTop: 12, fontWeight: 700 }}
-              >
+              <p className="pagamento-erro" role="alert">
                 {erroPagamento}
               </p>
             )}
@@ -1911,7 +1965,10 @@ export default function Dashboard() {
             <div className="popup-motorista-header">
               <div>
                 <h2 id="popup-avaliacao-titulo">Avaliar motorista</h2>
-                <p>A sua avaliação ajuda a calcular a média do motorista.</p>
+                <p>
+                  Pagamento confirmado. A sua avaliação ajuda a calcular a média
+                  do motorista.
+                </p>
               </div>
               <div className="popup-motorista-icon" aria-hidden="true">
                 ★
@@ -1922,6 +1979,12 @@ export default function Dashboard() {
               <span>Motorista</span>
               <strong>{pedidoAtual.motorista_id?.nome || "Motorista"}</strong>
             </div>
+
+            {mensagemPagamentoSucesso && (
+              <div className="pagamento-sucesso-avaliacao" role="status">
+                {mensagemPagamentoSucesso}
+              </div>
+            )}
 
             <div className="avaliacao-estrelas" aria-label="Nota do motorista">
               {[1, 2, 3, 4, 5].map((nota) => (
