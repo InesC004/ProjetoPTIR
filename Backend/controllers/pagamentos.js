@@ -6,7 +6,7 @@ const os = require("os");
 
 let stripe;
 if (process.env.STRIPE_SECRET_KEY) {
-  stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 }
 
 const HOSTNAME = os.hostname();
@@ -42,9 +42,7 @@ async function obterDadosPagamento({ viagem_id, cliente_id }) {
     });
   }
 
-  const valorFinal = Number(
-    pedido?.preco_final ?? viagem?.preco_total ?? 0,
-  );
+  const valorFinal = Number(pedido?.preco_final ?? viagem?.preco_total ?? 0);
 
   return {
     pedido,
@@ -97,7 +95,8 @@ exports.createPaymentIntent = async (req, res) => {
     if (!stripe) {
       return res.status(500).json({
         success: false,
-        message: "Stripe não está configurado. Defina STRIPE_SECRET_KEY nas variáveis de ambiente.",
+        message:
+          "Stripe não está configurado. Defina STRIPE_SECRET_KEY nas variáveis de ambiente.",
         servidor: HOSTNAME,
       });
     }
@@ -131,8 +130,9 @@ exports.createPaymentIntent = async (req, res) => {
       });
     }
 
-    // Se o método for dinheiro, multibanco ou mbway, não precisa de Payment Intent
-    if (metodo !== "cartao") {
+    // Em modo real, dinheiro/multibanco/mbway podem ser registados diretamente.
+    // Em modo_teste, todos passam pelo Stripe com um payment method de teste.
+    if (metodo !== "cartao" && !modo_teste) {
       const pagamento = new Pagamento({
         viagem_id: dadosPagamento.viagemIdFinal,
         cliente_id,
@@ -170,6 +170,7 @@ exports.createPaymentIntent = async (req, res) => {
       metadata: {
         viagem_id: dadosPagamento.viagemIdFinal.toString(),
         cliente_id: cliente_id.toString(),
+        metodo,
         modo_teste: modo_teste ? "true" : "false",
       },
     });
@@ -178,7 +179,7 @@ exports.createPaymentIntent = async (req, res) => {
     const pagamento = new Pagamento({
       viagem_id: dadosPagamento.viagemIdFinal,
       cliente_id,
-      metodo: "cartao",
+      metodo,
       valor: dadosPagamento.valorFinal,
       estado: "pendente",
       stripe_payment_intent_id: paymentIntent.id,
@@ -209,7 +210,8 @@ exports.confirmPayment = async (req, res) => {
     if (!stripe) {
       return res.status(500).json({
         success: false,
-        message: "Stripe não está configurado. Defina STRIPE_SECRET_KEY nas variáveis de ambiente.",
+        message:
+          "Stripe não está configurado. Defina STRIPE_SECRET_KEY nas variáveis de ambiente.",
         servidor: HOSTNAME,
       });
     }
