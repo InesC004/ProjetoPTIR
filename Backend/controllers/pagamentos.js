@@ -131,8 +131,9 @@ exports.createPaymentIntent = async (req, res) => {
       });
     }
 
-    // Se o método for dinheiro, multibanco ou mbway, não precisa de Payment Intent
-    if (metodo !== "cartao") {
+    // Em modo real, dinheiro/multibanco/mbway podem ser registados diretamente.
+    // Em modo_teste, todos passam pelo Stripe com um payment method de teste.
+    if (metodo !== "cartao" && !modo_teste) {
       const pagamento = new Pagamento({
         viagem_id: dadosPagamento.viagemIdFinal,
         cliente_id,
@@ -170,6 +171,7 @@ exports.createPaymentIntent = async (req, res) => {
       metadata: {
         viagem_id: dadosPagamento.viagemIdFinal.toString(),
         cliente_id: cliente_id.toString(),
+        metodo,
         modo_teste: modo_teste ? "true" : "false",
       },
     });
@@ -178,7 +180,7 @@ exports.createPaymentIntent = async (req, res) => {
     const pagamento = new Pagamento({
       viagem_id: dadosPagamento.viagemIdFinal,
       cliente_id,
-      metodo: "cartao",
+      metodo,
       valor: dadosPagamento.valorFinal,
       estado: "pendente",
       stripe_payment_intent_id: paymentIntent.id,
