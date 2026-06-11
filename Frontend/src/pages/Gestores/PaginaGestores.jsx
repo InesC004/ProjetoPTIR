@@ -375,8 +375,8 @@ function SecDados(props) {
       <section className="pg-disponiveis pg-disponiveis-inline">
         <div className="pg-disponiveis-topo">
           <div>
-            <h3>Disponibilidade</h3>
-            <p>Lista de táxis e motoristas disponíveis.</p>
+            <h3>Táxis e Motoristas</h3>
+            <p>Lista de táxis e motoristas.</p>
           </div>
 
           <button
@@ -405,7 +405,7 @@ function SecDados(props) {
         <div className="pg-disponiveis-grid">
           <div className="pg-panel">
             <h4>
-              Táxis disponíveis ({loading ? "..." : taxisDisponiveis.length})
+              Táxis Existentes ({loading ? "..." : taxisDisponiveis.length})
             </h4>
 
             {loading && <p className="pg-empty">A carregar táxis...</p>}
@@ -447,7 +447,7 @@ function SecDados(props) {
 
           <div className="pg-panel">
             <h4>
-              Motoristas disponíveis (
+              Motoristas Existentes (
               {loading ? "..." : motoristasDisponiveis.length})
             </h4>
 

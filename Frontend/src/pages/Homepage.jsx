@@ -1,10 +1,15 @@
 import { useState, useEffect } from "react";
+import { LogIn, UserPlus } from "lucide-react";
 import Header from "../components/Header2";
+import LoginModal from "../components/LoginModal";
+import RegisterModal from "../components/RegisterModal";
 import backgroundVideo from "../Pictures/fundo.mp4";
 
 export default function Homepage() {
   const [loaded, setLoaded] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
   useEffect(() => {
     setLoaded(true);
@@ -90,10 +95,42 @@ export default function Homepage() {
                 Peça a sua viagem em poucos segundos. Uma experiência moderna,
                 confortável e confiável, onde quer que esteja.
               </p>
+
+              <div className="mt-16 flex w-full max-w-xl flex-col items-center justify-center gap-4 sm:flex-row md:mt-20">
+                <button
+                  type="button"
+                  onClick={() => setIsRegisterOpen(true)}
+                  className="group inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-full bg-white px-8 py-4 text-base font-extrabold text-[#071426] shadow-[0_18px_50px_rgba(255,255,255,0.2)] outline-none transition duration-300 hover:-translate-y-1 hover:bg-sky-50 hover:shadow-[0_24px_65px_rgba(255,255,255,0.28)] focus-visible:ring-4 focus-visible:ring-white/50 sm:w-56 md:text-lg"
+                >
+                  <UserPlus
+                    size={21}
+                    className="text-blue-600 transition group-hover:scale-110"
+                  />
+                  Criar conta
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsLoginOpen(true)}
+                  className="group inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-full border border-white/45 bg-white/[0.06] px-8 py-4 text-base font-extrabold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_18px_48px_rgba(0,0,0,0.2)] outline-none backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-white/70 hover:bg-white/[0.14] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_24px_60px_rgba(0,0,0,0.28)] focus-visible:ring-4 focus-visible:ring-white/35 sm:w-56 md:text-lg"
+                >
+                  <LogIn
+                    size={21}
+                    className="text-sky-200 transition group-hover:scale-110"
+                  />
+                  Entrar
+                </button>
+              </div>
             </section>
           </div>
         </main>
       </div>
+
+      <RegisterModal
+        isOpen={isRegisterOpen}
+        onClose={() => setIsRegisterOpen(false)}
+      />
+      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </div>
   );
 }
