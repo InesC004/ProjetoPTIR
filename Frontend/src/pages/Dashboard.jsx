@@ -313,6 +313,7 @@ function MapaInterativo({
         const { lat, lng } = evento.latlng;
 
         if (estadoRef.current === "partida") {
+          estadoRef.current = "destino";
           if (marcadorPartida.current) marcadorPartida.current.remove();
 
           // FIX AXE: aria-label no marcador de partida
@@ -331,9 +332,14 @@ function MapaInterativo({
               desenharRota(refs, pos, marcadorDestino.current.getLatLng());
           });
           marcadorPartida.current = mk;
-          aoDefinirPartida([lat, lng], await coordenadasParaMorada(lat, lng));
-          estadoRef.current = "destino";
+          aoDefinirPartida([lat, lng], `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+          coordenadasParaMorada(lat, lng).then((morada) => {
+            if (marcadorPartida.current === mk) {
+              aoDefinirPartida([lat, lng], morada);
+            }
+          });
         } else if (estadoRef.current === "destino") {
+          estadoRef.current = "concluido";
           if (marcadorDestino.current) marcadorDestino.current.remove();
 
           // FIX AXE: aria-label no marcador de destino
@@ -352,8 +358,12 @@ function MapaInterativo({
               desenharRota(refs, marcadorPartida.current.getLatLng(), pos);
           });
           marcadorDestino.current = mk;
-          aoDefinirDestino([lat, lng], await coordenadasParaMorada(lat, lng));
-          estadoRef.current = "concluido";
+          aoDefinirDestino([lat, lng], `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+          coordenadasParaMorada(lat, lng).then((morada) => {
+            if (marcadorDestino.current === mk) {
+              aoDefinirDestino([lat, lng], morada);
+            }
+          });
           if (marcadorPartida.current)
             desenharRota(
               refs,
@@ -541,6 +551,24 @@ function getMongoId(valor) {
   return valor._id || valor.id || null;
 }
 
+function getViagemIdPedido(pedido) {
+  return getMongoId(pedido?.viagem_id) || getMongoId(pedido);
+}
+
+function viagemJaAvaliada(pedido) {
+  return Boolean(pedido?.viagem_id?.avaliacao_motorista?.nota);
+}
+
+function getRatingMotorista(motorista) {
+  const total = Number(motorista?.total_avaliacoes || 0);
+  const media = Number(motorista?.avaliacao_media || 0);
+  return {
+    total,
+    texto: total > 0 ? `${media.toFixed(1)} / 5` : "Sem avaliações",
+    detalhe: total === 1 ? "1 avaliação" : `${total} avaliações`,
+  };
+}
+
 function getEstadoVisivel(pedido) {
   if (!pedido) return "";
   if (pedido.pagamento_estado === "pago" || pedido.pagamento_confirmado)
@@ -663,6 +691,11 @@ export default function Dashboard() {
   const [aResponderMotorista, setAResponderMotorista] = useState(false);
   const [posicaoMotorista, setPosicaoMotorista] = useState(null);
   const [erroSeguimento, setErroSeguimento] = useState("");
+  const [mostrarPopupAvaliacao, setMostrarPopupAvaliacao] = useState(false);
+  const [notaAvaliacao, setNotaAvaliacao] = useState(0);
+  const [comentarioAvaliacao, setComentarioAvaliacao] = useState("");
+  const [aAvaliar, setAAvaliar] = useState(false);
+  const [erroAvaliacao, setErroAvaliacao] = useState("");
   const pedidoAtualId = getMongoId(pedidoAtual);
   const estadoPedidoAtual = getEstadoVisivel(pedidoAtual);
 
@@ -731,7 +764,6 @@ export default function Dashboard() {
             headers: { Authorization: `Bearer ${token}` },
           },
         );
-        if (resposta.status === 404) return;
         const dados = await resposta.json();
         if (dados.success && dados.pedido) {
           const pedido = aplicarEstadoFrontend(dados.pedido);
@@ -817,6 +849,9 @@ export default function Dashboard() {
     function pararSeguimento(payload) {
       if (payload?.pedidoId !== pedidoId) return;
       setPosicaoMotorista(null);
+      if (payload?.pedido) {
+        setPedidoAtual(aplicarEstadoFrontend(payload.pedido));
+      }
     }
 
     function receberErro(payload) {
@@ -1038,8 +1073,7 @@ export default function Dashboard() {
 
   async function efetuarPagamento() {
     if (!pedidoAtual) return;
-    const viagemId =
-      getMongoId(pedidoAtual.viagem_id) || getMongoId(pedidoAtual);
+    const viagemId = getViagemIdPedido(pedidoAtual);
     const clienteId = getMongoId(pedidoAtual.cliente_id);
     const valor = Number(
       pedidoAtual.preco_final ||
@@ -1093,10 +1127,62 @@ export default function Dashboard() {
       atualizarViagemMotoristaComoPaga(pedidoPago);
       setPedidoAtual(pedidoPago);
       setMostrarPopupPagamento(false);
+      if (!viagemJaAvaliada(pedidoPago)) {
+        setNotaAvaliacao(0);
+        setComentarioAvaliacao("");
+        setErroAvaliacao("");
+        setMostrarPopupAvaliacao(true);
+      }
     } catch (err) {
       setErroPagamento(err.message || "Não foi possível efetuar o pagamento.");
     } finally {
       setAPagar(false);
+    }
+  }
+
+  async function submeterAvaliacaoMotorista() {
+    if (!pedidoAtual) return;
+    const viagemId = getViagemIdPedido(pedidoAtual);
+    if (!viagemId) {
+      setErroAvaliacao("Não foi possível identificar a viagem.");
+      return;
+    }
+    if (!notaAvaliacao) {
+      setErroAvaliacao("Escolha uma nota de 1 a 5.");
+      return;
+    }
+
+    setAAvaliar(true);
+    setErroAvaliacao("");
+    try {
+      const data = await api.viagens.avaliarMotorista(viagemId, {
+        nota: notaAvaliacao,
+        comentario: comentarioAvaliacao.trim(),
+      });
+
+      setPedidoAtual((atual) => {
+        if (!atual) return atual;
+        const viagemAtual =
+          atual.viagem_id && typeof atual.viagem_id === "object"
+            ? atual.viagem_id
+            : { _id: viagemId };
+        return {
+          ...atual,
+          motorista_id: {
+            ...(atual.motorista_id || {}),
+            ...(data.motorista || {}),
+          },
+          viagem_id: {
+            ...viagemAtual,
+            avaliacao_motorista: data.avaliacao,
+          },
+        };
+      });
+      setMostrarPopupAvaliacao(false);
+    } catch (err) {
+      setErroAvaliacao(err.message || "Não foi possível enviar a avaliação.");
+    } finally {
+      setAAvaliar(false);
     }
   }
 
@@ -1619,6 +1705,14 @@ export default function Dashboard() {
                 <strong>{pedidoAtual.motorista_id?.nome || "Motorista"}</strong>
               </div>
               <div className="popup-linha">
+                <span>Avaliação</span>
+                <strong className="popup-rating">
+                  <span aria-hidden="true">★</span>
+                  {getRatingMotorista(pedidoAtual.motorista_id).texto}
+                  <small>{getRatingMotorista(pedidoAtual.motorista_id).detalhe}</small>
+                </strong>
+              </div>
+              <div className="popup-linha">
                 <span>Distância até si</span>
                 <strong>{pedidoAtual.motorista_distancia_km || "--"} km</strong>
               </div>
@@ -1810,6 +1904,88 @@ export default function Dashboard() {
                 {erroPagamento}
               </p>
             )}
+          </div>
+        </div>
+      )}
+
+      {mostrarPopupAvaliacao && pedidoAtual && (
+        <div
+          className="popup-motorista-fundo"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="popup-avaliacao-titulo"
+        >
+          <div className="popup-motorista popup-avaliacao">
+            <div className="popup-motorista-header">
+              <div>
+                <h2 id="popup-avaliacao-titulo">Avaliar motorista</h2>
+                <p>A sua avaliação ajuda a calcular a média do motorista.</p>
+              </div>
+              <div className="popup-motorista-icon" aria-hidden="true">
+                ★
+              </div>
+            </div>
+
+            <div className="avaliacao-motorista-resumo">
+              <span>Motorista</span>
+              <strong>{pedidoAtual.motorista_id?.nome || "Motorista"}</strong>
+            </div>
+
+            <div className="avaliacao-estrelas" aria-label="Nota do motorista">
+              {[1, 2, 3, 4, 5].map((nota) => (
+                <button
+                  key={nota}
+                  type="button"
+                  className={notaAvaliacao >= nota ? "ativo" : ""}
+                  onClick={() => {
+                    setNotaAvaliacao(nota);
+                    setErroAvaliacao("");
+                  }}
+                  aria-label={`${nota} estrela${nota > 1 ? "s" : ""}`}
+                  aria-pressed={notaAvaliacao === nota}
+                  disabled={aAvaliar}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+
+            <label className="avaliacao-comentario">
+              <span>Comentário opcional</span>
+              <textarea
+                value={comentarioAvaliacao}
+                maxLength={500}
+                rows={4}
+                onChange={(e) => setComentarioAvaliacao(e.target.value)}
+                placeholder="Como correu a viagem?"
+                disabled={aAvaliar}
+              />
+            </label>
+
+            {erroAvaliacao && (
+              <p className="avaliacao-erro" role="alert">
+                {erroAvaliacao}
+              </p>
+            )}
+
+            <div className="popup-motorista-acoes">
+              <button
+                className="btn-rejeitar"
+                type="button"
+                onClick={() => setMostrarPopupAvaliacao(false)}
+                disabled={aAvaliar}
+              >
+                Agora não
+              </button>
+              <button
+                className="btn-aceitar"
+                type="button"
+                onClick={submeterAvaliacaoMotorista}
+                disabled={aAvaliar || !notaAvaliacao}
+              >
+                {aAvaliar ? "A enviar..." : "Enviar avaliação"}
+              </button>
+            </div>
           </div>
         </div>
       )}

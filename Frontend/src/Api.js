@@ -131,6 +131,13 @@ const motoristas = {
     });
   },
 
+  /** Obter dados públicos de um motorista. */
+  async obter(id) {
+    return request(`/api/motoristas/${id}`, {
+      auth: true,
+    });
+  },
+
   /** Criar motorista (requer token de gestor). */
   async criar(payload) {
     return request("/api/motoristas/create", {
@@ -359,6 +366,20 @@ const pagamentos = {
 };
 
 // =============================================================================
+// Viagens
+// =============================================================================
+
+const viagens = {
+  async avaliarMotorista(viagemId, payload) {
+    return request(`/api/viagens/${viagemId}/avaliar`, {
+      method: "PUT",
+      body: payload,
+      auth: true,
+    });
+  },
+};
+
+// =============================================================================
 // Relatórios
 // =============================================================================
 
@@ -464,6 +485,7 @@ const api = {
   externos,
   faturas,
   pagamentos,
+  viagens,
   relatorios,
 };
 

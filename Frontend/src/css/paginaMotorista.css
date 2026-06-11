@@ -714,6 +714,38 @@ body {
   display: none;
 }
 
+.motorista-rating-chip,
+.perfil-menu-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #fbbf24 !important;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.motorista-rating-chip {
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.22);
+  font-size: 0.76rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.perfil-menu-rating {
+  margin-top: 5px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+}
+
+.perfil-menu-rating small {
+  color: #8ba3c0 !important;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 @media (max-width: 768px) {
 
   /* esconder sidebar */

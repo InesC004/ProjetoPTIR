@@ -302,6 +302,12 @@
   transition: all 0.18s;
 }
 
+.pm-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
 .pm-action:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 18px 40px rgba(16, 217, 138, 0.34);

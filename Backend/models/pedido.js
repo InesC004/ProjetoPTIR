@@ -16,6 +16,13 @@ const pedidoSchema = new mongoose.Schema(
       default: null,
     },
 
+    motoristas_recusaram: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "motorista",
+      },
+    ],
+
     origem_morada: {
       type: String,
       required: true,

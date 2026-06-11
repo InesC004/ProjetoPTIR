@@ -4,6 +4,7 @@ const Pedido = require("../models/pedido");
 const Viagem = require("../models/viagem");
 const Turno = require("../models/turno");
 const Preco = require("../models/preco");
+const mongoose = require("mongoose");
 const {
   emitirEventoPedido,
   limparLocalizacaoPedido,
@@ -170,6 +171,7 @@ exports.listarDisponiveis = async (req, res) => {
     const pedidos = await Pedido.find({
       estado: "pendente",
       nivel_conforto: turno.taxi?.nivel_conforto,
+      motoristas_recusaram: { $ne: req.user.id },
     });
 
     const motoristaLat = req.query.lat
@@ -243,6 +245,7 @@ exports.aceitar = async (req, res) => {
       {
         _id: req.params.id,
         estado: "pendente",
+        motoristas_recusaram: { $ne: req.user.id },
       },
       {
         estado: "aceite",
@@ -282,8 +285,17 @@ exports.aceitar = async (req, res) => {
 
 exports.cancelarAceitacao = async (req, res) => {
   try {
+    const userId = req.user.id || req.user._id || req.user.sub;
+    const pedidoQuery = mongoose.isValidObjectId(req.params.id)
+      ? {
+          $or: [
+            { _id: req.params.id },
+            { viagem_id: req.params.id },
+          ],
+        }
+      : { _id: req.params.id };
 
-    const pedido = await Pedido.findById(req.params.id);
+    const pedido = await Pedido.findOne(pedidoQuery);
 
     if (!pedido) {
       return res.status(404).json({
@@ -293,7 +305,7 @@ exports.cancelarAceitacao = async (req, res) => {
     }
 
     if (
-      pedido.motorista_id?.toString() !== req.user.id
+      pedido.motorista_id?.toString() !== userId
     ) {
       return res.status(403).json({
         success: false,
@@ -301,7 +313,7 @@ exports.cancelarAceitacao = async (req, res) => {
       });
     }
 
-    if (pedido.estado !== "aceite") {
+    if (!["aceite", "confirmado"].includes(pedido.estado)) {
       return res.status(400).json({
         success: false,
         message: "Este pedido já foi atualizado. Recarregue o estado do pedido.",
@@ -310,6 +322,12 @@ exports.cancelarAceitacao = async (req, res) => {
     }
 
     pedido.estado = "pendente";
+    if (!pedido.motoristas_recusaram?.some((id) => id.toString() === userId)) {
+      pedido.motoristas_recusaram = [
+        ...(pedido.motoristas_recusaram || []),
+        userId,
+      ];
+    }
     pedido.motorista_id = null;
 
     await pedido.save();
@@ -317,6 +335,7 @@ exports.cancelarAceitacao = async (req, res) => {
     emitirEventoPedido(pedido._id, "pedido:cancelled", {
       estado: pedido.estado,
       motivo: "aceitacao_cancelada",
+      pedido,
     });
 
     res.json({
@@ -401,7 +420,19 @@ exports.responderMotorista = async (req, res) => {
     if (resposta === "confirmar") {
       pedido.estado = "confirmado";
     } else {
+      const motoristaRejeitado = pedido.motorista_id;
       pedido.estado = "pendente";
+      if (
+        motoristaRejeitado &&
+        !pedido.motoristas_recusaram?.some(
+          (id) => id.toString() === motoristaRejeitado.toString(),
+        )
+      ) {
+        pedido.motoristas_recusaram = [
+          ...(pedido.motoristas_recusaram || []),
+          motoristaRejeitado,
+        ];
+      }
       pedido.motorista_id = null;
     }
 
@@ -503,7 +534,7 @@ exports.getById = async (req, res) => {
   try {
     const pedido = await Pedido.findById(req.params.id)
       .populate("cliente_id", "nome nif")
-      .populate("motorista_id", "nome nif")
+      .populate("motorista_id", "nome nif avaliacao_media total_avaliacoes")
       .populate("viagem_id");
 
     if (!pedido) {
@@ -596,13 +627,14 @@ exports.getAtivoCliente = async (req, res) => {
         $nin: ["cancelado", "concluido"],
       },
     })
-      .populate("motorista_id", "nome nif")
+      .populate("motorista_id", "nome nif avaliacao_media total_avaliacoes")
       .populate("viagem_id");
 
     if (!pedido) {
-      return res.status(404).json({
+      return res.json({
         success: false,
         message: "Não tens pedido ativo.",
+        pedido: null,
       });
     }
 
@@ -628,7 +660,7 @@ exports.getHistoricoMotorista = async (req, res) => {
       estado: "concluido",
     })
       .populate("cliente_id", "nome nif")
-      .populate("motorista_id", "nome nif")
+      .populate("motorista_id", "nome nif avaliacao_media total_avaliacoes")
       .populate("viagem_id")
       .sort({ data_fim_viagem: -1, updatedAt: -1 });
 
@@ -654,7 +686,7 @@ exports.getAtivoMotorista = async (req, res) => {
       estado: { $in: ["confirmado", "em_viagem"] },
     })
       .populate("cliente_id", "nome nif")
-      .populate("motorista_id", "nome nif")
+      .populate("motorista_id", "nome nif avaliacao_media total_avaliacoes")
       .populate("viagem_id")
       .sort({ updatedAt: -1 });
 

@@ -67,7 +67,7 @@ async function marcarPedidoComoPago({ viagem_id, cliente_id }) {
     { new: true },
   )
     .populate("cliente_id", "nome nif")
-    .populate("motorista_id", "nome nif")
+    .populate("motorista_id", "nome nif avaliacao_media total_avaliacoes")
     .populate("viagem_id");
 
   const viagemId = pedido?.viagem_id?._id || pedido?.viagem_id || viagem_id;

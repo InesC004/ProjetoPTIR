@@ -112,7 +112,19 @@ exports.login = async (req, res) => {
       success: true,
       message: 'Login bem sucedido.',
       role: 'motorista',
-      motorista: { nome: motorista.nome, nif: motorista.nif, email: motorista.email, numero_carta: motorista.numero_carta, genero: motorista.genero,  data_nascimento: motorista.data_nascimento, morada: motorista.morada,codigo_postal: motorista.codigo_postal},
+      motorista: {
+        _id: motorista._id,
+        nome: motorista.nome,
+        nif: motorista.nif,
+        email: motorista.email,
+        numero_carta: motorista.numero_carta,
+        genero: motorista.genero,
+        data_nascimento: motorista.data_nascimento,
+        morada: motorista.morada,
+        codigo_postal: motorista.codigo_postal,
+        avaliacao_media: motorista.avaliacao_media || 0,
+        total_avaliacoes: motorista.total_avaliacoes || 0
+      },
       token,
     })
   } catch (err) {

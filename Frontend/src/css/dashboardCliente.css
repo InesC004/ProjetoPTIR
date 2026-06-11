@@ -2579,6 +2579,27 @@ input[type="number"].input-morada {
   color: #0d1829 !important;
 }
 
+.popup-rating {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+  text-align: right;
+}
+
+.popup-rating > span {
+  color: #f59e0b !important;
+  font-size: 1rem;
+}
+
+.popup-rating small {
+  width: 100%;
+  color: #64748b !important;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 .pagamento-simulado {
   margin-top: 18px;
   padding: 16px;
@@ -2772,6 +2793,95 @@ input[type="number"].input-morada {
   border: none;
 }
 
+.popup-avaliacao {
+  width: min(92vw, 500px);
+}
+
+.avaliacao-motorista-resumo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(26, 110, 255, 0.12);
+  border-radius: 16px;
+  background: #f8fbff;
+}
+
+.avaliacao-motorista-resumo span {
+  color: #3d506a !important;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.avaliacao-motorista-resumo strong {
+  color: #0d1829 !important;
+  text-align: right;
+}
+
+.avaliacao-estrelas {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 20px 0 16px;
+}
+
+.avaliacao-estrelas button {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  border: 1px solid rgba(245, 158, 11, 0.24);
+  background: #fffaf0;
+  color: #cbd5e1 !important;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.avaliacao-estrelas button.ativo {
+  color: #f59e0b !important;
+  border-color: rgba(245, 158, 11, 0.55);
+  background: #fffbeb;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.18);
+}
+
+.avaliacao-comentario {
+  display: grid;
+  gap: 8px;
+}
+
+.avaliacao-comentario span {
+  color: #1e3a5f !important;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.avaliacao-comentario textarea {
+  width: 100%;
+  min-height: 104px;
+  resize: vertical;
+  border: 1px solid rgba(26, 110, 255, 0.14);
+  border-radius: 14px;
+  padding: 12px;
+  background: white;
+  color: #0d1829;
+  font: inherit;
+  outline: none;
+}
+
+.avaliacao-comentario textarea:focus {
+  border-color: rgba(26, 110, 255, 0.45);
+  box-shadow: 0 0 0 3px rgba(26, 110, 255, 0.1);
+}
+
+.avaliacao-erro {
+  margin: 10px 0 0;
+  color: #c62828 !important;
+  font-weight: 800;
+  font-size: 0.84rem;
+}
+
 /* NUCLEAR FIX — máxima especificidade para .passo-titulo e .passo-desc */
 html body .dash-pagina .card-passo .passo-titulo {
   color: #0d1829 !important;
@@ -2941,11 +3051,31 @@ html body .dash-pagina .card-passo .passo-desc {
 
   .popup-motorista-acoes {
     flex-direction: column;
+    gap: 10px;
   }
 
   .btn-aceitar,
   .btn-rejeitar {
     width: 100%;
+  }
+
+  .popup-linha {
+    align-items: flex-start;
+  }
+
+  .popup-rating {
+    max-width: 58%;
+  }
+
+  .avaliacao-estrelas {
+    gap: 5px;
+  }
+
+  .avaliacao-estrelas button {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    font-size: 1.3rem;
   }
 
   .pagamento-form-grid {

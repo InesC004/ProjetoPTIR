@@ -16,6 +16,7 @@ import {
   MapPin,
   Users,
   BarChart3,
+  Star,
 } from "lucide-react";
 import logo from "../Pictures/logo1.jpeg";
 import TurnosMotorista from "../components/TurnosMotorista";
@@ -37,19 +38,36 @@ const NAV = [
   { id: "reabastecimento", label: "Reabastecimento", Icon: Fuel, tag: "Táxi" },
 ];
 
+function getMotoristaId(motorista) {
+  if (motorista?._id || motorista?.id) return motorista._id || motorista.id;
+
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1] || ""));
+    return payload.id || payload._id || payload.sub || null;
+  } catch {
+    return null;
+  }
+}
+
 export default function PaginaMotorista() {
   const navigate = useNavigate();
   const [active, setActive] = useState("turno");
   const [profileOpen, setProfileOpen] = useState(false);
   const [turnoAtivo, setTurnoAtivo] = useState(null);
+  const [motoristaPerfil, setMotoristaPerfil] = useState(() =>
+    JSON.parse(
+      localStorage.getItem("motorista") ||
+        localStorage.getItem("user") ||
+        localStorage.getItem("cliente") ||
+        "{}",
+    ),
+  );
   const current = NAV.find((n) => n.id === active);
 
-  const motorista = JSON.parse(
-    localStorage.getItem("motorista") ||
-      localStorage.getItem("user") ||
-      localStorage.getItem("cliente") ||
-      "{}",
-  );
+  const motorista = motoristaPerfil;
   const nomeMotorista =
     motorista.nome ||
     motorista.name ||
@@ -60,6 +78,42 @@ export default function PaginaMotorista() {
     ? nomeMotorista.split(" ")[0]
     : "Motorista";
   const inicial = primeiroNome.charAt(0).toUpperCase();
+  const totalAvaliacoes = Number(motorista.total_avaliacoes || 0);
+  const avaliacaoMedia = Number(motorista.avaliacao_media || 0);
+  const avaliacaoTexto =
+    totalAvaliacoes > 0 ? avaliacaoMedia.toFixed(1) : "Novo";
+  const avaliacaoDetalhe =
+    totalAvaliacoes === 1 ? "1 avaliação" : `${totalAvaliacoes} avaliações`;
+
+  useEffect(() => {
+    async function fetchPerfilMotorista() {
+      const perfilAtual = JSON.parse(localStorage.getItem("motorista") || "{}");
+      const motoristaId = getMotoristaId(perfilAtual);
+      if (!motoristaId) return;
+
+      try {
+        const data = await api.motoristas.obter(motoristaId);
+        if (!data?.motorista) return;
+
+        setMotoristaPerfil((atual) => {
+          const atualizado = { ...atual, ...data.motorista };
+          localStorage.setItem("motorista", JSON.stringify(atualizado));
+          return atualizado;
+        });
+      } catch {
+        // Mantém os dados locais se o perfil não puder ser atualizado.
+      }
+    }
+
+    fetchPerfilMotorista();
+    const interval = setInterval(fetchPerfilMotorista, 10000);
+    window.addEventListener("focus", fetchPerfilMotorista);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", fetchPerfilMotorista);
+    };
+  }, []);
 
   useEffect(() => {
     async function fetchTurnoAtivo() {
@@ -295,6 +349,14 @@ export default function PaginaMotorista() {
                 {inicial}
               </span>
 
+              <span
+                className="motorista-rating-chip"
+                title={avaliacaoDetalhe}
+              >
+                <Star size={13} fill="currentColor" />
+                {avaliacaoTexto}
+              </span>
+
               {/* Nome */}
               <span
                 style={{
@@ -348,6 +410,11 @@ export default function PaginaMotorista() {
                     </div>
                     <div className="perfil-menu-email">
                       {motorista.email || motorista.mail || ""}
+                    </div>
+                    <div className="perfil-menu-rating">
+                      <Star size={13} fill="currentColor" />
+                      <span>{avaliacaoTexto}</span>
+                      <small>{avaliacaoDetalhe}</small>
                     </div>
                   </div>
                 </div>
