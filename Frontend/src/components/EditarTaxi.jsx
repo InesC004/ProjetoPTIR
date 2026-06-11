@@ -44,6 +44,16 @@ function normalizarListaTaxis(data) {
   return [];
 }
 
+function getAnoModelo(modelo) {
+  return modelo?.ano || modelo?.ano_inicio || "";
+}
+
+function labelModelo(modelo) {
+  if (!modelo) return "";
+  const ano = getAnoModelo(modelo);
+  return ano ? `${modelo.modelo} (${ano})` : modelo.modelo;
+}
+
 /* ═══════════════════════════════════════════════
    VALIDAÇÃO DE MATRÍCULA
    ═══════════════════════════════════════════════ */
@@ -236,7 +246,6 @@ export default function EditarTaxi({ aberto, onFechar }) {
   const [apiError, setApiError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const anoAtual = new Date().getFullYear();
   const disabled = saving || success;
 
   useEffect(() => {
@@ -305,7 +314,7 @@ export default function EditarTaxi({ aberto, onFechar }) {
     lista = modelosDisponiveis,
     modelo = form.modelo,
   ) {
-    return lista.find((m) => m.modelo === modelo);
+    return lista.find((m) => labelModelo(m) === modelo);
   }
 
   function getAnosPermitidos() {
@@ -313,17 +322,17 @@ export default function EditarTaxi({ aberto, onFechar }) {
 
     if (!modeloEscolhido) return [];
 
-    const inicio = Number(modeloEscolhido.ano_inicio);
-    const fim = Math.min(Number(modeloEscolhido.ano_fim || anoAtual), anoAtual);
+    const ano = Number(getAnoModelo(modeloEscolhido));
 
-    if (!inicio || !fim || fim < inicio) return [];
+    if (!ano) return [];
 
-    return Array.from({ length: fim - inicio + 1 }, (_, i) => String(fim - i));
+    return [String(ano)];
   }
 
   async function startEdit(taxi) {
     const marca = getCampoTaxi(taxi, "marca");
     const modelo = getCampoTaxi(taxi, "modelo");
+    const anoCompra = String(getCampoTaxi(taxi, "ano_compra") || "");
 
     setEditing(taxi);
     setErrors({});
@@ -331,13 +340,16 @@ export default function EditarTaxi({ aberto, onFechar }) {
     setSuccess(false);
 
     const modelos = await carregarModelos(marca);
-    const modeloEncontrado = modelos.find((m) => m.modelo === modelo);
+    const modeloEncontrado =
+      modelos.find(
+        (m) => m.modelo === modelo && String(getAnoModelo(m)) === anoCompra,
+      ) || modelos.find((m) => m.modelo === modelo);
 
     setForm({
       matricula: getCampoTaxi(taxi, "matricula"),
       marca,
-      modelo,
-      ano_compra: String(getCampoTaxi(taxi, "ano_compra") || ""),
+      modelo: modeloEncontrado ? labelModelo(modeloEncontrado) : modelo,
+      ano_compra: anoCompra,
       tipo_motor:
         modeloEncontrado?.tipo_motor || getCampoTaxi(taxi, "tipo_motor"),
       nivel_conforto:
@@ -370,14 +382,14 @@ export default function EditarTaxi({ aberto, onFechar }) {
       }
 
       if (campo === "modelo") {
-        novo.ano_compra = "";
-
         const modeloEscolhido = getModeloEscolhido(modelosDisponiveis, valor);
 
         if (modeloEscolhido) {
+          novo.ano_compra = String(getAnoModelo(modeloEscolhido));
           novo.tipo_motor = modeloEscolhido.tipo_motor;
           novo.nivel_conforto = modeloEscolhido.nivel_conforto;
         } else {
+          novo.ano_compra = "";
           novo.tipo_motor = "";
           novo.nivel_conforto = "";
         }
@@ -455,7 +467,7 @@ export default function EditarTaxi({ aberto, onFechar }) {
       const data = await api.taxis.atualizar(id, {
         matricula: form.matricula.toUpperCase(),
         marca: form.marca,
-        modelo: form.modelo,
+        modelo: getModeloEscolhido()?.modelo || form.modelo,
         ano_compra: parseInt(form.ano_compra, 10),
         tipo_motor: form.tipo_motor,
         nivel_conforto: form.nivel_conforto,
@@ -671,7 +683,7 @@ export default function EditarTaxi({ aberto, onFechar }) {
                 }
                 value={form.modelo}
                 onChange={(v) => handleChange("modelo", v)}
-                options={modelosDisponiveis.map((m) => m.modelo)}
+                options={modelosDisponiveis.map(labelModelo)}
                 disabled={!form.marca || disabled || loadingModelos}
                 error={errors.modelo}
               />
