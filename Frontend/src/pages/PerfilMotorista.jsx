@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PropTypes from "prop-types";
 import {
   User,
   Mail,
@@ -110,3 +111,9 @@ function Info({ icon, label, value }) {
     </div>
   );
 }
+
+Info.propTypes = {
+  icon: PropTypes.node.isRequired,
+  label: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+};

@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useRef } from "react";
 import Header from "../components/Header2";
-import api from "../Api";
+import api, { apiUrl } from "../Api";
 import { getSocket } from "../socket";
 import "../css/dashboardCliente.css";
 
@@ -707,14 +707,6 @@ export default function Dashboard() {
     evento.target.value = apenasDigitos(evento.target.value).slice(0, limite);
   }
 
-  function formatarValidadeCartao(evento) {
-    const digitos = apenasDigitos(evento.target.value).slice(0, 4);
-    evento.target.value =
-      digitos.length > 2
-        ? `${digitos.slice(0, 2)}/${digitos.slice(2)}`
-        : digitos;
-  }
-
   function validadeCartaoValida(valor) {
     const match = valor.match(/^(\d{2})\/(\d{2})$/);
     if (!match) return false;
@@ -759,7 +751,7 @@ export default function Dashboard() {
       try {
         const token = localStorage.getItem("token");
         const resposta = await fetch(
-          "http://localhost:8080/api/pedidos/ativo",
+          apiUrl("/api/pedidos/ativo"),
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -792,7 +784,7 @@ export default function Dashboard() {
       try {
         const token = localStorage.getItem("token");
         const res = await fetch(
-          `http://localhost:8080/api/pedidos/${pedidoAtual._id}`,
+          apiUrl(`/api/pedidos/${pedidoAtual._id}`),
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -986,7 +978,7 @@ export default function Dashboard() {
     setAPedir(true);
     try {
       const token = localStorage.getItem("token");
-      const resposta = await fetch("http://localhost:8080/api/pedidos/create", {
+      const resposta = await fetch(apiUrl("/api/pedidos/create"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1022,7 +1014,7 @@ export default function Dashboard() {
     if (!pedidoAtual) return;
     const token = localStorage.getItem("token");
     const res = await fetch(
-      `http://localhost:8080/api/pedidos/${pedidoAtual._id}/cancelar`,
+      apiUrl(`/api/pedidos/${pedidoAtual._id}/cancelar`),
       {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
@@ -1048,7 +1040,7 @@ export default function Dashboard() {
     setErroPedido("");
     try {
       const res = await fetch(
-        `http://localhost:8080/api/pedidos/${pedidoId}/responder`,
+        apiUrl(`/api/pedidos/${pedidoId}/responder`),
         {
           method: "PUT",
           headers: {

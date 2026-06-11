@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 import logo from "../../Pictures/logo1.jpeg";
-import api from "../../Api";
+import api, { apiUrl } from "../../Api";
 import RegistarTaxi from "../../components/RegistarTaxi";
 import RegistarModeloTaxi from "../../components/RegistarModeloTaxi";
 import RegistarMotorista from "../../components/RegistarMotorista";
@@ -584,7 +584,7 @@ function SecRelatorios() {
         setLoadingTurnos(true);
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://localhost:8080/api/turnos/todos", {
+        const res = await fetch(apiUrl("/api/turnos/todos"), {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -636,21 +636,21 @@ function SecRelatorios() {
       let urlLista = "";
 
       if (tipo === "taxi") {
-        urlTotais = `http://localhost:8080/api/relatorios/viagens/totais${params}`;
+        urlTotais = apiUrl(`/api/relatorios/viagens/totais${params}`);
         urlLista =
           total === "km"
-            ? `http://localhost:8080/api/relatorios/viagens/por-taxi${params}&tipo=km`
-            : `http://localhost:8080/api/relatorios/viagens/por-motorista${params}&tipo=${total}`;
+            ? apiUrl(`/api/relatorios/viagens/por-taxi${params}&tipo=km`)
+            : apiUrl(`/api/relatorios/viagens/por-motorista${params}&tipo=${total}`);
       }
 
       if (tipo === "clientes") {
-        urlTotais = `http://localhost:8080/api/relatorios/faturacao/totais${params}`;
-        urlLista = `http://localhost:8080/api/relatorios/faturacao/por-cliente${params}`;
+        urlTotais = apiUrl(`/api/relatorios/faturacao/totais${params}`);
+        urlLista = apiUrl(`/api/relatorios/faturacao/por-cliente${params}`);
       }
 
       if (tipo === "reabastecimentos") {
-        urlTotais = `http://localhost:8080/api/relatorios/reabastecimentos/totais${params}`;
-        urlLista = `http://localhost:8080/api/relatorios/reabastecimentos/por-tipo-motor${params}&tipo=${total}`;
+        urlTotais = apiUrl(`/api/relatorios/reabastecimentos/totais${params}`);
+        urlLista = apiUrl(`/api/relatorios/reabastecimentos/por-tipo-motor${params}&tipo=${total}`);
       }
 
       const [resTotais, resLista] = await Promise.all([
@@ -705,22 +705,22 @@ function SecRelatorios() {
 
       if (tipo === "taxi") {
         if (item.motorista) {
-          url = `http://localhost:8080/api/relatorios/viagens/motorista/${item.motorista._id}${params}`;
+          url = apiUrl(`/api/relatorios/viagens/motorista/${item.motorista._id}${params}`);
         }
 
         if (item.taxi) {
-          url = `http://localhost:8080/api/relatorios/viagens/taxi/${item.taxi._id}${params}`;
+          url = apiUrl(`/api/relatorios/viagens/taxi/${item.taxi._id}${params}`);
         }
       }
 
       if (tipo === "clientes") {
-        url = `http://localhost:8080/api/relatorios/faturacao/cliente/${item.cliente._id}${params}`;
+        url = apiUrl(`/api/relatorios/faturacao/cliente/${item.cliente._id}${params}`);
       }
 
       if (tipo === "reabastecimentos") {
         const tipoMotor = item.tipo_motor || item._id;
 
-        url = `http://localhost:8080/api/relatorios/reabastecimentos/${tipoMotor}${params}&tipo=${total}`;
+        url = apiUrl(`/api/relatorios/reabastecimentos/${tipoMotor}${params}&tipo=${total}`);
       }
 
       if (!url) return;

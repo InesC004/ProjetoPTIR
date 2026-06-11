@@ -1,6 +1,7 @@
 // Exemplo de integração Stripe no Frontend (React)
 // Instala: npm install @stripe/react-stripe-js @stripe/js
 
+/* eslint-disable react/prop-types */
 import { loadStripe } from "@stripe/js";
 import {
   Elements,
@@ -9,8 +10,9 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { useState } from "react";
+import { apiUrl } from "../Api";
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 export function PagamentoForm({ viagemId, clienteId, valor }) {
   const stripe = useStripe();
@@ -27,7 +29,7 @@ export function PagamentoForm({ viagemId, clienteId, valor }) {
     try {
       // Passo 1: Criar Payment Intent no backend
       const intentResponse = await fetch(
-        "http://localhost:8080/api/pagamentos/stripe/create-intent",
+        apiUrl("/api/pagamentos/stripe/create-intent"),
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -66,7 +68,7 @@ export function PagamentoForm({ viagemId, clienteId, valor }) {
 
       // Passo 3: Confirmar no backend
       const confirmResponse = await fetch(
-        "http://localhost:8080/api/pagamentos/stripe/confirm",
+        apiUrl("/api/pagamentos/stripe/confirm"),
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

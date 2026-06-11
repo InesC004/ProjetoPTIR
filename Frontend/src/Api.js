@@ -1,5 +1,6 @@
-const BASE_URL = "http://localhost:8080";
-// const BASE_URL = "https://takeacab.online/";
+import { API_BASE_URL, apiUrl } from "./config";
+
+const BASE_URL = API_BASE_URL;
 // ---------------------------------------------------------------------------
 // Utilitário interno
 // ---------------------------------------------------------------------------
@@ -501,4 +502,5 @@ const api = {
   relatorios,
 };
 
+export { API_BASE_URL, apiUrl };
 export default api;
