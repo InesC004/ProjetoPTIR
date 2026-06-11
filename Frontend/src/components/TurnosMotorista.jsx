@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
@@ -117,6 +116,8 @@ export default function TurnosMotorista() {
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
   const [, forceUpdate] = useState(0);
+  const [inicioAutomatico, setInicioAutomatico] = useState(true);
+  const [fimAutomatico, setFimAutomatico] = useState(true);
 
   const [form, setForm] = useState({
     taxi_id: "",
@@ -128,6 +129,15 @@ export default function TurnosMotorista() {
     () => turnos.find((t) => getEstadoTurno(t) === "ativo"),
     [turnos],
   );
+
+  function formComHoraAtual() {
+    const agora = new Date();
+
+    return {
+      inicio: toDateTimeLocalValue(agora),
+      fim: toDateTimeLocalValue(new Date(agora.getTime() + 8 * 60 * 60 * 1000)),
+    };
+  }
 
   async function carregarDados() {
     setLoading(true);
@@ -178,9 +188,33 @@ export default function TurnosMotorista() {
     return () => clearTimeout(timer);
   }, [sucesso]);
 
+  useEffect(() => {
+    function sincronizarAgora() {
+      if (!inicioAutomatico && !fimAutomatico) return;
+
+      const agora = new Date();
+      setForm((prev) => ({
+        ...prev,
+        inicio: inicioAutomatico ? toDateTimeLocalValue(agora) : prev.inicio,
+        fim: fimAutomatico
+          ? toDateTimeLocalValue(new Date(agora.getTime() + 8 * 60 * 60 * 1000))
+          : prev.fim,
+      }));
+    }
+
+    sincronizarAgora();
+    const interval = setInterval(sincronizarAgora, 30000);
+
+    return () => clearInterval(interval);
+  }, [inicioAutomatico, fimAutomatico]);
+
   function handleChange(e) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "inicio") setInicioAutomatico(false);
+    if (name === "fim") setFimAutomatico(false);
+
     setErro("");
     setSucesso("");
   }
@@ -225,9 +259,10 @@ export default function TurnosMotorista() {
 
       setForm({
         taxi_id: "",
-        inicio: toDateTimeLocalValue(),
-        fim: toDateTimeLocalValue(new Date(Date.now() + 8 * 60 * 60 * 1000)),
+        ...formComHoraAtual(),
       });
+      setInicioAutomatico(true);
+      setFimAutomatico(true);
 
       await carregarDados();
       window.dispatchEvent(new Event("turnosAtualizados"));
@@ -305,9 +340,11 @@ export default function TurnosMotorista() {
                 name="inicio"
                 type="datetime-local"
                 value={form.inicio}
+                min={toDateTimeLocalValue()}
                 onChange={handleChange}
                 className="tc-input"
               />
+              {inicioAutomatico}
             </div>
 
             <div className="tc-field">
@@ -316,6 +353,7 @@ export default function TurnosMotorista() {
                 name="fim"
                 type="datetime-local"
                 value={form.fim}
+                min={form.inicio || toDateTimeLocalValue()}
                 onChange={handleChange}
                 className="tc-input"
               />

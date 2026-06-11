@@ -114,6 +114,13 @@
     0 4px 14px rgba(15, 23, 42, 0.06);
 }
 
+.tc-field-hint {
+  margin: 7px 0 0;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
 .tc-select {
   cursor: pointer;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238ba3c0' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
