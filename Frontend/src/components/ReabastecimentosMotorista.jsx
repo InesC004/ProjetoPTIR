@@ -12,8 +12,8 @@ import {
   Euro,
 } from "lucide-react";
 import "../css/reabastecimentosMotorista.css";
-import { API_URL } from "../config";
 
+const API_URL = "http://localhost:8080/api";
 const TURNOS_URL = `${API_URL}/turnos`;
 const REABASTECIMENTOS_URL = `${API_URL}/reabastecimentos`;
 

@@ -1,6 +1,5 @@
-import { API_BASE_URL, apiUrl } from "./config";
-
-const BASE_URL = API_BASE_URL;
+const BASE_URL = "http://localhost:8080";
+// const BASE_URL = "https://takeacab.online/";
 // ---------------------------------------------------------------------------
 // Utilitário interno
 // ---------------------------------------------------------------------------
@@ -89,6 +88,13 @@ const auth = {
     });
   },
 
+  /** Completar perfil Auth0 de cliente. */
+  async completarPerfilCliente(payload) {
+    return request("/api/clientes/completar", {
+      method: "PUT",
+      body: payload,
+    });
+  },
 };
 
 // =============================================================================
@@ -495,5 +501,4 @@ const api = {
   relatorios,
 };
 
-export { API_BASE_URL, apiUrl };
 export default api;

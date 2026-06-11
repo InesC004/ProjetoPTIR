@@ -4,7 +4,7 @@
 // 1. Serviço de Avaliações (API Helper)
 // ========================================
 
-const API_BASE = `${(import.meta.env.VITE_API_BASE_URL || 'https://takeacab.online').replace(/\/$/, '')}/api`
+const API_BASE = 'http://localhost:8080/api'
 
 export const avaliacoesService = {
   // Adicionar avaliação a uma viagem
@@ -246,7 +246,7 @@ export function ViagensConcluidasPage({ clienteToken }) {
 
   const carregarViagens = async () => {
     try {
-      const response = await fetch(`${API_BASE}/viagens`, {
+      const response = await fetch('http://localhost:8080/api/viagens', {
         headers: {
           'Authorization': `Bearer ${clienteToken}`
         }

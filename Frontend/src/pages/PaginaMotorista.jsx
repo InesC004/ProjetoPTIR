@@ -21,7 +21,7 @@ import {
 import logo from "../Pictures/logo1.jpeg";
 import TurnosMotorista from "../components/TurnosMotorista";
 import ReabastecimentosMotorista from "../components/ReabastecimentosMotorista";
-import api, { apiUrl } from "../Api";
+import api from "../Api";
 import "../css/paginaMotorista.css";
 import PedidosMotorista from "../components/PedidosMotorista";
 import ViagensMotorista from "../components/ViagensMotorista";
@@ -119,7 +119,7 @@ export default function PaginaMotorista() {
     async function fetchTurnoAtivo() {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(apiUrl("/api/turnos/meus"), {
+        const res = await fetch("http://localhost:8080/api/turnos/meus", {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
 
