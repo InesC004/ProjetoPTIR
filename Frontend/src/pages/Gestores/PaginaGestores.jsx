@@ -14,11 +14,13 @@ import {
   Calculator,
   Search,
   RefreshCw,
+  CarFront,
 } from "lucide-react";
 
 import logo from "../../Pictures/logo1.jpeg";
 import api from "../../Api";
 import RegistarTaxi from "../../components/RegistarTaxi";
+import RegistarModeloTaxi from "../../components/RegistarModeloTaxi";
 import RegistarMotorista from "../../components/RegistarMotorista";
 import EditarTaxi from "../../components/EditarTaxi";
 import EditarMotorista from "../../components/EditarMotorista";
@@ -43,6 +45,7 @@ export default function PaginaGestores() {
   const [active, setActive] = useState("dados");
 
   const [modalTaxi, setModalTaxi] = useState(false);
+  const [modalModeloTaxi, setModalModeloTaxi] = useState(false);
   const [modalMotorista, setModalMotorista] = useState(false);
   const [modalEditTaxi, setModalEditTaxi] = useState(false);
   const [modalEditMotorista, setModalEditMotorista] = useState(false);
@@ -147,6 +150,7 @@ export default function PaginaGestores() {
             {active === "dados" && (
               <SecDados
                 onRegistarTaxi={() => setModalTaxi(true)}
+                onRegistarModeloTaxi={() => setModalModeloTaxi(true)}
                 onRegistarMotorista={() => setModalMotorista(true)}
                 onEditarTaxi={() => setModalEditTaxi(true)}
                 onEditarMotorista={() => setModalEditMotorista(true)}
@@ -169,6 +173,10 @@ export default function PaginaGestores() {
       </div>
 
       <RegistarTaxi aberto={modalTaxi} onFechar={() => setModalTaxi(false)} />
+      <RegistarModeloTaxi
+        aberto={modalModeloTaxi}
+        onFechar={() => setModalModeloTaxi(false)}
+      />
       <RegistarMotorista
         aberto={modalMotorista}
         onFechar={() => setModalMotorista(false)}
@@ -324,6 +332,11 @@ function SecDados(props) {
             label="Registar táxi"
             accent
             onClick={props.onRegistarTaxi}
+          />
+          <Action
+            Icon={CarFront}
+            label="Registar marca/modelo"
+            onClick={props.onRegistarModeloTaxi}
           />
           <Action
             Icon={Pencil}

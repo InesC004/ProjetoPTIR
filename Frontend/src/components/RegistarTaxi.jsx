@@ -221,8 +221,8 @@ export default function RegistarTaxi({ aberto, onFechar }) {
     try {
       const data = await api.modelosTaxi.listarModelosPorMarca(marca);
 
-      // Guarda o objeto completo, porque também precisamos do tipo_motor,
-      // nivel_conforto, ano_inicio e ano_fim vindos da base de dados.
+      // Guarda o objeto completo, porque tambem precisamos do ano,
+      // tipo_motor e nivel_conforto vindos da base de dados.
       setModelosDisponiveis(data);
     } catch (err) {
       console.error(err);
@@ -247,16 +247,16 @@ export default function RegistarTaxi({ aberto, onFechar }) {
       }
 
       if (campo === "modelo") {
-        novo.ano_compra = "";
-
         const modeloEscolhido = modelosDisponiveis.find(
-          (m) => m.modelo === valor,
+          (m) => labelModelo(m) === valor,
         );
 
         if (modeloEscolhido) {
+          novo.ano_compra = String(modeloEscolhido.ano);
           novo.tipo_motor = modeloEscolhido.tipo_motor;
           novo.nivel_conforto = modeloEscolhido.nivel_conforto;
         } else {
+          novo.ano_compra = "";
           novo.tipo_motor = "";
           novo.nivel_conforto = "";
         }
@@ -294,7 +294,7 @@ export default function RegistarTaxi({ aberto, onFechar }) {
   }
 
   function getModeloEscolhido() {
-    return modelosDisponiveis.find((m) => m.modelo === form.modelo);
+    return modelosDisponiveis.find((m) => labelModelo(m) === form.modelo);
   }
 
   function getAnosPermitidos() {
@@ -302,12 +302,11 @@ export default function RegistarTaxi({ aberto, onFechar }) {
 
     if (!modeloEscolhido) return [];
 
-    const inicio = Number(modeloEscolhido.ano_inicio);
-    const fim = Math.min(Number(modeloEscolhido.ano_fim || anoAtual), anoAtual);
+    const ano = Number(modeloEscolhido.ano);
 
-    if (!inicio || !fim || fim < inicio) return [];
+    if (!ano || ano > anoAtual) return [];
 
-    return Array.from({ length: fim - inicio + 1 }, (_, i) => String(fim - i));
+    return [String(ano)];
   }
 
   function validar() {
@@ -357,7 +356,7 @@ export default function RegistarTaxi({ aberto, onFechar }) {
     const novoTaxi = {
       matricula: form.matricula.toUpperCase(),
       marca: form.marca,
-      modelo: form.modelo,
+      modelo: getModeloEscolhido()?.modelo || form.modelo,
       ano_compra: parseInt(form.ano_compra, 10),
       tipo_motor: form.tipo_motor,
       nivel_conforto: form.nivel_conforto,
@@ -482,7 +481,7 @@ export default function RegistarTaxi({ aberto, onFechar }) {
               }
               value={form.modelo}
               onChange={(v) => handleChange("modelo", v)}
-              options={modelosDisponiveis.map((m) => m.modelo)}
+              options={modelosDisponiveis.map(labelModelo)}
               disabled={!form.marca || loading || success || loadingModelos}
               error={errors.modelo}
             />
@@ -594,4 +593,9 @@ export default function RegistarTaxi({ aberto, onFechar }) {
       </div>
     </div>
   );
+}
+
+function labelModelo(modelo) {
+  if (!modelo) return "";
+  return `${modelo.modelo} (${modelo.ano})`;
 }

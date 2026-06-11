@@ -465,6 +465,52 @@
   transition: 0.2s ease;
 }
 
+.rt-submit-full {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.rt-modelos-lista {
+  margin: 0 28px 26px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid #dbeafe;
+  background: #f8fbff;
+}
+
+.rt-modelos-lista h4 {
+  margin: 0 0 12px;
+  color: #07142a;
+  font-family: "Syne", "DM Sans", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.rt-modelo-row {
+  padding: 12px 0;
+  border-top: 1px solid #dbeafe;
+}
+
+.rt-modelo-row:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.rt-modelo-row strong {
+  display: block;
+  color: #07142a;
+  font-weight: 900;
+}
+
+.rt-modelo-row span {
+  display: block;
+  margin-top: 4px;
+  color: #526f98;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
 .rt-cancel-button {
   padding: 11px 22px;
   border: 1px solid transparent;

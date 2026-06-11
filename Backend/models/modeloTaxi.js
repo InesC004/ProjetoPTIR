@@ -6,7 +6,9 @@ const modeloTaxiSchema = new mongoose.Schema(
 
     modelo: { type: String, required: true },
 
-    ano_inicio: { type: Number, required: true },
+    ano: { type: Number, required: true },
+
+    ano_inicio: { type: Number },
 
     ano_fim: { type: Number },
 

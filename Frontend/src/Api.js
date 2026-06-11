@@ -205,12 +205,24 @@ const taxis = {
 // =============================================================================
 
 const modelosTaxi = {
+  async listar() {
+    return request("/api/modelos-taxi");
+  },
+
   async listarMarcas() {
     return request("/api/modelos-taxi/marcas");
   },
 
   async listarModelosPorMarca(marca) {
-    return request(`/api/modelos-taxi/modelos/${marca}`);
+    return request(`/api/modelos-taxi/modelos/${encodeURIComponent(marca)}`);
+  },
+
+  async criar(payload) {
+    return request("/api/modelos-taxi/create", {
+      method: "POST",
+      body: payload,
+      auth: true,
+    });
   },
 };
 // =============================================================================
