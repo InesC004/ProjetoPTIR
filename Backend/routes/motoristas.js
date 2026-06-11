@@ -12,6 +12,12 @@ router.post('/login', motoristasController.login)
 // listar todos os motoristas
 router.get('/todos', checkRole('gestor'), motoristasController.getTodos)
 
+// obter avaliações de um motorista (público - sem autenticação necessária)
+router.get('/:id/avaliacoes', motoristasController.getAvaliacoes)
+
+// obter motorista por ID
+router.get('/:id', motoristasController.getById)
+
 // editar motorista — só gestores
 router.put('/:id', checkRole('gestor'), motoristasController.update)
 

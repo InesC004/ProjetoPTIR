@@ -4,6 +4,7 @@ const Viagem = require('../models/viagem')
 const Pedido = require('../models/pedido')
 const Turno = require('../models/turno')
 const Preco = require('../models/preco')
+const Motorista = require('../models/motorista')
 
 const os = require('os')
 const HOSTNAME = os.hostname()
@@ -375,6 +376,115 @@ exports.cancelar = async (req, res) => {
       message: 'Viagem cancelada com sucesso.',
       servidor: HOSTNAME,
       viagem
+    })
+
+  } catch (err) {
+    console.error(err)
+
+    res.status(500).json({
+      success: false,
+      message: 'Erro no servidor.',
+      servidor: HOSTNAME
+    })
+  }
+}
+
+// avaliar motorista apos a viagem terminar
+exports.avaliarMotorista = async (req, res) => {
+  try {
+    const { id } = req.params
+    const { nota, comentario } = req.body
+
+    const notaNumerica = Number(nota)
+
+    if (!Number.isInteger(notaNumerica) || notaNumerica < 1 || notaNumerica > 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'A nota deve ser um numero inteiro entre 1 e 5.',
+        servidor: HOSTNAME
+      })
+    }
+
+    if (comentario && comentario.length > 500) {
+      return res.status(400).json({
+        success: false,
+        message: 'O comentario nao pode ter mais de 500 caracteres.',
+        servidor: HOSTNAME
+      })
+    }
+
+    const viagem = await Viagem.findById(id)
+
+    if (!viagem) {
+      return res.status(404).json({
+        success: false,
+        message: 'Viagem nao encontrada.',
+        servidor: HOSTNAME
+      })
+    }
+
+    if (viagem.estado !== 'concluida') {
+      return res.status(400).json({
+        success: false,
+        message: 'So e possivel avaliar o motorista depois da viagem terminar.',
+        servidor: HOSTNAME
+      })
+    }
+
+    if (viagem.cliente_id.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'So o cliente desta viagem pode avaliar o motorista.',
+        servidor: HOSTNAME
+      })
+    }
+
+    if (viagem.avaliacao_motorista?.nota) {
+      return res.status(409).json({
+        success: false,
+        message: 'Esta viagem ja tem avaliacao do motorista.',
+        servidor: HOSTNAME
+      })
+    }
+
+    const motorista = await Motorista.findById(viagem.motorista_id)
+
+    if (!motorista) {
+      return res.status(404).json({
+        success: false,
+        message: 'Motorista nao encontrado.',
+        servidor: HOSTNAME
+      })
+    }
+
+    viagem.avaliacao_motorista = {
+      nota: notaNumerica,
+      comentario,
+      cliente_id: req.user.id,
+      data: new Date()
+    }
+
+    const totalAtual = motorista.total_avaliacoes || 0
+    const mediaAtual = motorista.avaliacao_media || 0
+    const novaMedia = ((mediaAtual * totalAtual) + notaNumerica) / (totalAtual + 1)
+
+    motorista.total_avaliacoes = totalAtual + 1
+    motorista.avaliacao_media = parseFloat(novaMedia.toFixed(2))
+
+    await viagem.save()
+    await motorista.save()
+
+    res.status(200).json({
+      success: true,
+      message: 'Motorista avaliado com sucesso.',
+      servidor: HOSTNAME,
+      avaliacao: viagem.avaliacao_motorista,
+      motorista: {
+        _id: motorista._id,
+        nome: motorista.nome,
+        avaliacao_media: motorista.avaliacao_media,
+        total_avaliacoes: motorista.total_avaliacoes
+      }
     })
 
   } catch (err) {

@@ -132,6 +132,32 @@ exports.getTodos = async (req, res) => {
   }
 }
 
+// obter motorista por ID
+exports.getById = async (req, res) => {
+  try {
+    const { id } = req.params
+    const motorista = await Motorista.findById(id).select('-password')
+    
+    if (!motorista) {
+      return res.status(404).json({
+        success: false,
+        message: 'Motorista não encontrado.'
+      })
+    }
+    
+    res.json({
+      success: true,
+      motorista
+    })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({
+      success: false,
+      message: 'Erro no servidor'
+    })
+  }
+}
+
 // editar motorista
 exports.update = async (req, res) => {
   try {
@@ -242,5 +268,65 @@ exports.delete = async (req, res) => {
   } catch (err) {
     console.error(err)
     res.status(500).json({ success: false, message: 'Erro no servidor.' })
+  }
+}
+
+// obter avaliações de um motorista
+exports.getAvaliacoes = async (req, res) => {
+  try {
+    const { id } = req.params
+    const Viagem = require('../models/viagem')
+    const os = require('os')
+    const HOSTNAME = os.hostname()
+
+    // verificar se motorista existe
+    const motorista = await Motorista.findById(id)
+    if (!motorista) {
+      return res.status(404).json({
+        success: false,
+        message: 'Motorista não encontrado.',
+        servidor: HOSTNAME
+      })
+    }
+
+    // buscar todas as viagens com avaliações deste motorista
+    const viagens = await Viagem.find({
+      motorista_id: id,
+      'avaliacao_motorista.nota': { $exists: true }
+    })
+      .select('avaliacao_motorista data_fim cliente_id')
+      .populate('cliente_id', 'nome')
+      .sort({ 'avaliacao_motorista.data': -1 })
+
+    // preparar resposta
+    const avaliacoes = viagens.map(viagem => ({
+      _id: viagem._id,
+      nota: viagem.avaliacao_motorista.nota,
+      comentario: viagem.avaliacao_motorista.comentario,
+      cliente_nome: viagem.cliente_id?.nome || 'Cliente',
+      data: viagem.avaliacao_motorista.data,
+      data_viagem: viagem.data_fim
+    }))
+
+    res.json({
+      success: true,
+      servidor: HOSTNAME,
+      motorista: {
+        _id: motorista._id,
+        nome: motorista.nome,
+        avaliacao_media: motorista.avaliacao_media,
+        total_avaliacoes: motorista.total_avaliacoes
+      },
+      avaliacoes,
+      total: avaliacoes.length
+    })
+
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({
+      success: false,
+      message: 'Erro no servidor.',
+      servidor: os.hostname()
+    })
   }
 }

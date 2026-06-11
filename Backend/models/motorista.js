@@ -10,6 +10,8 @@ const motoristaSchema = new mongoose.Schema({
   data_nascimento: { type: Date },
   morada: { type: String },
   codigo_postal: { type: String },
+  avaliacao_media: { type: Number, default: 0 },
+  total_avaliacoes: { type: Number, default: 0 },
   //coordenadas
   //ligações schemas,modelo de morada
 });

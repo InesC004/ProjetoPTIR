@@ -79,6 +79,24 @@ const viagemSchema = new mongoose.Schema(
     km: Number,
 
     preco_total: Number,
+
+    avaliacao_motorista: {
+      nota: {
+        type: Number,
+        min: 1,
+        max: 5,
+      },
+      comentario: {
+        type: String,
+        trim: true,
+        maxlength: 500,
+      },
+      cliente_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "cliente",
+      },
+      data: Date,
+    },
   },
   { timestamps: true },
 );
