@@ -602,22 +602,54 @@ exports.getSubtotaisPorTipoMotor = async (req, res) => {
       data_fim: { $gte: inicio },
     }).populate("taxi", "tipo_motor matricula marca modelo");
 
-    const mapa = { combustao: { total_euros: 0, total_horas: 0 }, eletrico: { total_euros: 0, total_horas: 0 } };
+    const mapa = {
+      combustao: {
+        total_euros: 0,
+        total_horas: 0,
+        total_litros: 0,
+        total_kwh: 0,
+        total_quilometros: 0,
+        total_reabastecimentos: 0,
+      },
+      eletrico: {
+        total_euros: 0,
+        total_horas: 0,
+        total_litros: 0,
+        total_kwh: 0,
+        total_quilometros: 0,
+        total_reabastecimentos: 0,
+      },
+    };
 
     for (const r of reabastecimentos) {
       if (!r.taxi) continue;
       const tipoMotor = normalizarTipoMotor(r.taxi.tipo_motor);
       if (!mapa[tipoMotor]) {
-        mapa[tipoMotor] = { total_euros: 0, total_horas: 0 };
+        mapa[tipoMotor] = {
+          total_euros: 0,
+          total_horas: 0,
+          total_litros: 0,
+          total_kwh: 0,
+          total_quilometros: 0,
+          total_reabastecimentos: 0,
+        };
       }
       mapa[tipoMotor].total_euros += Number(r.euros) || 0;
       mapa[tipoMotor].total_horas += (new Date(r.data_fim) - new Date(r.data_inicio)) / (1000 * 60 * 60);
+      mapa[tipoMotor].total_litros += Number(r.litros) || 0;
+      mapa[tipoMotor].total_kwh += Number(r.kwh) || 0;
+      mapa[tipoMotor].total_quilometros += Number(r.quilometros) || 0;
+      mapa[tipoMotor].total_reabastecimentos += 1;
     }
 
     let resultado = Object.entries(mapa).map(([tipo_motor, valores]) => ({
       tipo_motor,
       total_euros: Number(valores.total_euros.toFixed(2)),
       total_horas: Number(valores.total_horas.toFixed(2)),
+      total_litros: Number(valores.total_litros.toFixed(2)),
+      total_kwh: Number(valores.total_kwh.toFixed(2)),
+      total_quilometros: Number(valores.total_quilometros.toFixed(2)),
+      total_reabastecimentos: valores.total_reabastecimentos,
     }));
 
     if (tipo === "horas") resultado.sort((a, b) => b.total_horas - a.total_horas);
@@ -653,10 +685,18 @@ exports.getDetalhesPorTipoMotor = async (req, res) => {
           taxi: { _id: id, matricula: r.taxi.matricula, marca: r.taxi.marca, modelo: r.taxi.modelo },
           total_euros: 0,
           total_horas: 0,
+          total_litros: 0,
+          total_kwh: 0,
+          total_quilometros: 0,
+          total_reabastecimentos: 0,
         };
       }
       mapaTaxis[id].total_euros += Number(r.euros) || 0;
       mapaTaxis[id].total_horas += (new Date(r.data_fim) - new Date(r.data_inicio)) / (1000 * 60 * 60);
+      mapaTaxis[id].total_litros += Number(r.litros) || 0;
+      mapaTaxis[id].total_kwh += Number(r.kwh) || 0;
+      mapaTaxis[id].total_quilometros += Number(r.quilometros) || 0;
+      mapaTaxis[id].total_reabastecimentos += 1;
     }
 
     let resultado = Object.values(mapaTaxis);
@@ -667,6 +707,9 @@ exports.getDetalhesPorTipoMotor = async (req, res) => {
       ...r,
       total_euros: Number(r.total_euros.toFixed(2)),
       total_horas: Number(r.total_horas.toFixed(2)),
+      total_litros: Number(r.total_litros.toFixed(2)),
+      total_kwh: Number(r.total_kwh.toFixed(2)),
+      total_quilometros: Number(r.total_quilometros.toFixed(2)),
     }));
 
     res.json({ success: true, servidor: HOSTNAME, periodo: { inicio, fim }, detalhes: resultado });

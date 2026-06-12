@@ -1055,6 +1055,48 @@ function SecRelatorios() {
     return "—";
   }
 
+  function metricasResumoItem(item) {
+    return [
+      item.total_reabastecimentos
+        ? `${item.total_reabastecimentos} registos`
+        : null,
+      item.total_viagens ? `${item.total_viagens} viagens` : null,
+      item.total_km ? `${item.total_km} km` : null,
+      item.total_quilometros ? `${item.total_quilometros} km` : null,
+      item.total_litros ? `${item.total_litros} L` : null,
+      item.total_kwh ? `${item.total_kwh} kWh` : null,
+      item.total_horas ? `${item.total_horas}h` : null,
+      item.total_euros ? `${item.total_euros}€` : null,
+    ].filter(Boolean);
+  }
+
+  function metricasDetalhe(item) {
+    if (tipo === "reabastecimentos") {
+      return [
+        item.total_reabastecimentos
+          ? `${item.total_reabastecimentos} registos`
+          : null,
+        item.total_litros ? `${item.total_litros} L` : null,
+        item.total_kwh ? `${item.total_kwh} kWh` : null,
+        item.total_quilometros ? `${item.total_quilometros} km` : null,
+        item.total_horas ? `${item.total_horas}h` : null,
+        item.total_euros ? `${item.total_euros}€` : null,
+        item.litros != null ? `${item.litros} L` : null,
+        item.kwh != null ? `${item.kwh} kWh` : null,
+        item.euros != null ? `${item.euros}€` : null,
+        item.quilometros != null ? `${item.quilometros} km` : null,
+      ].filter(Boolean);
+    }
+
+    return [
+      item.preco_total ? `${item.preco_total}€` : null,
+      item.total_euros ? `${item.total_euros}€` : null,
+      item.km ? `${item.km} km` : null,
+      item.horas ? `${item.horas}h` : null,
+      item.total_horas ? `${item.total_horas}h` : null,
+    ].filter(Boolean);
+  }
+
   return (
     <div className="pg-relatorios">
       <div className="pg-relatorios-topo">
@@ -1198,6 +1240,8 @@ function SecRelatorios() {
                   item.tipo_motor ||
                   item._id ||
                   "Sem nome";
+                const metricas = metricasResumoItem(item);
+
                 return (
                   <button
                     key={id}
@@ -1218,14 +1262,15 @@ function SecRelatorios() {
                       </small>
                     </span>
 
-                    <strong>
-                      {item.total_viagens
-                        ? `${item.total_viagens} viagens · `
-                        : ""}
-                      {item.total_km ? `${item.total_km} km · ` : ""}
-                      {item.total_horas ? `${item.total_horas}h · ` : ""}
-                      {item.total_euros ? `${item.total_euros}€` : ""}
-                    </strong>
+                    <div className="pg-row-metrics">
+                      {metricas.length > 0 ? (
+                        metricas.map((metrica) => (
+                          <strong key={metrica}>{metrica}</strong>
+                        ))
+                      ) : (
+                        <strong>—</strong>
+                      )}
+                    </div>
                   </button>
                 );
               })}
@@ -1249,53 +1294,44 @@ function SecRelatorios() {
             )}
 
             {!loadingDetalhes &&
-              detalhes.map((item) => (
-                <button key={item._id || item.taxi?._id} className="pg-row">
-                  <span>
-                    {tipo === "reabastecimentos"
-                      ? item.taxi?.matricula || "Táxi"
-                      : `Viagem ${item._id?.slice(-5) || ""}`}
+              detalhes.map((item) => {
+                const metricas = metricasDetalhe(item);
 
-                    <small>
-                      {tipo === "clientes" &&
-                        `${formatarData(item.data_inicio)} · ${
-                          item.taxi?.matricula || "Sem matrícula"
-                        } · ${item.motorista?.nome || "Sem motorista"}`}
+                return (
+                  <div key={item._id || item.taxi?._id} className="pg-row">
+                    <span>
+                      {tipo === "reabastecimentos"
+                        ? item.taxi?.matricula || "Táxi sem matrícula"
+                        : `Viagem ${item._id?.slice(-5) || ""}`}
 
-                      {tipo === "taxi" &&
-                        `${formatarData(item.data_inicio)} · ${
-                          item.taxi?.matricula || item.motorista?.nome || ""
-                        } · ${item.cliente?.nome || "Sem cliente"}`}
+                      <small>
+                        {tipo === "clientes" &&
+                          `${formatarData(item.data_inicio)} · ${
+                            item.taxi?.matricula || "Sem matrícula"
+                          } · ${item.motorista?.nome || "Sem motorista"}`}
 
-                      {tipo === "reabastecimentos" &&
-                        `${item.taxi?.marca || ""} ${item.taxi?.modelo || ""}`}
-                    </small>
-                  </span>
+                        {tipo === "taxi" &&
+                          `${formatarData(item.data_inicio)} · ${
+                            item.taxi?.matricula || item.motorista?.nome || ""
+                          } · ${item.cliente?.nome || "Sem cliente"}`}
 
-                  <strong>
-                    {tipo === "reabastecimentos" && (
-                      <>
-                        {item.litros != null ? `${item.litros} L · ` : ""}
-                        {item.kwh != null ? `${item.kwh} kWh · ` : ""}
-                        {item.euros != null ? `${item.euros}€ · ` : ""}
-                        {item.quilometros != null
-                          ? `${item.quilometros} km`
-                          : ""}
-                      </>
-                    )}
+                        {tipo === "reabastecimentos" &&
+                          `${item.taxi?.marca || "Sem marca"} ${item.taxi?.modelo || ""}`}
+                      </small>
+                    </span>
 
-                    {tipo !== "reabastecimentos" && (
-                      <>
-                        {item.preco_total ? `${item.preco_total}€ · ` : ""}
-                        {item.total_euros ? `${item.total_euros}€ · ` : ""}
-                        {item.km ? `${item.km} km · ` : ""}
-                        {item.horas ? `${item.horas}h` : ""}
-                        {item.total_horas ? `${item.total_horas}h` : ""}
-                      </>
-                    )}
-                  </strong>
-                </button>
-              ))}
+                    <div className="pg-row-metrics">
+                      {metricas.length > 0 ? (
+                        metricas.map((metrica) => (
+                          <strong key={metrica}>{metrica}</strong>
+                        ))
+                      ) : (
+                        <strong>—</strong>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         </div>
       )}
@@ -1328,7 +1364,9 @@ function SecRelatorios() {
                     </small>
                   </span>
 
-                  <strong>{horasTurno(turno).toFixed(1)}h</strong>
+                  <div className="pg-row-metrics">
+                    <strong>{horasTurno(turno).toFixed(1)}h</strong>
+                  </div>
                 </button>
               ))}
           </div>
