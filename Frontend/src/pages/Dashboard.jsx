@@ -1530,6 +1530,7 @@ export default function Dashboard() {
               <span className="titulo-gradiente">lado em minutos</span>
               <br />
             </h1>
+
             <div className="card-reserva animar-2">
               <div className="step-dots" aria-hidden="true">
                 <div
