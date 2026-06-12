@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -80,15 +80,31 @@ function getTipoMotor(turno) {
   return taxi.tipo_motor || "";
 }
 
+function toDateTimeLocalValue(date = new Date()) {
+  const d = new Date(date);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+}
+
+function getQuilometragemAtual(reabastecimentos) {
+  return reabastecimentos.reduce((max, item) => {
+    const valor = Number(item.quilometros ?? item.quilometragem ?? 0);
+    return Number.isFinite(valor) && valor > max ? valor : max;
+  }, 0);
+}
+
 export default function ReabastecimentosMotorista({ turnoAtivo }) {
   const [turnos, setTurnos] = useState([]);
   const [reabastecimentos, setReabastecimentos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!turnoAtivo);
   const [loadingLista, setLoadingLista] = useState(false);
   const [saving, setSaving] = useState(false);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
   const [turnoSelecionado, setTurnoSelecionado] = useState("");
+  const listaCarregadaRef = useRef(false);
+  const taxiIdAnteriorRef = useRef("");
+  const turnoAtivoId = turnoAtivo?._id || "";
 
   const [form, setForm] = useState({
     data_inicio: "",
@@ -104,10 +120,12 @@ export default function ReabastecimentosMotorista({ turnoAtivo }) {
     return turnos.find((t) => String(t._id) === String(turnoSelecionado));
   }, [turnoAtivo, turnos, turnoSelecionado]);
   const isEletrico = getTipoMotor(turnoAtual) === "eletrico";
+  const taxiIdAtual = useMemo(() => getTaxiId(turnoAtual), [turnoAtual]);
+  const quilometragemAtual = getQuilometragemAtual(reabastecimentos);
 
-  async function carregarTurnos() {
-    setLoading(true);
-    setErro("");
+  const carregarTurnos = useCallback(async ({ silencioso = false } = {}) => {
+    if (!silencioso) setLoading(true);
+    if (!silencioso) setErro("");
 
     try {
       const res = await fetch(`${TURNOS_URL}/meus`, {
@@ -119,26 +137,29 @@ export default function ReabastecimentosMotorista({ turnoAtivo }) {
 
       setTurnos(lista);
 
-      if (turnoAtivo?._id) {
-        setTurnoSelecionado(turnoAtivo._id);
-      } else if (!turnoSelecionado && lista[0]?._id) {
-        setTurnoSelecionado(lista[0]._id);
-      }
+      setTurnoSelecionado((atual) => {
+        if (turnoAtivoId) return turnoAtivoId;
+        if (!atual && lista[0]?._id) return lista[0]._id;
+        return atual;
+      });
     } catch (err) {
-      setErro(err.message || "Erro ao carregar turnos.");
+      if (!silencioso) setErro(err.message || "Erro ao carregar turnos.");
     } finally {
-      setLoading(false);
+      if (!silencioso) setLoading(false);
     }
-  }
+  }, [turnoAtivoId]);
 
-  async function carregarReabastecimentos(taxiId = getTaxiId(turnoAtual)) {
+  const carregarReabastecimentos = useCallback(async (
+    taxiId = taxiIdAtual,
+    { silencioso = false } = {},
+  ) => {
     if (!taxiId) {
       setReabastecimentos([]);
       return;
     }
 
-    setLoadingLista(true);
-    setErro("");
+    if (!silencioso) setLoadingLista(true);
+    if (!silencioso) setErro("");
 
     try {
       const res = await fetch(`${REABASTECIMENTOS_URL}/taxi/${taxiId}`, {
@@ -147,22 +168,67 @@ export default function ReabastecimentosMotorista({ turnoAtivo }) {
 
       const data = await readJson(res);
       setReabastecimentos(normalizarLista(data, "reabastecimentos"));
+      listaCarregadaRef.current = true;
     } catch (err) {
-      setErro(err.message || "Erro ao carregar reabastecimentos.");
+      if (!silencioso)
+        setErro(err.message || "Erro ao carregar reabastecimentos.");
     } finally {
-      setLoadingLista(false);
+      if (!silencioso) setLoadingLista(false);
     }
-  }
+  }, [taxiIdAtual]);
 
   useEffect(() => {
     carregarTurnos();
-  }, []);
+  }, [carregarTurnos]);
 
   useEffect(() => {
-    const taxiId = getTaxiId(turnoAtual);
-    if (taxiId) carregarReabastecimentos(taxiId);
-    else setReabastecimentos([]);
-  }, [turnoAtual]);
+    if (taxiIdAnteriorRef.current !== taxiIdAtual) {
+      listaCarregadaRef.current = false;
+      taxiIdAnteriorRef.current = taxiIdAtual;
+    }
+
+    if (taxiIdAtual) {
+      carregarReabastecimentos(taxiIdAtual, {
+        silencioso: listaCarregadaRef.current,
+      });
+    } else {
+      setReabastecimentos([]);
+    }
+  }, [taxiIdAtual, carregarReabastecimentos]);
+
+  const atualizarSilenciosamente = useCallback(() => {
+    if (taxiIdAtual) carregarReabastecimentos(taxiIdAtual, { silencioso: true });
+  }, [taxiIdAtual, carregarReabastecimentos]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      atualizarSilenciosamente();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [atualizarSilenciosamente]);
+
+  useEffect(() => {
+    if (!turnoAtual || form.data_inicio || form.data_fim) return;
+
+    const agora = new Date();
+    const inicioSugerido = new Date(agora.getTime() - 15 * 60 * 1000);
+
+    setForm((prev) => ({
+      ...prev,
+      data_inicio: toDateTimeLocalValue(inicioSugerido),
+      data_fim: toDateTimeLocalValue(agora),
+    }));
+  }, [turnoAtual, form.data_inicio, form.data_fim]);
+
+  useEffect(() => {
+    if (!quilometragemAtual || form.quilometragem) return;
+
+    setForm((prev) => ({
+      ...prev,
+      quilometragem: String(quilometragemAtual),
+    }));
+  }, [quilometragemAtual, form.quilometragem]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -193,6 +259,10 @@ export default function ReabastecimentosMotorista({ turnoAtivo }) {
 
     if (!form.quilometragem || Number(form.quilometragem) <= 0) {
       return "Indique uma quilometragem válida.";
+    }
+
+    if (quilometragemAtual && Number(form.quilometragem) <= quilometragemAtual) {
+      return `A quilometragem deve ser superior aos ${quilometragemAtual} km atuais do táxi.`;
     }
 
     return "";
@@ -237,7 +307,7 @@ export default function ReabastecimentosMotorista({ turnoAtivo }) {
         data_fim: "",
         quantidade: "",
         custo: "",
-        quilometragem: "",
+        quilometragem: String(form.quilometragem),
       });
 
       await carregarReabastecimentos(getTaxiId(turnoAtual));
@@ -318,6 +388,7 @@ export default function ReabastecimentosMotorista({ turnoAtivo }) {
                   name="data_inicio"
                   type="datetime-local"
                   value={form.data_inicio}
+                  max={toDateTimeLocalValue()}
                   onChange={handleChange}
                   className="rc-input"
                 />
@@ -329,6 +400,7 @@ export default function ReabastecimentosMotorista({ turnoAtivo }) {
                   name="data_fim"
                   type="datetime-local"
                   value={form.data_fim}
+                  max={toDateTimeLocalValue()}
                   onChange={handleChange}
                   className="rc-input"
                 />
@@ -369,12 +441,22 @@ export default function ReabastecimentosMotorista({ turnoAtivo }) {
                 <input
                   name="quilometragem"
                   type="number"
-                  min="0"
+                  min={quilometragemAtual ? quilometragemAtual + 1 : 0}
                   value={form.quilometragem}
                   onChange={handleChange}
                   className="rc-input"
-                  placeholder="Ex: 120500"
+                  placeholder={
+                    quilometragemAtual
+                      ? `Atual: ${quilometragemAtual} km`
+                      : "Ex: 120500"
+                  }
                 />
+                <p className="rc-help">
+                  Quilometragem atual conhecida:{" "}
+                  <strong>
+                    {quilometragemAtual ? `${quilometragemAtual} km` : "sem registo"}
+                  </strong>
+                </p>
               </div>
 
               <button type="submit" disabled={saving} className="rc-btn-submit">
@@ -414,7 +496,7 @@ export default function ReabastecimentosMotorista({ turnoAtivo }) {
 
           <button
             type="button"
-            onClick={() => carregarReabastecimentos()}
+            onClick={atualizarSilenciosamente}
             className="rc-btn-refresh"
             title="Atualizar"
           >
