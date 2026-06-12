@@ -3818,9 +3818,7 @@ select.campo {
   background-position:
     calc(100% - 18px) calc(50% - 3px),
     calc(100% - 12px) calc(50% - 3px);
-  background-size:
-    6px 6px,
-    6px 6px;
+  background-size: 6px 6px, 6px 6px;
   background-repeat: no-repeat;
 
   color: #17324f;
@@ -3828,10 +3826,7 @@ select.campo {
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
 select:hover,
