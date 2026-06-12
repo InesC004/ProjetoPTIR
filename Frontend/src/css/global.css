@@ -1695,7 +1695,7 @@ body {
 .sidebar-fundo {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 3990;
   transition: all 0.5s ease;
   background: radial-gradient(
     ellipse at right,
@@ -1717,7 +1717,7 @@ body {
   position: fixed;
   top: 0;
   right: 0;
-  z-index: 50;
+  z-index: 4000;
   height: 100%;
   width: 400px;
   max-width: 95vw;
@@ -1779,6 +1779,31 @@ body {
 .sidebar-fechar svg {
   width: 20px;
   height: 20px;
+}
+
+.sidebar-fechar-animado {
+  position: relative;
+}
+
+.sidebar-fechar-animado span {
+  position: absolute;
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 1;
+}
+
+.sidebar-fechar-animado span:nth-child(1) {
+  transform: rotate(45deg);
+}
+
+.sidebar-fechar-animado span:nth-child(2) {
+  transform: rotate(-45deg);
+}
+
+.sidebar-fechar-animado span:nth-child(3) {
+  display: none;
 }
 
 /* Brand */
