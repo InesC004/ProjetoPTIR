@@ -306,3 +306,98 @@
     margin-left: 0;
   }
 }
+/* Janela própria de confirmação */
+
+.modal-confirmacao-fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.46);
+  backdrop-filter: blur(5px);
+}
+
+.modal-confirmacao {
+  width: min(100%, 420px);
+  border: 1px solid #d8e5f7;
+  border-radius: 20px;
+  background: #ffffff;
+  padding: 22px;
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.22);
+  animation: modalConfirmacaoEntrada 0.2s ease both;
+}
+
+@keyframes modalConfirmacaoEntrada {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-confirmacao-icone {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 14px;
+  border-radius: 14px;
+  background: #fff0f0;
+  font-size: 1.3rem;
+}
+
+.modal-confirmacao h2 {
+  margin: 0;
+  color: #101828;
+  font-size: 1.25rem;
+}
+
+.modal-confirmacao p {
+  margin: 10px 0 20px;
+  color: #5b7490;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.modal-confirmacao-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.btn-modal-cancelar,
+.btn-modal-eliminar {
+  min-height: 40px;
+  border-radius: 11px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.btn-modal-cancelar {
+  border: 1px solid #d4e2f6;
+  background: #ffffff;
+  color: #47617f;
+}
+
+.btn-modal-cancelar:hover {
+  background: #eef6ff;
+}
+
+.btn-modal-eliminar {
+  border: 1px solid #b42318;
+  background: #b42318;
+  color: #ffffff;
+}
+
+.btn-modal-eliminar:hover {
+  background: #8f1d15;
+}

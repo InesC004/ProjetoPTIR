@@ -57,6 +57,7 @@ function obterId(viagem) {
 export default function HistoricoCliente() {
   const [filtro, setFiltro] = useState("todas");
 const [historico, setHistorico] = useState(() => obterHistorico());
+const [confirmacao, setConfirmacao] = useState(null);
 
 useEffect(() => {
   function atualizarHistorico() {
@@ -75,30 +76,47 @@ useEffect(() => {
     window.removeEventListener("storage", atualizarHistorico);
   };
 }, []);
-function eliminarViagem(id) {
-  const confirmou = window.confirm(
-    "Tem a certeza de que pretende eliminar esta viagem do histórico?",
-  );
-
-  if (!confirmou) return;
-
-  const historicoAtualizado = historico.filter(
-    (viagem) => String(obterId(viagem)) !== String(id),
-  );
-
-  guardarHistorico(historicoAtualizado);
-  setHistorico(historicoAtualizado);
+function pedirEliminacaoViagem(id) {
+  setConfirmacao({
+    tipo: "uma",
+    id,
+    titulo: "Eliminar esta viagem?",
+    mensagem:
+      "Esta viagem será removida do seu histórico. Esta ação não pode ser anulada.",
+  });
 }
 
-function eliminarTodoHistorico() {
-  const confirmou = window.confirm(
-    "Tem a certeza de que pretende eliminar todas as viagens do histórico?",
-  );
+function pedirEliminacaoHistorico() {
+  setConfirmacao({
+    tipo: "todas",
+    titulo: "Apagar todo o histórico?",
+    mensagem:
+      "Todas as viagens concluídas e canceladas serão removidas. Esta ação não pode ser anulada.",
+  });
+}
 
-  if (!confirmou) return;
+function fecharConfirmacao() {
+  setConfirmacao(null);
+}
 
-  guardarHistorico([]);
-  setHistorico([]);
+function confirmarEliminacao() {
+  if (!confirmacao) return;
+
+  if (confirmacao.tipo === "uma") {
+    const historicoAtualizado = historico.filter(
+      (viagem) => String(obterId(viagem)) !== String(confirmacao.id),
+    );
+
+    guardarHistorico(historicoAtualizado);
+    setHistorico(historicoAtualizado);
+  }
+
+  if (confirmacao.tipo === "todas") {
+    guardarHistorico([]);
+    setHistorico([]);
+  }
+
+  fecharConfirmacao();
 }
   const viagensFiltradas = useMemo(() => {
     if (filtro === "todas") return historico;
@@ -150,13 +168,13 @@ function eliminarTodoHistorico() {
             Canceladas
           </button>
           {historico.length > 0 && (
-  <button
-    type="button"
-    className="btn-limpar-historico"
-    onClick={eliminarTodoHistorico}
-  >
-    🗑️ Apagar todo o histórico
-  </button>
+            <button
+            type="button"
+            className="btn-limpar-historico"
+            onClick={pedirEliminacaoHistorico}
+            >
+            🗑️ Apagar todo o histórico
+            </button>
 )}
         </section>
 
@@ -230,14 +248,14 @@ function eliminarTodoHistorico() {
                             {preco && <strong>{preco}</strong>}
 
                             <button
-                            type="button"
-                            className="btn-eliminar-viagem"
-                            onClick={() => eliminarViagem(obterId(viagem))}
-                            aria-label="Eliminar esta viagem do histórico"
-                            title="Eliminar viagem"
-                            >
-                            🗑️
-                            </button>
+                                        type="button"
+                                        className="btn-eliminar-viagem"
+                                        onClick={() => pedirEliminacaoViagem(obterId(viagem))}
+                                        aria-label="Eliminar esta viagem do histórico"
+                                        title="Eliminar viagem"
+                                        >
+                                        🗑️
+                                        </button>
                         </div>
                         </div>
                 </article>
@@ -246,6 +264,50 @@ function eliminarTodoHistorico() {
           </section>
         )}
       </main>
+
+      {confirmacao && (
+        <div
+          className="modal-confirmacao-fundo"
+          role="presentation"
+          onMouseDown={fecharConfirmacao}
+        >
+          <div
+            className="modal-confirmacao"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-confirmacao-titulo"
+            onMouseDown={(evento) => evento.stopPropagation()}
+          >
+            <div className="modal-confirmacao-icone" aria-hidden="true">
+              🗑️
+            </div>
+
+            <h2 id="modal-confirmacao-titulo">
+              {confirmacao.titulo}
+            </h2>
+
+            <p>{confirmacao.mensagem}</p>
+
+            <div className="modal-confirmacao-acoes">
+              <button
+                type="button"
+                className="btn-modal-cancelar"
+                onClick={fecharConfirmacao}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                className="btn-modal-eliminar"
+                onClick={confirmarEliminacao}
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
