@@ -45,6 +45,14 @@ function fmtData(valor) {
   });
 }
 
+function fmtHora(valor) {
+  if (!valor) return "—";
+  return new Date(valor).toLocaleTimeString("pt-PT", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function getTaxiLabel(taxi) {
   if (!taxi) return "Táxi não indicado";
   return [taxi.matricula, taxi.marca, taxi.modelo].filter(Boolean).join(" · ");
@@ -199,6 +207,7 @@ export default function RelatorioMotorista() {
                   <thead>
                     <tr>
                       <th>Data</th>
+                      <th>Hora</th>
                       <th>Cliente</th>
                       <th>Rota</th>
                       <th>Táxi</th>
@@ -211,6 +220,7 @@ export default function RelatorioMotorista() {
                     {viagens.map((viagem) => (
                       <tr key={viagem._id}>
                         <td>{fmtData(viagem.data_inicio)}</td>
+                        <td>{fmtHora(viagem.data_inicio)}</td>
                         <td>{getNomeCliente(viagem.cliente)}</td>
                         <td>
                           <strong>{viagem.origem_morada || "Origem"}</strong>

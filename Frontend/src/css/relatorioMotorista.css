@@ -240,7 +240,7 @@
 .rm-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 780px;
+  min-width: 840px;
 }
 
 .rm-table th,
