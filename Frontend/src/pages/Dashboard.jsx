@@ -325,7 +325,8 @@ function MapaInterativo({
 
         marcadorRef.current = mk;
         const morada =
-          moradaInicial || `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
+          moradaInicial ||
+          `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
         if (ePartida) {
           aoDefinirPartida([lat, lng], morada);
           estadoRef.current = marcadorDestino.current ? "concluido" : "destino";
@@ -762,9 +763,7 @@ function ListaSugestoesMorada({ tipo, sugestoes, aoEscolher }) {
       role="listbox"
       aria-label={`Sugestões para ${tipo}`}
     >
-      <p className="titulo-sugestoes-morada">
-        Escolha uma localização válida:
-      </p>
+      <p className="titulo-sugestoes-morada">Escolha uma localização válida:</p>
 
       {sugestoes.map((sugestao) => (
         <button
@@ -1531,11 +1530,6 @@ export default function Dashboard() {
               <span className="titulo-gradiente">lado em minutos</span>
               <br />
             </h1>
-            <p className="descricao animar-2">
-              Escreva uma morada e confirme uma sugestão ou escolha diretamente
-              no mapa. A rota é calculada por estradas reais em tempo real.
-            </p>
-
             <div className="card-reserva animar-2">
               <div className="step-dots" aria-hidden="true">
                 <div
@@ -1565,7 +1559,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-
               <button
                 className={`btn-localizacao btn-localizacao-toggle ${localizacaoAtiva ? "ativo" : ""}`}
                 onClick={usarLocalizacaoAtual}
@@ -1573,7 +1566,10 @@ export default function Dashboard() {
                 type="button"
                 aria-pressed={localizacaoAtiva}
               >
-                <span className="localizacao-toggle-indicador" aria-hidden="true">
+                <span
+                  className="localizacao-toggle-indicador"
+                  aria-hidden="true"
+                >
                   <span />
                 </span>
                 <span className="localizacao-toggle-texto">
@@ -1591,7 +1587,11 @@ export default function Dashboard() {
                   </small>
                 </span>
                 <span className="localizacao-toggle-acao">
-                  {aLocalizarGPS ? "Aguarde" : localizacaoAtiva ? "Desativar" : "Ativar"}
+                  {aLocalizarGPS
+                    ? "Aguarde"
+                    : localizacaoAtiva
+                      ? "Desativar"
+                      : "Ativar"}
                 </span>
               </button>
 
@@ -1607,9 +1607,10 @@ export default function Dashboard() {
                   id="input-partida"
                   className={`input-morada${moradaPartida ? " preenchido-verde" : ""}`}
                   type="search"
-                  placeholder="Escreva uma morada, local ou código postal, ou clique no mapa"
                   value={moradaPartida}
-                  onChange={(e) => alterarMoradaDigitada("partida", e.target.value)}
+                  onChange={(e) =>
+                    alterarMoradaDigitada("partida", e.target.value)
+                  }
                   onKeyDown={(e) => aoPremirEnterMorada(e, "partida")}
                   disabled={pedidoBloqueiaNovaViagem}
                   autoComplete="street-address"
@@ -1634,17 +1635,13 @@ export default function Dashboard() {
                   className="btn-validar-morada"
                   type="button"
                   onClick={() => validarMoradaEscrita("partida")}
-                  disabled={pedidoBloqueiaNovaViagem || aPesquisarMorada === "partida"}
+                  disabled={
+                    pedidoBloqueiaNovaViagem || aPesquisarMorada === "partida"
+                  }
                 >
-                  {aPesquisarMorada === "partida" ? "A procurar..." : "🔎 Verificar morada"}
-                </button>
-                <button
-                  className="btn-escolher-mapa"
-                  type="button"
-                  onClick={() => selecionarPontoNoMapa("partida")}
-                  disabled={pedidoBloqueiaNovaViagem}
-                >
-                  🗺️ Escolher no mapa
+                  {aPesquisarMorada === "partida"
+                    ? "A procurar..."
+                    : "🔎 Verificar morada"}
                 </button>
               </div>
               {sugestoesPartida.length > 0 && (
@@ -1669,7 +1666,9 @@ export default function Dashboard() {
                   type="search"
                   placeholder="Escreva uma morada, local ou código postal, ou clique no mapa"
                   value={moradaDestino}
-                  onChange={(e) => alterarMoradaDigitada("destino", e.target.value)}
+                  onChange={(e) =>
+                    alterarMoradaDigitada("destino", e.target.value)
+                  }
                   onKeyDown={(e) => aoPremirEnterMorada(e, "destino")}
                   disabled={pedidoBloqueiaNovaViagem}
                   autoComplete="street-address"
@@ -1694,9 +1693,13 @@ export default function Dashboard() {
                   className="btn-validar-morada"
                   type="button"
                   onClick={() => validarMoradaEscrita("destino")}
-                  disabled={pedidoBloqueiaNovaViagem || aPesquisarMorada === "destino"}
+                  disabled={
+                    pedidoBloqueiaNovaViagem || aPesquisarMorada === "destino"
+                  }
                 >
-                  {aPesquisarMorada === "destino" ? "A procurar..." : "🔎 Verificar morada"}
+                  {aPesquisarMorada === "destino"
+                    ? "A procurar..."
+                    : "🔎 Verificar morada"}
                 </button>
                 <button
                   className="btn-escolher-mapa"
@@ -2137,8 +2140,8 @@ export default function Dashboard() {
               <div>
                 <h2 id="popup-pagamento-titulo">Viagem terminada</h2>
                 <p>
-                  A sua viagem foi concluída. O pagamento é obrigatório antes
-                  de poder pedir outro táxi.
+                  A sua viagem foi concluída. O pagamento é obrigatório antes de
+                  poder pedir outro táxi.
                 </p>
               </div>
               <div className="popup-motorista-icon" aria-hidden="true">
@@ -2288,7 +2291,8 @@ export default function Dashboard() {
             </div>
             <div className="popup-motorista-acoes">
               <p className="pagamento-obrigatorio" role="note">
-                Para concluir a viagem, escolha um método e confirme o pagamento.
+                Para concluir a viagem, escolha um método e confirme o
+                pagamento.
               </p>
               <button
                 className="btn-aceitar"

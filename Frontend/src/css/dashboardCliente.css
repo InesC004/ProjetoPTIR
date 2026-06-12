@@ -542,6 +542,50 @@
   max-width: 480px;
 }
 
+.reserva-orientacao {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 560px;
+  margin: 4px 0 18px;
+}
+
+.reserva-orientacao-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 54px;
+  padding: 10px 12px;
+  border: 1px solid rgba(26, 110, 255, 0.16);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 12px 28px rgba(13, 24, 41, 0.06);
+  backdrop-filter: blur(14px);
+}
+
+.reserva-orientacao-item span {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  background: linear-gradient(135deg, #1a6eff, #00d4ff);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 900;
+  box-shadow: 0 8px 18px rgba(26, 110, 255, 0.22);
+}
+
+.reserva-orientacao-item p {
+  margin: 0;
+  color: #1e3a5f;
+  font-size: clamp(0.78rem, 1vw, 0.88rem);
+  font-weight: 800;
+  line-height: 1.25;
+}
+
 /* ──────────────────────────────────────────────────────────────
    STEP DOTS
    ────────────────────────────────────────────────────────────── */
@@ -3044,6 +3088,18 @@ html body .dash-pagina .card-passo .passo-desc {
   .descricao {
     text-align: center;
     font-size: 0.95rem;
+  }
+
+  .reserva-orientacao {
+    grid-template-columns: 1fr;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .reserva-orientacao-item {
+    min-height: 48px;
+    justify-content: flex-start;
   }
 
   .card-reserva {
