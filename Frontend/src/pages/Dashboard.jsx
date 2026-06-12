@@ -1605,6 +1605,7 @@ export default function Dashboard() {
                   id="input-partida"
                   className={`input-morada${moradaPartida ? " preenchido-verde" : ""}`}
                   type="search"
+                  placeholder="Escreva uma morada, local ou código postal, ou clique no mapa"
                   value={moradaPartida}
                   onChange={(e) =>
                     alterarMoradaDigitada("partida", e.target.value)
@@ -1640,6 +1641,14 @@ export default function Dashboard() {
                   {aPesquisarMorada === "partida"
                     ? "A procurar..."
                     : "🔎 Verificar morada"}
+                </button>
+                <button
+                  className="btn-escolher-mapa"
+                  type="button"
+                  onClick={() => selecionarPontoNoMapa("partida")}
+                  disabled={pedidoBloqueiaNovaViagem}
+                >
+                  🗺️ Escolher no mapa
                 </button>
               </div>
               {sugestoesPartida.length > 0 && (
