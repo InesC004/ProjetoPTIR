@@ -781,11 +781,32 @@ exports.iniciarViagem = async (req, res) => {
       await viagem.save();
     }
 
+    const viagemDistanciaKm =
+      pedido.origem_lat &&
+      pedido.origem_lng &&
+      pedido.destino_lat &&
+      pedido.destino_lng
+        ? Number(
+            haversine(
+              pedido.origem_lat,
+              pedido.origem_lng,
+              pedido.destino_lat,
+              pedido.destino_lng,
+            ).toFixed(2),
+          )
+        : null;
+
+    const viagemTempoEstimadoMin = viagemDistanciaKm
+      ? Math.max(1, Math.round(viagemDistanciaKm * 2.5))
+      : null;
+
     res.json({
       success: true,
       message: "Viagem iniciada.",
       pedido,
       viagem,
+      viagem_distancia_km: viagemDistanciaKm,
+      viagem_tempo_estimado_min: viagemTempoEstimadoMin,
     });
   } catch (err) {
     console.error(err);

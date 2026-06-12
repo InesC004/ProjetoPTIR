@@ -36,13 +36,42 @@ function getMorada(valor) {
   return valor || "Morada não indicada";
 }
 
-function getDistancia(pedido) {
-  const distancia = 
+function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
+  if ([lat1, lng1, lat2, lng2].some((valor) => valor == null)) return null;
+
+  const raioTerraKm = 6371;
+  const toRad = (valor) => (Number(valor) * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+
+  return raioTerraKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function getDistanciaViagemValor(pedido) {
+  const distancia =
     pedido?.quilometros_percorridos ??
     pedido?.viagem_distancia_km ??
-    pedido?.distancia_km ??
-    pedido?.distancia ??
+    pedido?.distancia_viagem_km ??
     pedido?.viagem_id?.km;
+
+  if (distancia !== undefined && distancia !== null && distancia !== "") {
+    return Number(distancia);
+  }
+
+  return calcularDistanciaKm(
+    pedido?.origem_lat,
+    pedido?.origem_lng,
+    pedido?.destino_lat,
+    pedido?.destino_lng,
+  );
+}
+
+function getDistancia(pedido) {
+  const distancia = getDistanciaViagemValor(pedido);
+
   if (distancia === undefined || distancia === null || distancia === "")
     return "—";
   return `${Number(distancia).toFixed(2)} km`;
@@ -52,9 +81,18 @@ function getTempo(pedido) {
   const tempo = 
     pedido?.duracao_minutos ??
     pedido?.viagem_tempo_estimado_min ??
-    pedido?.tempo_estimado_min ??
-    pedido?.tempo_estimado;
-  if (tempo === undefined || tempo === null || tempo === "") return "—";
+    pedido?.tempo_viagem_min;
+
+  if (tempo === undefined || tempo === null || tempo === "") {
+    const distancia = getDistanciaViagemValor(pedido);
+
+    if (distancia !== undefined && distancia !== null && distancia !== "") {
+      return `${Math.max(1, Math.round(Number(distancia) * 2.5))} min`;
+    }
+
+    return "—";
+  }
+
   return `${Math.round(Number(tempo))} min`;
 }
 

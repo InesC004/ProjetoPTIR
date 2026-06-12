@@ -60,8 +60,39 @@ function getTempo(pedido) {
   return `${Math.round(Number(tempo))} min`;
 }
 
-function isPedidoConfirmadoOuViagem(pedido) {
-  return ["confirmado", "confirmada", "em_viagem"].includes(pedido?.estado);
+function getDistanciaViagem(pedido) {
+  const distancia =
+    pedido?.viagem_distancia_km ??
+    pedido?.quilometros_percorridos ??
+    pedido?.distancia_viagem_km;
+
+  if (distancia === undefined || distancia === null || distancia === "") {
+    return "—";
+  }
+
+  return `${Number(distancia).toFixed(2)} km`;
+}
+
+function getTempoViagem(pedido) {
+  const tempo =
+    pedido?.viagem_tempo_estimado_min ??
+    pedido?.duracao_minutos ??
+    pedido?.tempo_viagem_min;
+
+  if (tempo === undefined || tempo === null || tempo === "") {
+    const distancia =
+      pedido?.viagem_distancia_km ??
+      pedido?.quilometros_percorridos ??
+      pedido?.distancia_viagem_km;
+
+    if (distancia !== undefined && distancia !== null && distancia !== "") {
+      return `${Math.max(1, Math.round(Number(distancia) * 2.5))} min`;
+    }
+
+    return "—";
+  }
+
+  return `${Math.round(Number(tempo))} min`;
 }
 
 function getConforto(pedido) {
@@ -349,31 +380,31 @@ export default function PedidosMotorista() {
             const data = await api.pedidos.obter(id);
             const pedidoAtualizado = data?.pedido || data;
 
-            const distanciaViagem =
-              data?.viagem_distancia_km ??
-              pedidoAtualizado?.quilometros_percorridos ??
-              pedidoAtualizado?.distancia_km ??
-              pedidoAtualizado?.distancia ??
-              pedido?.viagem_distancia_km ??
+            const distanciaAteCliente =
               pedido?.distancia_km ??
-              pedido?.distancia;
+              pedido?.distancia ??
+              pedidoAtualizado?.distancia_km ??
+              pedidoAtualizado?.distancia;
 
-            const tempoViagem =
-              data?.viagem_tempo_estimado_min ??
-              pedidoAtualizado?.duracao_minutos ??
-              pedidoAtualizado?.tempo_estimado_min ??
-              pedidoAtualizado?.tempo_estimado ??
-              pedido?.viagem_tempo_estimado_min ??
+            const tempoAteCliente =
               pedido?.tempo_estimado_min ??
-              pedido?.tempo_estimado;
+              pedido?.tempo_estimado ??
+              pedidoAtualizado?.tempo_estimado_min ??
+              pedidoAtualizado?.tempo_estimado;
 
             return {
               ...pedido,
               ...pedidoAtualizado,
-              viagem_distancia_km: distanciaViagem,
-              viagem_tempo_estimado_min: tempoViagem,
-              distancia_km: distanciaViagem,
-              tempo_estimado_min: tempoViagem,
+              viagem_distancia_km:
+                data?.viagem_distancia_km ??
+                pedidoAtualizado?.quilometros_percorridos ??
+                pedido?.viagem_distancia_km,
+              viagem_tempo_estimado_min:
+                data?.viagem_tempo_estimado_min ??
+                pedidoAtualizado?.duracao_minutos ??
+                pedido?.viagem_tempo_estimado_min,
+              distancia_km: distanciaAteCliente,
+              tempo_estimado_min: tempoAteCliente,
             };
           } catch {
             return {
@@ -448,6 +479,16 @@ export default function PedidosMotorista() {
           return {
             ...pedido,
             ...pedidoAtualizado,
+            distancia_km:
+              pedido?.distancia_km ??
+              pedido?.distancia ??
+              pedidoAtualizado?.distancia_km ??
+              pedidoAtualizado?.distancia,
+            tempo_estimado_min:
+              pedido?.tempo_estimado_min ??
+              pedido?.tempo_estimado ??
+              pedidoAtualizado?.tempo_estimado_min ??
+              pedidoAtualizado?.tempo_estimado,
             viagem_distancia_km:
               data?.viagem_distancia_km ?? pedido?.viagem_distancia_km,
             viagem_tempo_estimado_min:
@@ -518,14 +559,17 @@ export default function PedidosMotorista() {
           data?.pedido?.viagem_id ||
           data?.viagem?._id ||
           pedido?.viagem_id,
-        distancia_km:
+        viagem_distancia_km:
+          data?.viagem_distancia_km ??
           pedido?.viagem_distancia_km ??
-          pedido?.distancia_km ??
-          pedido?.distancia,
-        tempo_estimado_min:
+          data?.pedido?.quilometros_percorridos,
+        viagem_tempo_estimado_min:
+          data?.viagem_tempo_estimado_min ??
           pedido?.viagem_tempo_estimado_min ??
-          pedido?.tempo_estimado_min ??
-          pedido?.tempo_estimado,
+          data?.pedido?.duracao_minutos,
+        distancia_km: pedido?.distancia_km ?? pedido?.distancia,
+        tempo_estimado_min:
+          pedido?.tempo_estimado_min ?? pedido?.tempo_estimado,
         estado: "em_viagem",
         estadoViagem: "em_curso",
         data_inicio: new Date().toISOString(),
@@ -726,6 +770,7 @@ export default function PedidosMotorista() {
                         secondaryIcon={<Ban size={16} />}
                         onSecondary={() => cancelarAceitacao(pedido)}
                         disabled={processingId === getId(pedido)}
+                        viagemTotal
                     />
                     ))}
                 </div>
@@ -748,6 +793,7 @@ function PedidoCard({
   disabled,
   waiting,
   danger,
+  viagemTotal,
 }) {
   return (
     <article className="pm-item">
@@ -785,22 +831,14 @@ function PedidoCard({
 
         <Metric
           icon={<MapPin size={15} />}
-          label={
-            isPedidoConfirmadoOuViagem(pedido)
-              ? "Distância da viagem"
-              : "Até ao cliente"
-          }
-          value={getDistancia(pedido)}
+          label={viagemTotal ? "Distância total da viagem" : "Até ao cliente"}
+          value={viagemTotal ? getDistanciaViagem(pedido) : getDistancia(pedido)}
         />
 
         <Metric
           icon={<Route size={15} />}
-          label={
-            isPedidoConfirmadoOuViagem(pedido)
-              ? "Tempo da viagem"
-              : "Chegada estimada"
-          }
-          value={getTempo(pedido)}
+          label={viagemTotal ? "Tempo total da viagem" : "Chegada estimada"}
+          value={viagemTotal ? getTempoViagem(pedido) : getTempo(pedido)}
         />
       </div>
 
