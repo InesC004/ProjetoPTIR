@@ -1525,6 +1525,8 @@ export default function Dashboard() {
         <section className="hero">
           <div className="painel-esquerdo">
             <h1 className="titulo animar-1">
+              <br />
+
               <span className="linha-1">Vá em minutos</span>
             </h1>
 

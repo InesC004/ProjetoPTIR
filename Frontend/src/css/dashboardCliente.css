@@ -49,7 +49,9 @@
   position: relative;
 }
 .dash-pagina .linha-1 {
+  font-size: 40px;
   color: black !important;
+  margin-top: -10px!important;
 }
 
 .dash-pagina .feat-num {
@@ -614,7 +616,7 @@
   backdrop-filter: none !important;
   filter: none !important;
   opacity: 1 !important;
-  margin-top: -10px!important;
+  margin-top: -9px!important;
 }
 .card-reserva,
 .card-reserva * {
@@ -696,7 +698,7 @@
   background: #eafff5;
   border: 1px solid rgba(0, 152, 90, 0.28);
   border-radius: var(--radius-sm);
-  padding: 0 12px;
+  padding: 0;
   height: 48px;
   color: #007243;
   font-size: 0.84rem;
@@ -908,7 +910,7 @@ input[type="number"].input-morada {
 .pedido-estado-card {
   width: 100%;
   margin-top: 12px;
-  padding: 16px;
+  padding: 10px;
   border-radius: 18px;
   background: #f7fbff;
   border: 1px solid #cfe0f7;
@@ -1134,6 +1136,7 @@ input[type="number"].input-morada {
   flex: 1;
   height: 100%;
   min-height: 480px;
+  margin-top: 44px;
 }
 .caixa-mapa .leaflet-container {
   width: 100% !important;
