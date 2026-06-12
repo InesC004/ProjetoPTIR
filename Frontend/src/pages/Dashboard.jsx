@@ -1530,10 +1530,6 @@ export default function Dashboard() {
               <span className="titulo-gradiente">lado em minutos</span>
               <br />
             </h1>
-            <p className="descricao animar-2">
-              Escreva uma morada e confirme uma sugestão ou escolha diretamente
-              no mapa. A rota é calculada por estradas reais em tempo real.
-            </p>
 
             <div className="card-reserva animar-2">
               <div className="step-dots" aria-hidden="true">
