@@ -108,7 +108,7 @@ exports.create = async (req, res) => {
     const populated = await turno.populate([
       {
         path: 'taxi',
-        select: 'matricula marca modelo tipo_motor'
+        select: 'matricula marca modelo tipo_motor nivel_conforto'
       },
       {
         path: 'motorista',
@@ -167,7 +167,7 @@ exports.getTodos = async (req, res) => {
   try {
     const turnos = await Turno.find()
       .populate('motorista', 'nome nif')
-      .populate('taxi', 'matricula marca modelo')
+      .populate('taxi', 'matricula marca modelo tipo_motor nivel_conforto')
       .sort({ data_inicio: 1 })
 
     res.json(turnos)
@@ -183,7 +183,7 @@ exports.getMeusTurnos = async (req, res) => {
     const turnos = await Turno.find({
       motorista: req.user.id
     })
-      .populate('taxi', 'matricula marca modelo tipo_motor')
+      .populate('taxi', 'matricula marca modelo tipo_motor nivel_conforto')
       .sort({ data_inicio: 1 })
 
     res.json(turnos)

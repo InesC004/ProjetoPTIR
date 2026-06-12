@@ -58,8 +58,25 @@ function normalizarLista(data, chave) {
 function getTaxiLabel(taxi) {
   if (!taxi) return "Táxi não associado";
   if (typeof taxi === "string") return taxi;
+
+  const conforto =
+    taxi.nivel_conforto === "luxuoso"
+      ? "Luxuoso"
+      : taxi.nivel_conforto === "basico"
+        ? "Básico"
+        : taxi.nivel_conforto;
+
+  const motor =
+    taxi.tipo_motor === "combustao"
+      ? "Combustão"
+      : taxi.tipo_motor === "eletrico"
+        ? "Elétrico"
+        : taxi.tipo_motor;
+
   return (
-    [taxi.matricula, taxi.marca, taxi.modelo].filter(Boolean).join(" · ") ||
+    [taxi.matricula, taxi.marca, taxi.modelo, motor, conforto]
+      .filter(Boolean)
+      .join(" · ") ||
     "Táxi"
   );
 }
@@ -139,9 +156,10 @@ export default function TurnosMotorista() {
     };
   }
 
-  async function carregarDados() {
-    setLoading(true);
-    setErro("");
+  async function carregarDados({ silencioso = false } = {}) {
+    if (!silencioso) setLoading(true);
+    if (!silencioso) setErro("");
+
     try {
       const [resTurnos, resTaxis] = await Promise.all([
         fetch(`${TURNOS_URL}/meus`, { headers: authHeaders() }),
@@ -152,9 +170,9 @@ export default function TurnosMotorista() {
       setTurnos(normalizarLista(dataTurnos, "turnos"));
       setTaxis(normalizarLista(dataTaxis, "taxis"));
     } catch (err) {
-      setErro(err.message || "Erro ao carregar dados.");
+      if (!silencioso) setErro(err.message || "Erro ao carregar dados.");
     } finally {
-      setLoading(false);
+      if (!silencioso) setLoading(false);
     }
   }
 
@@ -162,7 +180,7 @@ export default function TurnosMotorista() {
   useEffect(() => {
     const interval = setInterval(() => {
       forceUpdate((v) => v + 1);
-    }, 1000);
+    }, 30000);
 
     return () => clearInterval(interval);
   }, []);
@@ -172,8 +190,8 @@ export default function TurnosMotorista() {
     carregarDados();
 
     const interval = setInterval(() => {
-      carregarDados();
-    }, 10000);
+      carregarDados({ silencioso: true });
+    }, 30000);
 
     return () => clearInterval(interval);
   }, []);
@@ -203,7 +221,7 @@ export default function TurnosMotorista() {
     }
 
     sincronizarAgora();
-    const interval = setInterval(sincronizarAgora, 30000);
+    const interval = setInterval(sincronizarAgora, 1000);
 
     return () => clearInterval(interval);
   }, [inicioAutomatico, fimAutomatico]);
@@ -371,7 +389,6 @@ export default function TurnosMotorista() {
                 {taxis.map((taxi) => (
                   <option key={taxi._id} value={taxi._id}>
                     {getTaxiLabel(taxi)}
-                    {taxi.nivel_conforto ? ` · ${taxi.nivel_conforto}` : ""}
                   </option>
                 ))}
               </select>

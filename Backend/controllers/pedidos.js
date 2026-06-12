@@ -195,6 +195,7 @@ exports.listarDisponiveis = async (req, res) => {
         return {
           ...pedido.toObject(),
           distancia_km: distancia.toFixed(2),
+          tempo_estimado_min: Math.max(1, Math.round(distancia * 2.5)),
         };
       })
       .sort(
@@ -322,12 +323,9 @@ exports.cancelarAceitacao = async (req, res) => {
     }
 
     pedido.estado = "pendente";
-    if (!pedido.motoristas_recusaram?.some((id) => id.toString() === userId)) {
-      pedido.motoristas_recusaram = [
-        ...(pedido.motoristas_recusaram || []),
-        userId,
-      ];
-    }
+    pedido.motoristas_recusaram = (pedido.motoristas_recusaram || []).filter(
+      (id) => id.toString() !== userId,
+    );
     pedido.motorista_id = null;
 
     await pedido.save();

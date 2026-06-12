@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
   Ban,
@@ -48,10 +48,20 @@ function getTempo(pedido) {
   const tempo = pedido?.tempo_estimado_min ?? pedido?.tempo_estimado;
 
   if (tempo === undefined || tempo === null || tempo === "") {
+    const distancia = pedido?.distancia_km ?? pedido?.distancia;
+
+    if (distancia !== undefined && distancia !== null && distancia !== "") {
+      return `${Math.max(1, Math.round(Number(distancia) * 2.5))} min`;
+    }
+
     return "—";
   }
 
   return `${Math.round(Number(tempo))} min`;
+}
+
+function isPedidoConfirmadoOuViagem(pedido) {
+  return ["confirmado", "confirmada", "em_viagem"].includes(pedido?.estado);
 }
 
 function getConforto(pedido) {
@@ -81,6 +91,7 @@ export default function PedidosMotorista() {
   const [sucesso, setSucesso] = useState("");
   const [processingId, setProcessingId] = useState(null);
   const [posicao, setPosicao] = useState(null);
+  const pedidosLibertadosRef = useRef(new Map());
 
   const pedidosOrdenados = useMemo(
     () =>
@@ -116,11 +127,31 @@ export default function PedidosMotorista() {
       const data = await api.pedidos.listarDisponiveis(posicaoAtual || {});
       const lista = normalizarLista(data, "pedidos");
 
-      const idsAceites = new Set(aceites.map(getId));
-      const idsConfirmacoes = new Set(confirmacoes.map(getId));
+      const idsLibertados = new Set(pedidosLibertadosRef.current.keys());
+      const idsAceites = new Set(
+        aceites.map(getId).filter((id) => !idsLibertados.has(id)),
+      );
+      const idsConfirmacoes = new Set(
+        confirmacoes.map(getId).filter((id) => !idsLibertados.has(id)),
+      );
+      const listaComLibertados = [...lista];
+
+      pedidosLibertadosRef.current.forEach((pedidoLibertado, id) => {
+        if (
+          pedidoLibertado?.estado !== "pendente" ||
+          foiCanceladoPeloCliente(pedidoLibertado)
+        ) {
+          pedidosLibertadosRef.current.delete(id);
+          return;
+        }
+
+        if (!listaComLibertados.some((p) => getId(p) === id)) {
+          listaComLibertados.push(pedidoLibertado);
+        }
+      });
 
       setPedidos(
-        lista.filter(
+        listaComLibertados.filter(
           (p) =>
             !idsAceites.has(getId(p)) &&
             !idsConfirmacoes.has(getId(p)) &&
@@ -262,15 +293,43 @@ export default function PedidosMotorista() {
 
     try {
       const data = await api.pedidos.cancelarAceitacao(id);
+      const pedidoPendente = {
+        ...pedido,
+        ...(data?.pedido || {}),
+        distancia_km:
+          pedido?.distancia_km ??
+          pedido?.distancia ??
+          data?.pedido?.distancia_km ??
+          data?.pedido?.distancia,
+        tempo_estimado_min:
+          pedido?.tempo_estimado_min ??
+          pedido?.tempo_estimado ??
+          data?.pedido?.tempo_estimado_min ??
+          data?.pedido?.tempo_estimado,
+        estado: "pendente",
+        motorista_id: null,
+      };
+
+      pedidosLibertadosRef.current.set(id, pedidoPendente);
 
       setAceites((prev) => prev.filter((p) => getId(p) !== id));
       setConfirmacoes((prev) => prev.filter((p) => getId(p) !== id));
       removerPedidoAceite(id);
       removerConfirmacaoAceite(id);
-      setPedidos((prev) => prev.filter((p) => getId(p) !== id));
+      setPedidos((prev) => {
+        const semDuplicado = prev.filter((p) => getId(p) !== id);
+
+        if (
+          pedidoPendente?.estado === "pendente" &&
+          !foiCanceladoPeloCliente(pedidoPendente)
+        ) {
+          return [pedidoPendente, ...semDuplicado];
+        }
+
+        return semDuplicado;
+      });
 
       setSucesso(data?.message || "Aceitação cancelada com sucesso.");
-      await carregarPedidos(posicao, false);
     } catch (err) {
       setErro(err.message || "Não foi possível cancelar a aceitação.");
     } finally {
@@ -726,13 +785,21 @@ function PedidoCard({
 
         <Metric
           icon={<MapPin size={15} />}
-          label="Distância"
+          label={
+            isPedidoConfirmadoOuViagem(pedido)
+              ? "Distância da viagem"
+              : "Até ao cliente"
+          }
           value={getDistancia(pedido)}
         />
 
         <Metric
           icon={<Route size={15} />}
-          label="Tempo estimado"
+          label={
+            isPedidoConfirmadoOuViagem(pedido)
+              ? "Tempo da viagem"
+              : "Chegada estimada"
+          }
           value={getTempo(pedido)}
         />
       </div>
