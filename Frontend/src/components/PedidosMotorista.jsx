@@ -520,6 +520,7 @@ export default function PedidosMotorista() {
     );
     if (removidas > 0) {
       window.dispatchEvent(new Event("confirmacoesAceitesAtualizadas"));
+      window.dispatchEvent(new Event("abrirViagensMotorista"));
     }
   }
 

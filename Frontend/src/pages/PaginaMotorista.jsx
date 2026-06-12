@@ -86,6 +86,16 @@ export default function PaginaMotorista() {
     totalAvaliacoes === 1 ? "1 avaliação" : `${totalAvaliacoes} avaliações`;
 
   useEffect(() => {
+    function abrirViagens() {
+      setActive("viagem");
+    }
+
+    window.addEventListener("abrirViagensMotorista", abrirViagens);
+    return () =>
+      window.removeEventListener("abrirViagensMotorista", abrirViagens);
+  }, []);
+
+  useEffect(() => {
     async function fetchPerfilMotorista() {
       const perfilAtual = JSON.parse(localStorage.getItem("motorista") || "{}");
       const motoristaId = getMotoristaId(perfilAtual);

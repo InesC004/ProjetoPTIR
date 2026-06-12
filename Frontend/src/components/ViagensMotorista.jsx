@@ -103,6 +103,43 @@ function getPreco(pedido) {
   return `${Number(preco).toFixed(2)} €`;
 }
 
+function getDataOrdenacao(pedido) {
+  const valor =
+    pedido?.data_fim_viagem ||
+    pedido?.data_fim ||
+    pedido?.updatedAt ||
+    pedido?.updated_at ||
+    pedido?.data_inicio_viagem ||
+    pedido?.data_inicio ||
+    pedido?.createdAt ||
+    pedido?.created_at;
+  const timestamp = valor ? new Date(valor).getTime() : 0;
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function ordenarMaisRecentes(lista) {
+  return [...lista].sort((a, b) => getDataOrdenacao(b) - getDataOrdenacao(a));
+}
+
+function formatarDataHora(valor) {
+  if (!valor) return "—";
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return "—";
+
+  return data.toLocaleString("pt-PT", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getReferenciaViagem(pedido, index) {
+  const id = getId(pedido) || getViagemId(pedido);
+  if (!id) return `Viagem #${index + 1}`;
+  return `Viagem #${String(id).slice(-5).toUpperCase()}`;
+}
+
 function normalizarTerminada(pedido) {
   const pagamentoOk =
     pedido?.pagamento_estado === "pago" || !!pedido?.pagamento_confirmado;
@@ -135,7 +172,7 @@ export default function ViagensMotorista() {
       localStorage.getItem("viagensTerminadasMotorista") || "[]",
     );
     setViagens(guardadas);
-    setViagensTerminadas(terminadas.map(normalizarTerminada));
+    setViagensTerminadas(ordenarMaisRecentes(terminadas.map(normalizarTerminada)));
 
     const atualizadas = await Promise.all(
       terminadas.map(async (pedido) => {
@@ -151,11 +188,13 @@ export default function ViagensMotorista() {
       }),
     );
 
+    const atualizadasOrdenadas = ordenarMaisRecentes(atualizadas);
+
     localStorage.setItem(
       "viagensTerminadasMotorista",
-      JSON.stringify(atualizadas),
+      JSON.stringify(atualizadasOrdenadas),
     );
-    setViagensTerminadas(atualizadas);
+    setViagensTerminadas(atualizadasOrdenadas);
   }
 
   useEffect(() => {
@@ -199,17 +238,22 @@ export default function ViagensMotorista() {
         pagamento_confirmado: false,
       };
 
+      const terminadasOrdenadas = ordenarMaisRecentes([
+        terminada,
+        ...terminadasAtuais,
+      ]);
+
       localStorage.setItem(
         "viagensConfirmadasMotorista",
         JSON.stringify(atualizadas),
       );
       localStorage.setItem(
         "viagensTerminadasMotorista",
-        JSON.stringify([terminada, ...terminadasAtuais]),
+        JSON.stringify(terminadasOrdenadas),
       );
 
       setViagens(atualizadas);
-      setViagensTerminadas([terminada, ...terminadasAtuais]);
+      setViagensTerminadas(terminadasOrdenadas);
       window.dispatchEvent(new Event("viagensConfirmadasAtualizadas"));
     } catch (err) {
       alert(err.message || "Não foi possível terminar a viagem.");
@@ -371,7 +415,7 @@ export default function ViagensMotorista() {
         </div>
       ) : (
         <div className="vm-list">
-          {viagensTerminadas.map((pedido) => {
+          {viagensTerminadas.map((pedido, index) => {
             const id = getId(pedido);
             const faturaOk = pedido.fatura_emitida || faturaEstado[id] === "ok";
             const faturaLoading = faturaEstado[id] === "loading";
@@ -393,8 +437,28 @@ export default function ViagensMotorista() {
                       <CheckCircle2 size={14} />
                       {pagamentoOk ? "Concluída" : "Pagamento pendente"}
                     </span>
-                    <h4>{getMorada(pedido.origem_morada)}</h4>
-                    <p>Destino: {getMorada(pedido.destino_morada)}</p>
+                    <h4>{getReferenciaViagem(pedido, index)}</h4>
+                    <p>
+                      {getMorada(pedido.origem_morada)} →{" "}
+                      {getMorada(pedido.destino_morada)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="vm-trip-summary">
+                  <div>
+                    <span>Início</span>
+                    <strong>
+                      {formatarDataHora(
+                        pedido.data_inicio_viagem || pedido.data_inicio,
+                      )}
+                    </strong>
+                  </div>
+                  <div>
+                    <span>Fim</span>
+                    <strong>
+                      {formatarDataHora(pedido.data_fim_viagem || pedido.data_fim)}
+                    </strong>
                   </div>
                 </div>
 
