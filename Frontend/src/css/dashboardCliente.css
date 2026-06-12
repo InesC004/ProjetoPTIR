@@ -49,9 +49,7 @@
   position: relative;
 }
 .dash-pagina .linha-1 {
-  font-size: 40px;
   color: black !important;
-  margin-top: -10px!important;
 }
 
 .dash-pagina .feat-num {
@@ -608,6 +606,7 @@
   border: 1px solid rgba(26, 110, 255, 0.16) !important;
   border-radius: var(--radius-lg) !important;
   padding: clamp(16px, 2.5vw, 24px) !important;
+  margin-bottom: 18px !important;
   box-shadow:
     0 8px 40px rgba(26, 110, 255, 0.08),
     0 2px 12px rgba(0, 0, 0, 0.05),
@@ -616,7 +615,6 @@
   backdrop-filter: none !important;
   filter: none !important;
   opacity: 1 !important;
-  margin-top: -9px!important;
 }
 .card-reserva,
 .card-reserva * {
@@ -698,7 +696,7 @@
   background: #eafff5;
   border: 1px solid rgba(0, 152, 90, 0.28);
   border-radius: var(--radius-sm);
-  padding: 0;
+  padding: 0 12px;
   height: 48px;
   color: #007243;
   font-size: 0.84rem;
@@ -910,7 +908,7 @@ input[type="number"].input-morada {
 .pedido-estado-card {
   width: 100%;
   margin-top: 12px;
-  padding: 10px;
+  padding: 16px;
   border-radius: 18px;
   background: #f7fbff;
   border: 1px solid #cfe0f7;
@@ -1136,7 +1134,6 @@ input[type="number"].input-morada {
   flex: 1;
   height: 100%;
   min-height: 480px;
-  margin-top: 44px;
 }
 .caixa-mapa .leaflet-container {
   width: 100% !important;
@@ -3821,9 +3818,7 @@ select.campo {
   background-position:
     calc(100% - 18px) calc(50% - 3px),
     calc(100% - 12px) calc(50% - 3px);
-  background-size:
-    6px 6px,
-    6px 6px;
+  background-size: 6px 6px, 6px 6px;
   background-repeat: no-repeat;
 
   color: #17324f;
@@ -3831,10 +3826,7 @@ select.campo {
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
 select:hover,

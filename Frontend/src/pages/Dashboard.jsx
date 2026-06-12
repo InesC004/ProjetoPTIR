@@ -325,8 +325,7 @@ function MapaInterativo({
 
         marcadorRef.current = mk;
         const morada =
-          moradaInicial ||
-          `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
+          moradaInicial || `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
         if (ePartida) {
           aoDefinirPartida([lat, lng], morada);
           estadoRef.current = marcadorDestino.current ? "concluido" : "destino";
@@ -640,6 +639,54 @@ function PainelSeguimento({
 // ═══════════════════════════════════════════════════════════════════════════════
 const PEDIDO_PAGAMENTO_PENDENTE_KEY = "pedidoPagamentoPendenteCliente";
 const PEDIDOS_PAGOS_KEY = "pedidosPagosCliente";
+const HISTORICO_CLIENTE_KEY = "historicoViagensCliente";
+
+function guardarNoHistoricoCliente(pedido, estado) {
+  if (!pedido) return;
+
+  let historicoAtual = [];
+
+  try {
+    historicoAtual = JSON.parse(
+      localStorage.getItem(HISTORICO_CLIENTE_KEY) || "[]",
+    );
+  } catch {
+    historicoAtual = [];
+  }
+
+  const id =
+    getMongoId(pedido) ||
+    getMongoId(pedido?.viagem_id) ||
+    `viagem-${Date.now()}`;
+
+  const novaViagem = {
+    id,
+    estado,
+    origem: pedido.origem_morada || "Origem não indicada",
+    destino: pedido.destino_morada || "Destino não indicado",
+    preco:
+      pedido.preco_final ||
+      pedido.custo_estimado ||
+      pedido.preco ||
+      null,
+    data:
+      pedido.data_fim_viagem ||
+      pedido.updatedAt ||
+      pedido.createdAt ||
+      new Date().toISOString(),
+  };
+
+  const semDuplicados = historicoAtual.filter(
+    (viagem) => String(viagem.id) !== String(id),
+  );
+
+  localStorage.setItem(
+    HISTORICO_CLIENTE_KEY,
+    JSON.stringify([novaViagem, ...semDuplicados]),
+  );
+
+  window.dispatchEvent(new Event("historicoClienteAtualizado"));
+}
 
 function getMongoId(valor) {
   if (!valor) return null;
@@ -763,7 +810,9 @@ function ListaSugestoesMorada({ tipo, sugestoes, aoEscolher }) {
       role="listbox"
       aria-label={`Sugestões para ${tipo}`}
     >
-      <p className="titulo-sugestoes-morada">Escolha uma localização válida:</p>
+      <p className="titulo-sugestoes-morada">
+        Escolha uma localização válida:
+      </p>
 
       {sugestoes.map((sugestao) => (
         <button
@@ -1047,7 +1096,25 @@ export default function Dashboard() {
     popupPagamentoAbertoParaPedidoRef.current = pedidoId;
     setMostrarPopupPagamento(true);
   }, [pedidoAtual]);
+useEffect(() => {
+  if (!pedidoAtual) return;
 
+  const estadoAtual = getEstadoVisivel(pedidoAtual);
+
+  if (estadoAtual === "cancelado" || estadoAtual === "cancelada") {
+    guardarNoHistoricoCliente(pedidoAtual, "cancelada");
+    return;
+  }
+
+  const viagemPaga =
+    estadoAtual === "concluido" &&
+    (pedidoAtual.pagamento_estado === "pago" ||
+      pedidoAtual.pagamento_confirmado);
+
+  if (viagemPaga) {
+    guardarNoHistoricoCliente(pedidoAtual, "concluida");
+  }
+}, [pedidoAtual]);
   useEffect(() => {
     if (!partida || !destino) {
       setDadosRota(null);
@@ -1317,6 +1384,8 @@ export default function Dashboard() {
       setErroPedido(data.message || "Erro ao cancelar pedido.");
       return;
     }
+
+    guardarNoHistoricoCliente(data.pedido || pedidoAtual, "cancelada");
     setPedidoAtual(null);
   }
 
@@ -1398,6 +1467,7 @@ export default function Dashboard() {
       guardarPedidoPago(pedidoPago);
       limparPedidoPagamentoPendente();
       atualizarViagemMotoristaComoPaga(pedidoPago);
+      guardarNoHistoricoCliente(pedidoPago, "concluida");
       setPedidoAtual(pedidoPago);
       setMostrarPopupPagamento(false);
       setMensagemPagamentoSucesso("Pagamento confirmado com sucesso.");
@@ -1525,10 +1595,15 @@ export default function Dashboard() {
         <section className="hero">
           <div className="painel-esquerdo">
             <h1 className="titulo animar-1">
+              <span className="linha-1">Chegue a qualquer</span>
               <br />
-
-              <span className="linha-1">Vá em minutos</span>
+              <span className="titulo-gradiente">lado em minutos</span>
+              <br />
             </h1>
+            <p className="descricao animar-2">
+              Escreva uma morada e confirme uma sugestão ou escolha diretamente
+              no mapa. A rota é calculada por estradas reais em tempo real.
+            </p>
 
             <div className="card-reserva animar-2">
               <div className="step-dots" aria-hidden="true">
@@ -1559,6 +1634,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
+
               <button
                 className={`btn-localizacao btn-localizacao-toggle ${localizacaoAtiva ? "ativo" : ""}`}
                 onClick={usarLocalizacaoAtual}
@@ -1566,10 +1642,7 @@ export default function Dashboard() {
                 type="button"
                 aria-pressed={localizacaoAtiva}
               >
-                <span
-                  className="localizacao-toggle-indicador"
-                  aria-hidden="true"
-                >
+                <span className="localizacao-toggle-indicador" aria-hidden="true">
                   <span />
                 </span>
                 <span className="localizacao-toggle-texto">
@@ -1587,11 +1660,7 @@ export default function Dashboard() {
                   </small>
                 </span>
                 <span className="localizacao-toggle-acao">
-                  {aLocalizarGPS
-                    ? "Aguarde"
-                    : localizacaoAtiva
-                      ? "Desativar"
-                      : "Ativar"}
+                  {aLocalizarGPS ? "Aguarde" : localizacaoAtiva ? "Desativar" : "Ativar"}
                 </span>
               </button>
 
@@ -1609,9 +1678,7 @@ export default function Dashboard() {
                   type="search"
                   placeholder="Escreva uma morada, local ou código postal, ou clique no mapa"
                   value={moradaPartida}
-                  onChange={(e) =>
-                    alterarMoradaDigitada("partida", e.target.value)
-                  }
+                  onChange={(e) => alterarMoradaDigitada("partida", e.target.value)}
                   onKeyDown={(e) => aoPremirEnterMorada(e, "partida")}
                   disabled={pedidoBloqueiaNovaViagem}
                   autoComplete="street-address"
@@ -1636,13 +1703,9 @@ export default function Dashboard() {
                   className="btn-validar-morada"
                   type="button"
                   onClick={() => validarMoradaEscrita("partida")}
-                  disabled={
-                    pedidoBloqueiaNovaViagem || aPesquisarMorada === "partida"
-                  }
+                  disabled={pedidoBloqueiaNovaViagem || aPesquisarMorada === "partida"}
                 >
-                  {aPesquisarMorada === "partida"
-                    ? "A procurar..."
-                    : "🔎 Verificar morada"}
+                  {aPesquisarMorada === "partida" ? "A procurar..." : "🔎 Verificar morada"}
                 </button>
                 <button
                   className="btn-escolher-mapa"
@@ -1675,9 +1738,7 @@ export default function Dashboard() {
                   type="search"
                   placeholder="Escreva uma morada, local ou código postal, ou clique no mapa"
                   value={moradaDestino}
-                  onChange={(e) =>
-                    alterarMoradaDigitada("destino", e.target.value)
-                  }
+                  onChange={(e) => alterarMoradaDigitada("destino", e.target.value)}
                   onKeyDown={(e) => aoPremirEnterMorada(e, "destino")}
                   disabled={pedidoBloqueiaNovaViagem}
                   autoComplete="street-address"
@@ -1702,13 +1763,9 @@ export default function Dashboard() {
                   className="btn-validar-morada"
                   type="button"
                   onClick={() => validarMoradaEscrita("destino")}
-                  disabled={
-                    pedidoBloqueiaNovaViagem || aPesquisarMorada === "destino"
-                  }
+                  disabled={pedidoBloqueiaNovaViagem || aPesquisarMorada === "destino"}
                 >
-                  {aPesquisarMorada === "destino"
-                    ? "A procurar..."
-                    : "🔎 Verificar morada"}
+                  {aPesquisarMorada === "destino" ? "A procurar..." : "🔎 Verificar morada"}
                 </button>
                 <button
                   className="btn-escolher-mapa"
@@ -2149,8 +2206,8 @@ export default function Dashboard() {
               <div>
                 <h2 id="popup-pagamento-titulo">Viagem terminada</h2>
                 <p>
-                  A sua viagem foi concluída. O pagamento é obrigatório antes de
-                  poder pedir outro táxi.
+                  A sua viagem foi concluída. O pagamento é obrigatório antes
+                  de poder pedir outro táxi.
                 </p>
               </div>
               <div className="popup-motorista-icon" aria-hidden="true">
@@ -2300,8 +2357,7 @@ export default function Dashboard() {
             </div>
             <div className="popup-motorista-acoes">
               <p className="pagamento-obrigatorio" role="note">
-                Para concluir a viagem, escolha um método e confirme o
-                pagamento.
+                Para concluir a viagem, escolha um método e confirme o pagamento.
               </p>
               <button
                 className="btn-aceitar"
