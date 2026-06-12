@@ -438,12 +438,15 @@
 .modal-centro {
   z-index: 5001 !important;
   padding: 18px !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
 }
 
 .modal-caixa {
   width: min(760px, 92vw) !important;
   min-height: 0 !important;
   max-height: calc(100dvh - 36px) !important;
+  overflow: hidden !important;
 }
 
 .modal-caixa-registo {
@@ -499,6 +502,24 @@
 }
 
 @media (max-width: 780px), (max-height: 680px) {
+  .modal-centro {
+    align-items: flex-start !important;
+    padding: 14px !important;
+  }
+
+  .modal-caixa {
+    width: min(430px, 94vw) !important;
+    max-height: calc(100dvh - 28px) !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .modal-form-area {
+    justify-content: flex-start !important;
+    max-height: calc(100dvh - 28px) !important;
+    overflow-y: auto !important;
+    padding: 58px 22px 24px !important;
+  }
+
   .modal-caixa-registo {
     grid-template-columns: 1fr !important;
     width: min(430px, 94vw) !important;
@@ -506,5 +527,27 @@
 
   .modal-caixa-registo .modal-imagem {
     display: none !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .modal-centro {
+    padding: 10px !important;
+  }
+
+  .modal-caixa,
+  .modal-caixa-registo {
+    width: calc(100vw - 20px) !important;
+    max-height: calc(100dvh - 20px) !important;
+  }
+
+  .modal-form-area,
+  .modal-caixa-registo .modal-form-area {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+
+  .modal-btn-linha {
+    grid-template-columns: 1fr !important;
   }
 }

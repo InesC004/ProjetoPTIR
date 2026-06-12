@@ -76,8 +76,7 @@ function getTaxiLabel(taxi) {
   return (
     [taxi.matricula, taxi.marca, taxi.modelo, motor, conforto]
       .filter(Boolean)
-      .join(" · ") ||
-    "Táxi"
+      .join(" · ") || "Táxi"
   );
 }
 
@@ -144,6 +143,11 @@ export default function TurnosMotorista() {
 
   const turnoAtivo = useMemo(
     () => turnos.find((t) => getEstadoTurno(t) === "ativo"),
+    [turnos],
+  );
+
+  const turnosSemAtivo = useMemo(
+    () => turnos.filter((t) => getEstadoTurno(t) !== "ativo"),
     [turnos],
   );
 
@@ -317,6 +321,64 @@ export default function TurnosMotorista() {
     }
   }
 
+  function renderTurno(turno, { destaque = false } = {}) {
+    const estado = getEstadoTurno(turno);
+    const cfg = ESTADO_CONFIG[estado];
+    const podeCancelar = estado !== "terminado" && estado !== "cancelado";
+
+    return (
+      <div
+        key={turno._id}
+        className={`tc-item ${destaque ? "tc-item-active" : ""}`}
+      >
+        <div className="tc-item-left">
+          <div className="tc-item-taxi">
+            <CarFront size={15} />
+            {getTaxiLabel(turno.taxi || turno.taxi_id)}
+          </div>
+
+          <div className="tc-item-times">
+            <span className="tc-item-time">
+              <Clock size={12} />
+              InÃ­cio: {formatDateTime(turno.data_inicio || turno.inicio)}
+            </span>
+            <span className="tc-item-time">
+              <Clock size={12} />
+              Fim: {formatDateTime(turno.data_fim || turno.fim)}
+            </span>
+          </div>
+
+          <span
+            className={`tc-badge tc-badge-${estado}`}
+            style={{
+              background: cfg.bg,
+              borderColor: cfg.border,
+              color: cfg.color,
+            }}
+          >
+            <span className="tc-badge-dot" style={{ background: cfg.dot }} />
+            {cfg.label}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => cancelarTurno(turno._id)}
+          disabled={!podeCancelar || cancelandoId === turno._id}
+          className="tc-btn-cancel"
+          title={podeCancelar ? "Cancelar turno" : "NÃ£o Ã© possÃ­vel cancelar"}
+        >
+          {cancelandoId === turno._id ? (
+            <Loader2 size={14} className="tc-spin" />
+          ) : (
+            <Ban size={14} />
+          )}
+          Cancelar
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="tc-grid">
       {/* ───── CARD: NOVO TURNO ───── */}
@@ -455,77 +517,98 @@ export default function TurnosMotorista() {
               <p>Ainda não existem turnos registados.</p>
             </div>
           ) : (
-            <div className="tc-list">
-              {turnos.map((turno) => {
-                const estado = getEstadoTurno(turno);
-                const cfg = ESTADO_CONFIG[estado];
-                const podeCancelar =
-                  estado !== "terminado" && estado !== "cancelado";
-
-                return (
-                  <div key={turno._id} className="tc-item">
-                    <div className="tc-item-left">
-                      <div className="tc-item-taxi">
-                        <CarFront size={15} />
-                        {getTaxiLabel(turno.taxi || turno.taxi_id)}
-                      </div>
-
-                      <div className="tc-item-times">
-                        <span className="tc-item-time">
-                          <Clock size={12} />
-                          Início:{" "}
-                          {formatDateTime(turno.data_inicio || turno.inicio)}
-                        </span>
-                        <span className="tc-item-time">
-                          <Clock size={12} />
-                          Fim: {formatDateTime(turno.data_fim || turno.fim)}
-                        </span>
-                      </div>
-
-                      <span
-                        className={`tc-badge tc-badge-${estado}`}
-                        style={{
-                          background: cfg.bg,
-                          borderColor: cfg.border,
-                          color: cfg.color,
-                        }}
-                      >
-                        <span
-                          className="tc-badge-dot"
-                          style={{ background: cfg.dot }}
-                        />
-                        {cfg.label}
-                      </span>
+            <div className="tc-turnos-wrap">
+              {turnoAtivo && (
+                <div className="tc-active-section">
+                  <div className="tc-active-section-head">
+                    <div>
+                      <p className="tc-section-title">Turno atual</p>
+                      <span>Pode cancelar o Turno.</span>
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={() => cancelarTurno(turno._id)}
-                      disabled={!podeCancelar || cancelandoId === turno._id}
-                      className="tc-btn-cancel"
-                      title={
-                        podeCancelar
-                          ? "Cancelar turno"
-                          : "Não é possível cancelar"
-                      }
-                    >
-                      {cancelandoId === turno._id ? (
-                        <Loader2 size={14} className="tc-spin" />
-                      ) : (
-                        <Ban size={14} />
-                      )}
-                      Cancelar
-                    </button>
+                    <CheckCircle2 size={18} />
                   </div>
-                );
-              })}
-            </div>
-          )}
+                  {renderTurno(turnoAtivo, { destaque: true })}
+                </div>
+              )}
 
-          {turnoAtivo && (
-            <div className="tc-active-banner">
-              <CheckCircle2 size={16} />
-              Turno ativo: {getTaxiLabel(turnoAtivo.taxi || turnoAtivo.taxi_id)}
+              <div className="tc-section-title-row">
+                <p className="tc-section-title">Turnos anteriores</p>
+                <span>{turnosSemAtivo.length}</span>
+              </div>
+
+              {turnosSemAtivo.length === 0 ? (
+                <div className="tc-empty tc-empty-small">
+                  <p>Ainda nÃ£o existem turnos anteriores.</p>
+                </div>
+              ) : (
+                <div className="tc-list">
+                  {turnosSemAtivo.map((turno) => {
+                    const estado = getEstadoTurno(turno);
+                    const cfg = ESTADO_CONFIG[estado];
+                    const podeCancelar =
+                      estado !== "terminado" && estado !== "cancelado";
+
+                    return (
+                      <div key={turno._id} className="tc-item">
+                        <div className="tc-item-left">
+                          <div className="tc-item-taxi">
+                            <CarFront size={15} />
+                            {getTaxiLabel(turno.taxi || turno.taxi_id)}
+                          </div>
+
+                          <div className="tc-item-times">
+                            <span className="tc-item-time">
+                              <Clock size={12} />
+                              Início:{" "}
+                              {formatDateTime(
+                                turno.data_inicio || turno.inicio,
+                              )}
+                            </span>
+                            <span className="tc-item-time">
+                              <Clock size={12} />
+                              Fim: {formatDateTime(turno.data_fim || turno.fim)}
+                            </span>
+                          </div>
+
+                          <span
+                            className={`tc-badge tc-badge-${estado}`}
+                            style={{
+                              background: cfg.bg,
+                              borderColor: cfg.border,
+                              color: cfg.color,
+                            }}
+                          >
+                            <span
+                              className="tc-badge-dot"
+                              style={{ background: cfg.dot }}
+                            />
+                            {cfg.label}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => cancelarTurno(turno._id)}
+                          disabled={!podeCancelar || cancelandoId === turno._id}
+                          className="tc-btn-cancel"
+                          title={
+                            podeCancelar
+                              ? "Cancelar turno"
+                              : "Não é possível cancelar"
+                          }
+                        >
+                          {cancelandoId === turno._id ? (
+                            <Loader2 size={14} className="tc-spin" />
+                          ) : (
+                            <Ban size={14} />
+                          )}
+                          Cancelar
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>

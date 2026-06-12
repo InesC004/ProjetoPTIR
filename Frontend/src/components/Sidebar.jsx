@@ -81,6 +81,16 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const navItems = [];
 
+  function abrirLogin() {
+    onClose?.();
+    setIsLoginOpen(true);
+  }
+
+  function abrirRegisto() {
+    onClose?.();
+    setIsRegisterOpen(true);
+  }
+
   return (
     <>
       {/* Fundo escuro */}
@@ -143,15 +153,12 @@ export default function Sidebar({ isOpen, onClose }) {
                 </div>
 
                 <div className="sidebar-botoes">
-                  <button
-                    onClick={() => setIsLoginOpen(true)}
-                    className="sidebar-btn-entrar"
-                  >
+                  <button onClick={abrirLogin} className="sidebar-btn-entrar">
                     <SvgIcon name="key" />
                     Entrar
                   </button>
                   <button
-                    onClick={() => setIsRegisterOpen(true)}
+                    onClick={abrirRegisto}
                     className="sidebar-btn-registar"
                   >
                     <SvgIcon name="spark" />
