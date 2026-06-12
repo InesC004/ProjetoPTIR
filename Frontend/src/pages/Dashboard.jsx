@@ -1525,10 +1525,7 @@ export default function Dashboard() {
         <section className="hero">
           <div className="painel-esquerdo">
             <h1 className="titulo animar-1">
-              <span className="linha-1">Chegue a qualquer</span>
-              <br />
-              <span className="titulo-gradiente">lado em minutos</span>
-              <br />
+              <span className="linha-1">Vá em minutos</span>
             </h1>
 
             <div className="card-reserva animar-2">

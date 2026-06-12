@@ -650,7 +650,6 @@
   border: 1px solid rgba(26, 110, 255, 0.16) !important;
   border-radius: var(--radius-lg) !important;
   padding: clamp(16px, 2.5vw, 24px) !important;
-  margin-bottom: 18px !important;
   box-shadow:
     0 8px 40px rgba(26, 110, 255, 0.08),
     0 2px 12px rgba(0, 0, 0, 0.05),
@@ -659,6 +658,7 @@
   backdrop-filter: none !important;
   filter: none !important;
   opacity: 1 !important;
+  margin-top: -10px!important;
 }
 .card-reserva,
 .card-reserva * {
