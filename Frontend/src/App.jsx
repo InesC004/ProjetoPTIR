@@ -7,6 +7,7 @@ import PaginaGestores from "./pages/Gestores/PaginaGestores";
 import PaginaMotorista from "./pages/PaginaMotorista";
 import CriarGestor from "./pages/CriarGestor";
 import PerfilMotorista from "./pages/PerfilMotorista";
+import HistoricoCliente from "./pages/HistoricoCliente";
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
         />
         <Route path="/Perfil-motorista" element={<PerfilMotorista />} />
         <Route path="/admin/Criar-gestor" element={<CriarGestor />} />
+        <Route path="/trips" element={<HistoricoCliente />} />
       </Routes>
     </BrowserRouter>
   );
