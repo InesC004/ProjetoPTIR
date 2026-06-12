@@ -15,6 +15,7 @@ import {
   Search,
   RefreshCw,
   CarFront,
+  Star,
 } from "lucide-react";
 
 import logo from "../../Pictures/logo1.jpeg";
@@ -226,6 +227,7 @@ function PageHead({ t, s }) {
 function SecDados(props) {
   const [taxis, setTaxis] = useState([]);
   const [motoristas, setMotoristas] = useState([]);
+  const [turnos, setTurnos] = useState([]);
   const [pesquisa, setPesquisa] = useState("");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
@@ -239,9 +241,10 @@ function SecDados(props) {
       setLoading(true);
       setErro("");
 
-      const [dadosTaxis, dadosMotoristas] = await Promise.all([
+      const [dadosTaxis, dadosMotoristas, dadosTurnos] = await Promise.all([
         api.taxis.listar(),
         api.motoristas.listar(),
+        api.turnos.listarTodos(),
       ]);
 
       const listaTaxis = Array.isArray(dadosTaxis)
@@ -252,16 +255,108 @@ function SecDados(props) {
         ? dadosMotoristas
         : dadosMotoristas.motoristas || dadosMotoristas.data || [];
 
+      const listaTurnos = Array.isArray(dadosTurnos)
+        ? dadosTurnos
+        : dadosTurnos.turnos || dadosTurnos.data || [];
+
       setTaxis(listaTaxis);
       setMotoristas(listaMotoristas);
+      setTurnos(listaTurnos);
     } catch (err) {
       console.error("Erro ao carregar táxis/motoristas:", err);
       setErro(err.message || "Erro ao carregar dados.");
       setTaxis([]);
       setMotoristas([]);
+      setTurnos([]);
     } finally {
       setLoading(false);
     }
+  }
+
+  function getId(valor) {
+    if (!valor) return "";
+    return String(valor._id || valor.id || valor);
+  }
+
+  function formatarData(data) {
+    if (!data) return "Sem data";
+
+    const date = new Date(data);
+    if (Number.isNaN(date.getTime())) return "Sem data";
+
+    return date.toLocaleString("pt-PT", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function turnosDaEntidade(tipo, entidadeId) {
+    const agora = new Date();
+
+    return turnos
+      .filter((turno) => getId(turno[tipo]) === entidadeId)
+      .filter((turno) => new Date(turno.data_fim) >= agora)
+      .sort((a, b) => new Date(a.data_inicio) - new Date(b.data_inicio));
+  }
+
+  function getEstadoOperacional(turnosEntidade, estadoOriginal) {
+    const agora = new Date();
+    const turnoAtivo = turnosEntidade.find((turno) => {
+      const inicio = new Date(turno.data_inicio);
+      const fim = new Date(turno.data_fim);
+      return inicio <= agora && fim >= agora;
+    });
+
+    if (turnoAtivo) {
+      return { texto: "Em turno", tipo: "ocupado", turno: turnoAtivo };
+    }
+
+    const turnoFuturo = turnosEntidade.find(
+      (turno) => new Date(turno.data_inicio) > agora,
+    );
+
+    if (turnoFuturo) {
+      return { texto: "Turno agendado", tipo: "agendado", turno: turnoFuturo };
+    }
+
+    return {
+      texto: estadoOriginal || "Livre",
+      tipo: "livre",
+      turno: null,
+    };
+  }
+
+  function getTaxiComTurnos(taxi) {
+    const entidadeTurnos = turnosDaEntidade("taxi", getId(taxi));
+    return {
+      ...taxi,
+      turnosEntidade: entidadeTurnos,
+      estadoOperacional: getEstadoOperacional(entidadeTurnos, taxi.estado),
+    };
+  }
+
+  function getMotoristaComTurnos(motorista) {
+    const entidadeTurnos = turnosDaEntidade("motorista", getId(motorista));
+    return {
+      ...motorista,
+      turnosEntidade: entidadeTurnos,
+      estadoOperacional: getEstadoOperacional(
+        entidadeTurnos,
+        motorista.estado || motorista.status,
+      ),
+    };
+  }
+
+  function formatarAvaliacao(motorista) {
+    const total = Number(motorista.total_avaliacoes || 0);
+    const media = Number(motorista.avaliacao_media || 0);
+
+    if (!total) return "Novo";
+
+    return `${media.toFixed(1)} (${total})`;
   }
 
   function textoTaxi(taxi) {
@@ -272,6 +367,10 @@ function SecDados(props) {
       ${taxi.tipo_motor || ""}
       ${taxi.nivel_conforto || ""}
       ${taxi.estado || ""}
+      ${taxi.estadoOperacional?.texto || ""}
+      ${taxi.turnosEntidade
+        ?.map((turno) => `${turno.motorista?.nome || ""} ${turno.motorista?.nif || ""}`)
+        .join(" ") || ""}
     `.toLowerCase();
   }
 
@@ -282,43 +381,22 @@ function SecDados(props) {
       ${motorista.email || ""}
       ${motorista.numero_carta || ""}
       ${motorista.estado || ""}
+      ${motorista.estadoOperacional?.texto || ""}
+      ${formatarAvaliacao(motorista)}
+      ${motorista.turnosEntidade
+        ?.map((turno) => `${turno.taxi?.matricula || ""} ${turno.taxi?.marca || ""} ${turno.taxi?.modelo || ""}`)
+        .join(" ") || ""}
     `.toLowerCase();
-  }
-
-  function isTaxiDisponivel(taxi) {
-    const estado = (taxi.estado || "").toLowerCase();
-
-    if (!estado) return true;
-
-    return (
-      estado === "disponivel" ||
-      estado === "disponível" ||
-      estado === "livre" ||
-      estado === "ativo"
-    );
-  }
-
-  function isMotoristaDisponivel(motorista) {
-    const estado = (motorista.estado || motorista.status || "").toLowerCase();
-
-    if (!estado) return true;
-
-    return (
-      estado === "disponivel" ||
-      estado === "disponível" ||
-      estado === "livre" ||
-      estado === "ativo"
-    );
   }
 
   const pesquisaNormalizada = pesquisa.trim().toLowerCase();
 
-  const taxisDisponiveis = taxis
-    .filter(isTaxiDisponivel)
+  const taxisExistentes = taxis
+    .map(getTaxiComTurnos)
     .filter((taxi) => textoTaxi(taxi).includes(pesquisaNormalizada));
 
-  const motoristasDisponiveis = motoristas
-    .filter(isMotoristaDisponivel)
+  const motoristasExistentes = motoristas
+    .map(getMotoristaComTurnos)
     .filter((motorista) =>
       textoMotorista(motorista).includes(pesquisaNormalizada),
     );
@@ -376,7 +454,7 @@ function SecDados(props) {
         <div className="pg-disponiveis-topo">
           <div>
             <h3>Táxis e Motoristas</h3>
-            <p>Lista de táxis e motoristas.</p>
+            <p>Lista de táxis e motoristas com estado calculado pelos turnos.</p>
           </div>
 
           <button
@@ -405,18 +483,18 @@ function SecDados(props) {
         <div className="pg-disponiveis-grid">
           <div className="pg-panel">
             <h4>
-              Táxis Existentes ({loading ? "..." : taxisDisponiveis.length})
+              Táxis Existentes ({loading ? "..." : taxisExistentes.length})
             </h4>
 
             {loading && <p className="pg-empty">A carregar táxis...</p>}
 
-            {!loading && taxisDisponiveis.length === 0 && (
-              <p className="pg-empty">Nenhum táxi disponível encontrado.</p>
+            {!loading && taxisExistentes.length === 0 && (
+              <p className="pg-empty">Nenhum táxi encontrado.</p>
             )}
 
-            {!loading && taxisDisponiveis.length > 0 && (
+            {!loading && taxisExistentes.length > 0 && (
               <div className="pg-lista-cards">
-                {taxisDisponiveis.map((taxi) => (
+                {taxisExistentes.map((taxi) => (
                   <div
                     key={taxi._id || taxi.matricula}
                     className="pg-mini-card"
@@ -426,18 +504,48 @@ function SecDados(props) {
                     </div>
 
                     <div className="pg-mini-info">
-                      <strong>{taxi.matricula || "Sem matrícula"}</strong>
+                      <div className="pg-mini-title-row">
+                        <strong>{taxi.matricula || "Sem matrícula"}</strong>
+                        <small
+                          className={`pg-status ${taxi.estadoOperacional.tipo}`}
+                        >
+                          {taxi.estadoOperacional.texto}
+                        </small>
+                      </div>
                       <span>
                         {taxi.marca || "Sem marca"} {taxi.modelo || ""}
                       </span>
 
-                      <div className="pg-mini-tags">
-                        {taxi.tipo_motor && <small>{taxi.tipo_motor}</small>}
-                        {taxi.nivel_conforto && (
-                          <small>{taxi.nivel_conforto}</small>
+                      <details className="pg-mini-details">
+                        <summary>Detalhes</summary>
+                        <div className="pg-detail-grid">
+                          <Detail label="Motor" value={taxi.tipo_motor} />
+                          <Detail
+                            label="Conforto"
+                            value={taxi.nivel_conforto}
+                          />
+                          <Detail
+                            label="Ano de compra"
+                            value={taxi.ano_compra}
+                          />
+                          <Detail label="Estado base" value={taxi.estado} />
+                        </div>
+
+                        {taxi.turnosEntidade.length > 0 && (
+                          <div className="pg-turnos-mini">
+                            <strong>Turnos</strong>
+                            {taxi.turnosEntidade.slice(0, 3).map((turno) => (
+                              <p key={turno._id}>
+                                {formatarData(turno.data_inicio)} -{" "}
+                                {formatarData(turno.data_fim)}
+                                {turno.motorista?.nome
+                                  ? ` · ${turno.motorista.nome}`
+                                  : ""}
+                              </p>
+                            ))}
+                          </div>
                         )}
-                        {taxi.estado && <small>{taxi.estado}</small>}
-                      </div>
+                      </details>
                     </div>
                   </div>
                 ))}
@@ -448,20 +556,18 @@ function SecDados(props) {
           <div className="pg-panel">
             <h4>
               Motoristas Existentes (
-              {loading ? "..." : motoristasDisponiveis.length})
+              {loading ? "..." : motoristasExistentes.length})
             </h4>
 
             {loading && <p className="pg-empty">A carregar motoristas...</p>}
 
-            {!loading && motoristasDisponiveis.length === 0 && (
-              <p className="pg-empty">
-                Nenhum motorista disponível encontrado.
-              </p>
+            {!loading && motoristasExistentes.length === 0 && (
+              <p className="pg-empty">Nenhum motorista encontrado.</p>
             )}
 
-            {!loading && motoristasDisponiveis.length > 0 && (
+            {!loading && motoristasExistentes.length > 0 && (
               <div className="pg-lista-cards">
-                {motoristasDisponiveis.map((motorista) => (
+                {motoristasExistentes.map((motorista) => (
                   <div
                     key={motorista._id || motorista.nif}
                     className="pg-mini-card"
@@ -471,18 +577,58 @@ function SecDados(props) {
                     </div>
 
                     <div className="pg-mini-info">
-                      <strong>{motorista.nome || "Sem nome"}</strong>
+                      <div className="pg-mini-title-row">
+                        <strong>{motorista.nome || "Sem nome"}</strong>
+                        <small
+                          className={`pg-status ${motorista.estadoOperacional.tipo}`}
+                        >
+                          {motorista.estadoOperacional.texto}
+                        </small>
+                      </div>
                       <span>{motorista.email || "Sem email"}</span>
 
-                      <div className="pg-mini-tags">
-                        {motorista.nif && <small>NIF {motorista.nif}</small>}
-                        {motorista.numero_carta && (
-                          <small>Carta {motorista.numero_carta}</small>
-                        )}
-                        {(motorista.estado || motorista.status) && (
-                          <small>{motorista.estado || motorista.status}</small>
-                        )}
+                      <div className="pg-rating-row">
+                        <Star size={15} />
+                        <span>{formatarAvaliacao(motorista)}</span>
                       </div>
+
+                      <details className="pg-mini-details">
+                        <summary>Detalhes</summary>
+                        <div className="pg-detail-grid">
+                          <Detail label="NIF" value={motorista.nif} />
+                          <Detail
+                            label="Carta"
+                            value={motorista.numero_carta}
+                          />
+                          <Detail label="Género" value={motorista.genero} />
+                          <Detail label="Morada" value={motorista.morada} />
+                          <Detail
+                            label="Código postal"
+                            value={motorista.codigo_postal}
+                          />
+                          <Detail
+                            label="Avaliações"
+                            value={`${motorista.total_avaliacoes || 0}`}
+                          />
+                        </div>
+
+                        {motorista.turnosEntidade.length > 0 && (
+                          <div className="pg-turnos-mini">
+                            <strong>Turnos</strong>
+                            {motorista.turnosEntidade
+                              .slice(0, 3)
+                              .map((turno) => (
+                                <p key={turno._id}>
+                                  {formatarData(turno.data_inicio)} -{" "}
+                                  {formatarData(turno.data_fim)}
+                                  {turno.taxi?.matricula
+                                    ? ` · ${turno.taxi.matricula}`
+                                    : ""}
+                                </p>
+                              ))}
+                          </div>
+                        )}
+                      </details>
                     </div>
                   </div>
                 ))}
@@ -491,6 +637,17 @@ function SecDados(props) {
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function Detail({ label, value }) {
+  if (value === undefined || value === null || value === "") return null;
+
+  return (
+    <div className="pg-detail-item">
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
