@@ -61,7 +61,47 @@ async function coordenadasParaMorada(lat, lng) {
     return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
   }
 }
+async function pesquisarMoradas(texto) {
+  const termo = texto.trim();
 
+  if (termo.length < 3) return [];
+
+  const params = new URLSearchParams({
+    q: termo,
+    format: "jsonv2",
+    addressdetails: "1",
+    limit: "5",
+    countrycodes: "pt",
+  });
+
+  const resposta = await fetch(
+    `https://nominatim.openstreetmap.org/search?${params.toString()}`,
+    {
+      headers: {
+        "Accept-Language": "pt-PT",
+      },
+    },
+  );
+
+  if (!resposta.ok) {
+    throw new Error("Não foi possível validar a morada.");
+  }
+
+  const resultados = await resposta.json();
+
+  return resultados
+    .map((resultado) => ({
+      lat: Number(resultado.lat),
+      lng: Number(resultado.lon),
+      morada: resultado.display_name,
+    }))
+    .filter(
+      (resultado) =>
+        Number.isFinite(resultado.lat) &&
+        Number.isFinite(resultado.lng) &&
+        resultado.morada,
+    );
+}
 const CHAVE_ORS = "5b3ce3597851110001cf6248a8d6e04a30ed45e6b3a20d5e0b3c7d26";
 
 async function obterRota(lngOrigem, latOrigem, lngDestino, latDestino) {
@@ -214,47 +254,88 @@ function MapaInterativo({
         estadoRef.current = marcadorPartida.current ? "destino" : "partida";
         aoDefinirDestino(null, "");
       },
-      async colocarPartidaNaLocalizacao(lat, lng) {
-        const L = leafletRef.current;
-        const mapa = mapRef.current;
-        if (!L || !mapa) return;
-        if (marcadorPartida.current) {
-          marcadorPartida.current.remove();
-          marcadorPartida.current = null;
-        }
-        if (camadaRotaRef.current) {
-          camadaRotaRef.current.remove();
-          camadaRotaRef.current = null;
-        }
+      async definirPontoPorCoordenadas(tipo, lat, lng, moradaInicial = "") {
+  const L = leafletRef.current;
+  const mapa = mapRef.current;
 
-        // FIX AXE: alt="Ponto de partida" + aplicarAriaLabel
-        const mk = L.marker([lat, lng], {
-          icon: criarIcone(L, "#00e887", "📍"),
-          draggable: true,
-          alt: "Ponto de partida",
-        }).addTo(mapa);
-        aplicarAriaLabel(mk, "Ponto de partida");
+  if (!L || !mapa) return;
 
-        mk.on("dragend", async () => {
-          const pos = mk.getLatLng();
-          const morada = await coordenadasParaMorada(pos.lat, pos.lng);
-          aoDefinirPartida([pos.lat, pos.lng], morada);
-          if (marcadorDestino.current)
-            desenharRota(refs, pos, marcadorDestino.current.getLatLng());
-        });
-        marcadorPartida.current = mk;
-        if (marcadorDestino.current) {
-          desenharRota(
-            refs,
-            mk.getLatLng(),
-            marcadorDestino.current.getLatLng(),
-          );
-          estadoRef.current = "concluido";
-        } else {
-          estadoRef.current = "destino";
-        }
-        mapa.setView([lat, lng], 15);
-      },
+  const ePartida = tipo === "partida";
+  const marcadorRef = ePartida ? marcadorPartida : marcadorDestino;
+
+  if (marcadorRef.current) {
+    marcadorRef.current.remove();
+    marcadorRef.current = null;
+  }
+
+  if (camadaRotaRef.current) {
+    camadaRotaRef.current.remove();
+    camadaRotaRef.current = null;
+  }
+
+  const label = ePartida ? "Ponto de partida" : "Ponto de destino";
+
+  const mk = L.marker([lat, lng], {
+    icon: ePartida
+      ? criarIcone(L, "#00e887", "📍")
+      : criarIcone(L, "#c64dff", "🏁"),
+    draggable: true,
+    alt: label,
+  }).addTo(mapa);
+
+  aplicarAriaLabel(mk, label);
+
+  mk.on("dragend", async () => {
+    const pos = mk.getLatLng();
+    const morada = await coordenadasParaMorada(pos.lat, pos.lng);
+
+    if (ePartida) {
+      aoDefinirPartida([pos.lat, pos.lng], morada);
+
+      if (marcadorDestino.current) {
+        desenharRota(refs, pos, marcadorDestino.current.getLatLng());
+      }
+    } else {
+      aoDefinirDestino([pos.lat, pos.lng], morada);
+
+      if (marcadorPartida.current) {
+        desenharRota(refs, marcadorPartida.current.getLatLng(), pos);
+      }
+    }
+  });
+
+  marcadorRef.current = mk;
+
+  const morada =
+    moradaInicial || `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
+
+  if (ePartida) {
+    aoDefinirPartida([lat, lng], morada);
+    estadoRef.current = marcadorDestino.current ? "concluido" : "destino";
+  } else {
+    aoDefinirDestino([lat, lng], morada);
+    estadoRef.current = marcadorPartida.current ? "concluido" : "partida";
+  }
+
+  if (marcadorPartida.current && marcadorDestino.current) {
+    desenharRota(
+      refs,
+      marcadorPartida.current.getLatLng(),
+      marcadorDestino.current.getLatLng(),
+    );
+  }
+
+  mapa.setView([lat, lng], 15);
+},
+
+async colocarPartidaNaLocalizacao(lat, lng) {
+  return apiRef.current?.definirPontoPorCoordenadas(
+    "partida",
+    lat,
+    lng,
+    await coordenadasParaMorada(lat, lng),
+  );
+},
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -658,7 +739,30 @@ function atualizarViagemMotoristaComoPaga(pedido) {
   );
   window.dispatchEvent(new Event("viagensConfirmadasAtualizadas"));
 }
+function ListaSugestoesMorada({ tipo, sugestoes, aoEscolher }) {
+  return (
+    <div
+      className="lista-sugestoes-morada"
+      role="listbox"
+      aria-label={`Sugestões para ${tipo}`}
+    >
+      <p>Confirme a localização encontrada:</p>
 
+      {sugestoes.map((sugestao) => (
+        <button
+          type="button"
+          role="option"
+          aria-selected="false"
+          key={`${tipo}-${sugestao.lat}-${sugestao.lng}-${sugestao.morada}`}
+          onClick={() => aoEscolher(tipo, sugestao)}
+        >
+          <span aria-hidden="true">📍</span>
+          <span>{sugestao.morada}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL: Dashboard
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -675,7 +779,9 @@ export default function Dashboard() {
   const [moradaPartida, setMoradaPartida] = useState("");
   const [destino, setDestino] = useState(null);
   const [moradaDestino, setMoradaDestino] = useState("");
+  
   const [aLocalizarGPS, setALocalizarGPS] = useState(false);
+  const [localizacaoAtiva, setLocalizacaoAtiva] = useState(false);
   const [dadosRota, setDadosRota] = useState(null);
   const [aCalcular, setACalcular] = useState(false);
   const [nivelConforto, setNivelConforto] = useState("basico");
@@ -698,7 +804,10 @@ export default function Dashboard() {
   const [mensagemPagamentoSucesso, setMensagemPagamentoSucesso] = useState("");
   const pedidoAtualId = getMongoId(pedidoAtual);
   const estadoPedidoAtual = getEstadoVisivel(pedidoAtual);
-
+  const [sugestoesPartida, setSugestoesPartida] = useState([]);
+  const [sugestoesDestino, setSugestoesDestino] = useState([]);
+  const [aPesquisarMorada, setAPesquisarMorada] = useState(null);
+  const [erroMorada, setErroMorada] = useState("");
   function apenasDigitos(valor) {
     return valor.replace(/\D/g, "");
   }
@@ -963,24 +1072,56 @@ export default function Dashboard() {
     setDestino(null);
     setMoradaDestino("");
     setDadosRota(null);
+    setLocalizacaoAtiva(false);
     setPedidoAtual(null);
     apiMapa.current?.reiniciar();
+}
+  async function usarLocalizacaoAtual() {
+  // Se já estiver ativa, o clique serve para desativar.
+  if (localizacaoAtiva) {
+    setLocalizacaoAtiva(false);
+    setDadosRota(null);
+    setSugestoesPartida([]);
+    apiMapa.current?.limparPartida();
+    return;
   }
 
-  async function usarLocalizacaoAtual() {
-    setALocalizarGPS(true);
-    navigator.geolocation?.getCurrentPosition(
-      async ({ coords: { latitude: lat, longitude: lng } }) => {
-        if (moradaPartida) reiniciar();
-        const morada = await coordenadasParaMorada(lat, lng);
-        await apiMapa.current?.colocarPartidaNaLocalizacao(lat, lng);
-        setPartida([lat, lng]);
-        setMoradaPartida(morada);
-        setALocalizarGPS(false);
-      },
-      () => setALocalizarGPS(false),
-    );
+  if (!navigator.geolocation) {
+    setErroPedido("O navegador não permite obter a sua localização.");
+    return;
   }
+
+  setErroPedido("");
+  setALocalizarGPS(true);
+
+  navigator.geolocation.getCurrentPosition(
+    async ({ coords: { latitude: lat, longitude: lng } }) => {
+      const morada = await coordenadasParaMorada(lat, lng);
+
+      await apiMapa.current?.definirPontoPorCoordenadas(
+        "partida",
+        lat,
+        lng,
+        morada,
+      );
+
+      setSugestoesPartida([]);
+      setLocalizacaoAtiva(true);
+      setALocalizarGPS(false);
+    },
+    () => {
+      setErroPedido(
+        "Não foi possível ativar a localização. Verifique a permissão do navegador.",
+      );
+      setALocalizarGPS(false);
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 8000,
+      maximumAge: 30000,
+    },
+  );
+}
 
   async function pedirViagem() {
     setErroPedido("");
@@ -1286,15 +1427,41 @@ export default function Dashboard() {
               </div>
 
               <button
-                className="btn-localizacao"
+                className={`btn-localizacao btn-localizacao-toggle ${
+                  localizacaoAtiva ? "ativo" : ""
+                }`}
                 onClick={usarLocalizacaoAtual}
                 disabled={aLocalizarGPS || pedidoBloqueiaNovaViagem}
                 type="button"
+                aria-pressed={localizacaoAtiva}
               >
-                <span aria-hidden="true">{aLocalizarGPS ? "⌛" : "📡"}</span>
-                {aLocalizarGPS
-                  ? "A obter localização..."
-                  : "Usar a minha localização atual"}
+                <span className="localizacao-toggle-indicador" aria-hidden="true">
+                  <span />
+                </span>
+
+                <span className="localizacao-toggle-texto">
+                  <strong>
+                    {aLocalizarGPS
+                      ? "A obter localização..."
+                      : localizacaoAtiva
+                        ? "A minha localização está ativa"
+                        : "A minha localização está desativada"}
+                  </strong>
+
+                  <small>
+                    {localizacaoAtiva
+                      ? "A partida usa a posição atual do dispositivo."
+                      : "Ative para usar a sua posição como partida."}
+                  </small>
+                </span>
+
+                <span className="localizacao-toggle-acao">
+                  {aLocalizarGPS
+                    ? "Aguarde"
+                    : localizacaoAtiva
+                      ? "Desativar"
+                      : "Ativar"}
+                </span>
               </button>
 
               <label
