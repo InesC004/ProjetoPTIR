@@ -13,6 +13,14 @@ function obterHistorico() {
     return [];
   }
 }
+function guardarHistorico(historico) {
+  localStorage.setItem(
+    HISTORICO_CLIENTE_KEY,
+    JSON.stringify(historico),
+  );
+
+  window.dispatchEvent(new Event("historicoClienteAtualizado"));
+}
 
 function formatarData(valor) {
   if (!valor) return "Data indisponível";
@@ -67,7 +75,31 @@ useEffect(() => {
     window.removeEventListener("storage", atualizarHistorico);
   };
 }, []);
+function eliminarViagem(id) {
+  const confirmou = window.confirm(
+    "Tem a certeza de que pretende eliminar esta viagem do histórico?",
+  );
 
+  if (!confirmou) return;
+
+  const historicoAtualizado = historico.filter(
+    (viagem) => String(obterId(viagem)) !== String(id),
+  );
+
+  guardarHistorico(historicoAtualizado);
+  setHistorico(historicoAtualizado);
+}
+
+function eliminarTodoHistorico() {
+  const confirmou = window.confirm(
+    "Tem a certeza de que pretende eliminar todas as viagens do histórico?",
+  );
+
+  if (!confirmou) return;
+
+  guardarHistorico([]);
+  setHistorico([]);
+}
   const viagensFiltradas = useMemo(() => {
     if (filtro === "todas") return historico;
 
@@ -117,6 +149,15 @@ useEffect(() => {
           >
             Canceladas
           </button>
+          {historico.length > 0 && (
+  <button
+    type="button"
+    className="btn-limpar-historico"
+    onClick={eliminarTodoHistorico}
+  >
+    🗑️ Apagar todo o histórico
+  </button>
+)}
         </section>
 
         {viagensFiltradas.length === 0 ? (
@@ -179,14 +220,26 @@ useEffect(() => {
                   </div>
 
                   <div className="historico-card-rodape">
-                    <span>
-                      {viagem.estado === "concluida"
-                        ? "Viagem terminada"
-                        : "Pedido cancelado"}
-                    </span>
+                        <span>
+                            {viagem.estado === "concluida"
+                            ? "Viagem terminada"
+                            : "Pedido cancelado"}
+                        </span>
 
-                    {preco && <strong>{preco}</strong>}
-                  </div>
+                        <div className="historico-card-acoes">
+                            {preco && <strong>{preco}</strong>}
+
+                            <button
+                            type="button"
+                            className="btn-eliminar-viagem"
+                            onClick={() => eliminarViagem(obterId(viagem))}
+                            aria-label="Eliminar esta viagem do histórico"
+                            title="Eliminar viagem"
+                            >
+                            🗑️
+                            </button>
+                        </div>
+                        </div>
                 </article>
               );
             })}

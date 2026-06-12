@@ -3853,3 +3853,8 @@ select:focus,
   display: block;
   margin-bottom: 8px;
 }
+/* Preço estimado recebido do backend */
+.card-reserva .faixa-valor.preco {
+  color: #00884f !important;
+  -webkit-text-fill-color: #00884f !important;
+}
