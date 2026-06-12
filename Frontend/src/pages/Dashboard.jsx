@@ -61,39 +61,59 @@ async function coordenadasParaMorada(lat, lng) {
     return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
   }
 }
+
+const CHAVE_GEOAPIFY = "204ace01caa045cf8a30996b62e9da79";
+
+function normalizarCodigoPostal(valor) {
+  const texto = String(valor ?? "");
+  const semEspacos = texto.replace(/\s/g, "");
+
+  // Mantém textos normais exatamente como foram escritos, incluindo espaços.
+  if (!/^\d{0,4}-?\d{0,3}$/.test(semEspacos)) {
+    return texto;
+  }
+
+  const digitos = semEspacos.replace(/\D/g, "").slice(0, 7);
+
+  if (digitos.length <= 4) return digitos;
+
+  return `${digitos.slice(0, 4)}-${digitos.slice(4)}`;
+}
+
 async function pesquisarMoradas(texto) {
-  const termo = texto.trim();
+  const termo = normalizarCodigoPostal(texto).trim();
 
   if (termo.length < 3) return [];
 
   const params = new URLSearchParams({
-    q: termo,
-    format: "jsonv2",
-    addressdetails: "1",
-    limit: "5",
-    countrycodes: "pt",
+    text: termo,
+    format: "json",
+    limit: "6",
+    lang: "pt",
+    filter: "countrycode:pt",
+    apiKey: CHAVE_GEOAPIFY,
   });
 
   const resposta = await fetch(
-    `https://nominatim.openstreetmap.org/search?${params.toString()}`,
-    {
-      headers: {
-        "Accept-Language": "pt-PT",
-      },
-    },
+    `https://api.geoapify.com/v1/geocode/autocomplete?${params.toString()}`,
   );
 
   if (!resposta.ok) {
-    throw new Error("Não foi possível validar a morada.");
+    throw new Error("Não foi possível pesquisar localizações.");
   }
 
-  const resultados = await resposta.json();
+  const dados = await resposta.json();
 
-  return resultados
+  return (dados.results || [])
     .map((resultado) => ({
       lat: Number(resultado.lat),
       lng: Number(resultado.lon),
-      morada: resultado.display_name,
+      morada:
+        resultado.formatted ||
+        resultado.address_line1 ||
+        resultado.name ||
+        "Localização encontrada",
+      codigoPostal: resultado.postcode || "",
     }))
     .filter(
       (resultado) =>
@@ -102,6 +122,7 @@ async function pesquisarMoradas(texto) {
         resultado.morada,
     );
 }
+
 const CHAVE_ORS = "5b3ce3597851110001cf6248a8d6e04a30ed45e6b3a20d5e0b3c7d26";
 
 async function obterRota(lngOrigem, latOrigem, lngDestino, latDestino) {
@@ -254,88 +275,82 @@ function MapaInterativo({
         estadoRef.current = marcadorPartida.current ? "destino" : "partida";
         aoDefinirDestino(null, "");
       },
+      selecionarNoMapa(tipo) {
+        if (estadoRef.current === "seguimento") return;
+        if (tipo === "partida") {
+          estadoRef.current = "partida";
+        } else if (tipo === "destino") {
+          estadoRef.current = marcadorPartida.current ? "destino" : "partida";
+        }
+      },
       async definirPontoPorCoordenadas(tipo, lat, lng, moradaInicial = "") {
-  const L = leafletRef.current;
-  const mapa = mapRef.current;
+        const L = leafletRef.current;
+        const mapa = mapRef.current;
+        if (!L || !mapa) return;
 
-  if (!L || !mapa) return;
+        const ePartida = tipo === "partida";
+        const marcadorRef = ePartida ? marcadorPartida : marcadorDestino;
+        if (marcadorRef.current) {
+          marcadorRef.current.remove();
+          marcadorRef.current = null;
+        }
+        if (camadaRotaRef.current) {
+          camadaRotaRef.current.remove();
+          camadaRotaRef.current = null;
+        }
 
-  const ePartida = tipo === "partida";
-  const marcadorRef = ePartida ? marcadorPartida : marcadorDestino;
+        const label = ePartida ? "Ponto de partida" : "Ponto de destino";
+        const mk = L.marker([lat, lng], {
+          icon: ePartida
+            ? criarIcone(L, "#00e887", "📍")
+            : criarIcone(L, "#c64dff", "🏁"),
+          draggable: true,
+          alt: label,
+        }).addTo(mapa);
+        aplicarAriaLabel(mk, label);
 
-  if (marcadorRef.current) {
-    marcadorRef.current.remove();
-    marcadorRef.current = null;
-  }
+        mk.on("dragend", async () => {
+          const pos = mk.getLatLng();
+          const morada = await coordenadasParaMorada(pos.lat, pos.lng);
+          if (ePartida) {
+            aoDefinirPartida([pos.lat, pos.lng], morada);
+            if (marcadorDestino.current)
+              desenharRota(refs, pos, marcadorDestino.current.getLatLng());
+          } else {
+            aoDefinirDestino([pos.lat, pos.lng], morada);
+            if (marcadorPartida.current)
+              desenharRota(refs, marcadorPartida.current.getLatLng(), pos);
+          }
+        });
 
-  if (camadaRotaRef.current) {
-    camadaRotaRef.current.remove();
-    camadaRotaRef.current = null;
-  }
+        marcadorRef.current = mk;
+        const morada =
+          moradaInicial || `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
+        if (ePartida) {
+          aoDefinirPartida([lat, lng], morada);
+          estadoRef.current = marcadorDestino.current ? "concluido" : "destino";
+        } else {
+          aoDefinirDestino([lat, lng], morada);
+          estadoRef.current = marcadorPartida.current ? "concluido" : "partida";
+        }
 
-  const label = ePartida ? "Ponto de partida" : "Ponto de destino";
-
-  const mk = L.marker([lat, lng], {
-    icon: ePartida
-      ? criarIcone(L, "#00e887", "📍")
-      : criarIcone(L, "#c64dff", "🏁"),
-    draggable: true,
-    alt: label,
-  }).addTo(mapa);
-
-  aplicarAriaLabel(mk, label);
-
-  mk.on("dragend", async () => {
-    const pos = mk.getLatLng();
-    const morada = await coordenadasParaMorada(pos.lat, pos.lng);
-
-    if (ePartida) {
-      aoDefinirPartida([pos.lat, pos.lng], morada);
-
-      if (marcadorDestino.current) {
-        desenharRota(refs, pos, marcadorDestino.current.getLatLng());
-      }
-    } else {
-      aoDefinirDestino([pos.lat, pos.lng], morada);
-
-      if (marcadorPartida.current) {
-        desenharRota(refs, marcadorPartida.current.getLatLng(), pos);
-      }
-    }
-  });
-
-  marcadorRef.current = mk;
-
-  const morada =
-    moradaInicial || `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
-
-  if (ePartida) {
-    aoDefinirPartida([lat, lng], morada);
-    estadoRef.current = marcadorDestino.current ? "concluido" : "destino";
-  } else {
-    aoDefinirDestino([lat, lng], morada);
-    estadoRef.current = marcadorPartida.current ? "concluido" : "partida";
-  }
-
-  if (marcadorPartida.current && marcadorDestino.current) {
-    desenharRota(
-      refs,
-      marcadorPartida.current.getLatLng(),
-      marcadorDestino.current.getLatLng(),
-    );
-  }
-
-  mapa.setView([lat, lng], 15);
-},
-
-async colocarPartidaNaLocalizacao(lat, lng) {
-  return apiRef.current?.definirPontoPorCoordenadas(
-    "partida",
-    lat,
-    lng,
-    await coordenadasParaMorada(lat, lng),
-  );
-},
+        if (marcadorPartida.current && marcadorDestino.current) {
+          desenharRota(
+            refs,
+            marcadorPartida.current.getLatLng(),
+            marcadorDestino.current.getLatLng(),
+          );
+        }
+        mapa.setView([lat, lng], 15);
+      },
+      async colocarPartidaNaLocalizacao(lat, lng) {
+        return apiRef.current?.definirPontoPorCoordenadas(
+          "partida",
+          lat,
+          lng,
+          await coordenadasParaMorada(lat, lng),
+        );
+      },
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -739,6 +754,7 @@ function atualizarViagemMotoristaComoPaga(pedido) {
   );
   window.dispatchEvent(new Event("viagensConfirmadasAtualizadas"));
 }
+
 function ListaSugestoesMorada({ tipo, sugestoes, aoEscolher }) {
   return (
     <div
@@ -746,23 +762,42 @@ function ListaSugestoesMorada({ tipo, sugestoes, aoEscolher }) {
       role="listbox"
       aria-label={`Sugestões para ${tipo}`}
     >
-      <p>Confirme a localização encontrada:</p>
+      <p className="titulo-sugestoes-morada">
+        Escolha uma localização válida:
+      </p>
 
       {sugestoes.map((sugestao) => (
         <button
           type="button"
           role="option"
           aria-selected="false"
+          className="item-sugestao-morada"
           key={`${tipo}-${sugestao.lat}-${sugestao.lng}-${sugestao.morada}`}
           onClick={() => aoEscolher(tipo, sugestao)}
         >
-          <span aria-hidden="true">📍</span>
-          <span>{sugestao.morada}</span>
+          <span className="icone-sugestao-morada" aria-hidden="true">
+            📍
+          </span>
+
+          <span className="conteudo-sugestao-morada">
+            <strong>{sugestao.morada}</strong>
+
+            <small>
+              {sugestao.codigoPostal
+                ? `Código postal: ${sugestao.codigoPostal}`
+                : "Clique para selecionar esta localização"}
+            </small>
+          </span>
+
+          <span className="seta-sugestao-morada" aria-hidden="true">
+            →
+          </span>
         </button>
       ))}
     </div>
   );
 }
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL: Dashboard
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -779,9 +814,12 @@ export default function Dashboard() {
   const [moradaPartida, setMoradaPartida] = useState("");
   const [destino, setDestino] = useState(null);
   const [moradaDestino, setMoradaDestino] = useState("");
-  
   const [aLocalizarGPS, setALocalizarGPS] = useState(false);
   const [localizacaoAtiva, setLocalizacaoAtiva] = useState(false);
+  const [sugestoesPartida, setSugestoesPartida] = useState([]);
+  const [sugestoesDestino, setSugestoesDestino] = useState([]);
+  const [aPesquisarMorada, setAPesquisarMorada] = useState(null);
+  const [erroMorada, setErroMorada] = useState("");
   const [dadosRota, setDadosRota] = useState(null);
   const [aCalcular, setACalcular] = useState(false);
   const [nivelConforto, setNivelConforto] = useState("basico");
@@ -804,10 +842,7 @@ export default function Dashboard() {
   const [mensagemPagamentoSucesso, setMensagemPagamentoSucesso] = useState("");
   const pedidoAtualId = getMongoId(pedidoAtual);
   const estadoPedidoAtual = getEstadoVisivel(pedidoAtual);
-  const [sugestoesPartida, setSugestoesPartida] = useState([]);
-  const [sugestoesDestino, setSugestoesDestino] = useState([]);
-  const [aPesquisarMorada, setAPesquisarMorada] = useState(null);
-  const [erroMorada, setErroMorada] = useState("");
+
   function apenasDigitos(valor) {
     return valor.replace(/\D/g, "");
   }
@@ -1039,6 +1074,34 @@ export default function Dashboard() {
       .finally(() => setACalcular(false));
   }, [partida, destino]);
 
+  useEffect(() => {
+    if (partida || moradaPartida.trim().length < 3) {
+      setSugestoesPartida([]);
+      return undefined;
+    }
+
+    const timeout = setTimeout(() => {
+      validarMoradaEscrita("partida");
+    }, 450);
+
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moradaPartida, partida]);
+
+  useEffect(() => {
+    if (destino || moradaDestino.trim().length < 3) {
+      setSugestoesDestino([]);
+      return undefined;
+    }
+
+    const timeout = setTimeout(() => {
+      validarMoradaEscrita("destino");
+    }, 450);
+
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moradaDestino, destino]);
+
   const fmtDist = (m) =>
     m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1)} km`;
   const fmtTempo = (s) => {
@@ -1073,55 +1136,131 @@ export default function Dashboard() {
     setMoradaDestino("");
     setDadosRota(null);
     setLocalizacaoAtiva(false);
+    setSugestoesPartida([]);
+    setSugestoesDestino([]);
+    setErroMorada("");
     setPedidoAtual(null);
     apiMapa.current?.reiniciar();
-}
+  }
+
   async function usarLocalizacaoAtual() {
-  // Se já estiver ativa, o clique serve para desativar.
-  if (localizacaoAtiva) {
-    setLocalizacaoAtiva(false);
+    if (localizacaoAtiva) {
+      setLocalizacaoAtiva(false);
+      setDadosRota(null);
+      apiMapa.current?.limparPartida();
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      setErroPedido("O navegador não permite obter a sua localização.");
+      return;
+    }
+
+    setErroPedido("");
+    setErroMorada("");
+    setALocalizarGPS(true);
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords: { latitude: lat, longitude: lng } }) => {
+        const morada = await coordenadasParaMorada(lat, lng);
+        await apiMapa.current?.definirPontoPorCoordenadas(
+          "partida",
+          lat,
+          lng,
+          morada,
+        );
+        setSugestoesPartida([]);
+        setLocalizacaoAtiva(true);
+        setALocalizarGPS(false);
+      },
+      () => {
+        setErroPedido(
+          "Não foi possível ativar a localização. Verifique a permissão do navegador.",
+        );
+        setALocalizarGPS(false);
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 },
+    );
+  }
+
+  function alterarMoradaDigitada(tipo, valor) {
+    setErroMorada("");
     setDadosRota(null);
-    setSugestoesPartida([]);
-    apiMapa.current?.limparPartida();
-    return;
-  }
 
-  if (!navigator.geolocation) {
-    setErroPedido("O navegador não permite obter a sua localização.");
-    return;
-  }
+    const valorNormalizado = normalizarCodigoPostal(valor);
 
-  setErroPedido("");
-  setALocalizarGPS(true);
-
-  navigator.geolocation.getCurrentPosition(
-    async ({ coords: { latitude: lat, longitude: lng } }) => {
-      const morada = await coordenadasParaMorada(lat, lng);
-
-      await apiMapa.current?.definirPontoPorCoordenadas(
-        "partida",
-        lat,
-        lng,
-        morada,
-      );
-
+    if (tipo === "partida") {
+      apiMapa.current?.limparPartida();
+      setMoradaPartida(valorNormalizado);
+      setPartida(null);
+      setLocalizacaoAtiva(false);
       setSugestoesPartida([]);
-      setLocalizacaoAtiva(true);
-      setALocalizarGPS(false);
-    },
-    () => {
-      setErroPedido(
-        "Não foi possível ativar a localização. Verifique a permissão do navegador.",
-      );
-      setALocalizarGPS(false);
-    },
-    {
-      enableHighAccuracy: true,
-      timeout: 8000,
-      maximumAge: 30000,
-    },
-  );
-}
+    } else {
+      apiMapa.current?.limparDestino();
+      setMoradaDestino(valorNormalizado);
+      setDestino(null);
+      setSugestoesDestino([]);
+    }
+  }
+
+  async function validarMoradaEscrita(tipo) {
+    const texto = tipo === "partida" ? moradaPartida : moradaDestino;
+    if (texto.trim().length < 3) {
+      setErroMorada("Escreva pelo menos 3 caracteres para procurar a morada.");
+      return;
+    }
+
+    setAPesquisarMorada(tipo);
+    setErroMorada("");
+    try {
+      const resultados = await pesquisarMoradas(texto);
+      if (tipo === "partida") setSugestoesPartida(resultados);
+      else setSugestoesDestino(resultados);
+      if (!resultados.length) {
+        setErroMorada(
+          "Não encontrámos essa localização. Confirme a morada ou escolha o ponto no mapa.",
+        );
+      }
+    } catch (erro) {
+      setErroMorada(erro.message || "Não foi possível validar a morada.");
+    } finally {
+      setAPesquisarMorada(null);
+    }
+  }
+
+  async function escolherMoradaValidada(tipo, sugestao) {
+    setErroMorada("");
+    if (tipo === "partida") {
+      setSugestoesPartida([]);
+      setPartida([sugestao.lat, sugestao.lng]);
+      setMoradaPartida(sugestao.morada);
+      setLocalizacaoAtiva(false);
+    } else {
+      setSugestoesDestino([]);
+      setDestino([sugestao.lat, sugestao.lng]);
+      setMoradaDestino(sugestao.morada);
+    }
+    await apiMapa.current?.definirPontoPorCoordenadas(
+      tipo,
+      sugestao.lat,
+      sugestao.lng,
+      sugestao.morada,
+    );
+  }
+
+  function aoPremirEnterMorada(evento, tipo) {
+    if (evento.key !== "Enter") return;
+    evento.preventDefault();
+    validarMoradaEscrita(tipo);
+  }
+
+  function selecionarPontoNoMapa(tipo) {
+    if (pedidoBloqueiaNovaViagem) return;
+    apiMapa.current?.selecionarNoMapa(tipo);
+    document.querySelector(".caixa-mapa")?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }
 
   async function pedirViagem() {
     setErroPedido("");
@@ -1345,8 +1484,8 @@ export default function Dashboard() {
   const passos = [
     {
       n: "1",
-      titulo: "Defina no mapa",
-      desc: "1º clique = partida · 2º clique = destino, diretamente no mapa",
+      titulo: "Defina a viagem",
+      desc: "Escreva as moradas ou selecione a partida e o destino no mapa",
     },
     {
       n: "2",
@@ -1393,8 +1532,8 @@ export default function Dashboard() {
               <br />
             </h1>
             <p className="descricao animar-2">
-              Clique no mapa para marcar a partida e o destino. A rota é
-              calculada por estradas reais em tempo real.
+              Escreva uma morada e confirme uma sugestão ou escolha diretamente
+              no mapa. A rota é calculada por estradas reais em tempo real.
             </p>
 
             <div className="card-reserva animar-2">
@@ -1426,10 +1565,9 @@ export default function Dashboard() {
                 </div>
               </div>
 
+
               <button
-                className={`btn-localizacao btn-localizacao-toggle ${
-                  localizacaoAtiva ? "ativo" : ""
-                }`}
+                className={`btn-localizacao btn-localizacao-toggle ${localizacaoAtiva ? "ativo" : ""}`}
                 onClick={usarLocalizacaoAtual}
                 disabled={aLocalizarGPS || pedidoBloqueiaNovaViagem}
                 type="button"
@@ -1438,7 +1576,6 @@ export default function Dashboard() {
                 <span className="localizacao-toggle-indicador" aria-hidden="true">
                   <span />
                 </span>
-
                 <span className="localizacao-toggle-texto">
                   <strong>
                     {aLocalizarGPS
@@ -1447,20 +1584,14 @@ export default function Dashboard() {
                         ? "A minha localização está ativa"
                         : "A minha localização está desativada"}
                   </strong>
-
                   <small>
                     {localizacaoAtiva
                       ? "A partida usa a posição atual do dispositivo."
                       : "Ative para usar a sua posição como partida."}
                   </small>
                 </span>
-
                 <span className="localizacao-toggle-acao">
-                  {aLocalizarGPS
-                    ? "Aguarde"
-                    : localizacaoAtiva
-                      ? "Desativar"
-                      : "Ativar"}
+                  {aLocalizarGPS ? "Aguarde" : localizacaoAtiva ? "Desativar" : "Ativar"}
                 </span>
               </button>
 
@@ -1475,11 +1606,13 @@ export default function Dashboard() {
                 <input
                   id="input-partida"
                   className={`input-morada${moradaPartida ? " preenchido-verde" : ""}`}
-                  type="text"
-                  placeholder="Clique no mapa (1º clique)…"
+                  type="search"
+                  placeholder="Escreva uma morada, local ou código postal, ou clique no mapa"
                   value={moradaPartida}
-                  readOnly
-                  aria-readonly="true"
+                  onChange={(e) => alterarMoradaDigitada("partida", e.target.value)}
+                  onKeyDown={(e) => aoPremirEnterMorada(e, "partida")}
+                  disabled={pedidoBloqueiaNovaViagem}
+                  autoComplete="street-address"
                 />
                 {moradaPartida && !pedidoBloqueiaNovaViagem && (
                   <button
@@ -1488,6 +1621,7 @@ export default function Dashboard() {
                     aria-label="Limpar ponto de partida"
                     onClick={() => {
                       setDadosRota(null);
+                      setSugestoesPartida([]);
                       apiMapa.current?.limparPartida();
                     }}
                   >
@@ -1495,6 +1629,31 @@ export default function Dashboard() {
                   </button>
                 )}
               </div>
+              <div className="acoes-morada">
+                <button
+                  className="btn-validar-morada"
+                  type="button"
+                  onClick={() => validarMoradaEscrita("partida")}
+                  disabled={pedidoBloqueiaNovaViagem || aPesquisarMorada === "partida"}
+                >
+                  {aPesquisarMorada === "partida" ? "A procurar..." : "🔎 Verificar morada"}
+                </button>
+                <button
+                  className="btn-escolher-mapa"
+                  type="button"
+                  onClick={() => selecionarPontoNoMapa("partida")}
+                  disabled={pedidoBloqueiaNovaViagem}
+                >
+                  🗺️ Escolher no mapa
+                </button>
+              </div>
+              {sugestoesPartida.length > 0 && (
+                <ListaSugestoesMorada
+                  tipo="partida"
+                  sugestoes={sugestoesPartida}
+                  aoEscolher={escolherMoradaValidada}
+                />
+              )}
 
               <label
                 htmlFor="input-destino"
@@ -1507,15 +1666,13 @@ export default function Dashboard() {
                 <input
                   id="input-destino"
                   className={`input-morada${moradaDestino ? " preenchido-azul" : ""}`}
-                  type="text"
-                  placeholder={
-                    moradaPartida
-                      ? "Clique no mapa (2º clique)…"
-                      : "Primeiro defina a partida"
-                  }
+                  type="search"
+                  placeholder="Escreva uma morada, local ou código postal, ou clique no mapa"
                   value={moradaDestino}
-                  readOnly
-                  aria-readonly="true"
+                  onChange={(e) => alterarMoradaDigitada("destino", e.target.value)}
+                  onKeyDown={(e) => aoPremirEnterMorada(e, "destino")}
+                  disabled={pedidoBloqueiaNovaViagem}
+                  autoComplete="street-address"
                 />
                 {moradaDestino && !pedidoBloqueiaNovaViagem && (
                   <button
@@ -1524,6 +1681,7 @@ export default function Dashboard() {
                     aria-label="Limpar ponto de destino"
                     onClick={() => {
                       setDadosRota(null);
+                      setSugestoesDestino([]);
                       apiMapa.current?.limparDestino();
                     }}
                   >
@@ -1531,6 +1689,36 @@ export default function Dashboard() {
                   </button>
                 )}
               </div>
+              <div className="acoes-morada">
+                <button
+                  className="btn-validar-morada"
+                  type="button"
+                  onClick={() => validarMoradaEscrita("destino")}
+                  disabled={pedidoBloqueiaNovaViagem || aPesquisarMorada === "destino"}
+                >
+                  {aPesquisarMorada === "destino" ? "A procurar..." : "🔎 Verificar morada"}
+                </button>
+                <button
+                  className="btn-escolher-mapa"
+                  type="button"
+                  onClick={() => selecionarPontoNoMapa("destino")}
+                  disabled={pedidoBloqueiaNovaViagem}
+                >
+                  🗺️ Escolher no mapa
+                </button>
+              </div>
+              {sugestoesDestino.length > 0 && (
+                <ListaSugestoesMorada
+                  tipo="destino"
+                  sugestoes={sugestoesDestino}
+                  aoEscolher={escolherMoradaValidada}
+                />
+              )}
+              {erroMorada && (
+                <p className="erro-morada" role="alert">
+                  {erroMorada}
+                </p>
+              )}
 
               {aCalcular && (
                 <div className="faixa-rota" role="status" aria-live="polite">
@@ -1644,7 +1832,7 @@ export default function Dashboard() {
                     {estadoPedido === "em_viagem" &&
                       "A viagem está em curso. Aguarde o motorista terminar."}
                     {estadoPedido === "pagamento_pendente" &&
-                      "A viagem terminou. O pagamento está pendente."}
+                      "A viagem terminou. Efetue o pagamento obrigatório para poder pedir outro táxi."}
                     {estadoPedido === "concluido" && "Viagem concluída e paga."}
                   </p>
                   {estadoPedido === "concluido" && mensagemPagamentoSucesso && (
@@ -1702,6 +1890,7 @@ export default function Dashboard() {
                 aoDefinirPartida={(c, m) => {
                   setPartida(c);
                   setMoradaPartida(m);
+                  if (c) setLocalizacaoAtiva(false);
                 }}
                 aoDefinirDestino={(c, m) => {
                   setDestino(c);
@@ -1882,13 +2071,19 @@ export default function Dashboard() {
                 </strong>
               </div>
               <div className="popup-linha">
-                <span>Distância até si</span>
-                <strong>{pedidoAtual.motorista_distancia_km || "--"} km</strong>
+                <span>Distância motorista → até si</span>
+                <strong>
+                  {pedidoAtual.motorista_distancia_km != null
+                    ? `${pedidoAtual.motorista_distancia_km} km`
+                    : "A obter GPS do motorista"}
+                </strong>
               </div>
               <div className="popup-linha">
-                <span>Tempo até chegar</span>
+                <span>Tempo do motorista até si</span>
                 <strong>
-                  {pedidoAtual.motorista_tempo_chegada_min || "--"} min
+                  {pedidoAtual.motorista_tempo_chegada_min != null
+                    ? `${pedidoAtual.motorista_tempo_chegada_min} min`
+                    : "A calcular"}
                 </strong>
               </div>
               <div className="popup-linha">
@@ -1942,7 +2137,8 @@ export default function Dashboard() {
               <div>
                 <h2 id="popup-pagamento-titulo">Viagem terminada</h2>
                 <p>
-                  A sua viagem foi concluída. Efetue o pagamento para finalizar.
+                  A sua viagem foi concluída. O pagamento é obrigatório antes
+                  de poder pedir outro táxi.
                 </p>
               </div>
               <div className="popup-motorista-icon" aria-hidden="true">
@@ -2091,14 +2287,9 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="popup-motorista-acoes">
-              <button
-                className="btn-rejeitar"
-                type="button"
-                onClick={() => setMostrarPopupPagamento(false)}
-                disabled={aPagar}
-              >
-                Fechar
-              </button>
+              <p className="pagamento-obrigatorio" role="note">
+                Para concluir a viagem, escolha um método e confirme o pagamento.
+              </p>
               <button
                 className="btn-aceitar"
                 type="button"
