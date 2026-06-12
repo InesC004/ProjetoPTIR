@@ -1167,7 +1167,15 @@ useEffect(() => {
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [moradaDestino, destino]);
+const fmtPreco = (valor) => {
+  const numero = Number(valor);
 
+  if (!Number.isFinite(numero) || numero <= 0) {
+    return "A calcular";
+  }
+
+  return `${numero.toFixed(2).replace(".", ",")} €`;
+};
   const fmtDist = (m) =>
     m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1)} km`;
   const fmtTempo = (s) => {
@@ -1803,13 +1811,24 @@ useEffect(() => {
                     <div className="faixa-valor">
                       {fmtDist(dadosRota.distanciaM)}
                     </div>
+
                     <div className="faixa-label">Distância</div>
                   </div>
+
                   <div className="faixa-item">
                     <div className="faixa-valor ciano">
                       {fmtTempo(dadosRota.duracaoS)}
                     </div>
+
                     <div className="faixa-label">Tempo estimado</div>
+                  </div>
+
+                  <div className="faixa-item">
+                    <div className="faixa-valor preco">
+                      {fmtPreco(pedidoAtual?.custo_estimado)}
+                    </div>
+
+                    <div className="faixa-label">Preço estimado</div>
                   </div>
                 </div>
               )}
