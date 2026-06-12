@@ -80,7 +80,7 @@ function pedirEliminacaoViagem(id) {
   setConfirmacao({
     tipo: "uma",
     id,
-    titulo: "Eliminar esta viagem?",
+    titulo: "Tem a certeza que quer eliminar esta viagem?",
     mensagem:
       "Esta viagem será removida do seu histórico. Esta ação não pode ser anulada.",
   });
@@ -89,7 +89,7 @@ function pedirEliminacaoViagem(id) {
 function pedirEliminacaoHistorico() {
   setConfirmacao({
     tipo: "todas",
-    titulo: "Apagar todo o histórico?",
+    titulo: "Tem a certeza que quer eliminar todo o histórico?",
     mensagem:
       "Todas as viagens concluídas e canceladas serão removidas. Esta ação não pode ser anulada.",
   });
@@ -278,9 +278,6 @@ function confirmarEliminacao() {
             aria-labelledby="modal-confirmacao-titulo"
             onMouseDown={(evento) => evento.stopPropagation()}
           >
-            <div className="modal-confirmacao-icone" aria-hidden="true">
-              🗑️
-            </div>
 
             <h2 id="modal-confirmacao-titulo">
               {confirmacao.titulo}
