@@ -14,25 +14,25 @@ Relatório referente à componente de **Redes e Design** do projeto, desenvolvid
 
 ## Parte de Tecnologias de Informação
 
-### Relatórios das reuniões
+### Relatórios das Reuniões
 
-Esta secção contém os relatórios elaborados ao longo das reuniões de acompanhamento do projeto:
+Esta secção contém os relatórios elaborados durante as reuniões de acompanhamento do projeto:
 
 * `Março-PTIR-2526-RELATÓRIO.pdf` — relatório da reunião de março;
 * `Abril-PTIR-2526-RELATÓRIO.pdf` — relatório da reunião de abril;
 * `Maio-PTIR-2526-RELATÓRIO.pdf` — relatório da reunião de maio;
 * `UltimaAvaliação-PTIR-2526-RELATÓRIO.DOCX.pdf` — relatório da última reunião e avaliação do projeto.
 
-### Avaliação do projeto
+### Avaliação do Projeto
 
 * `formularioAvaliador.pdf` — formulário utilizado pelo avaliador para registar a avaliação do projeto;
 * `Avaliador.pdf` — documento com as instruções destinadas ao avaliador.
 
-### Testes de usabilidade
+### Testes de Usabilidade
 
 * `Resultados_TestesUsabilidade.pdf` — documento com os resultados obtidos nos testes de usabilidade realizados ao projeto.
 
-## Organização da documentação
+## Organização da Documentação
 
 ```text
 Documentação/
@@ -53,3 +53,4 @@ Documentação/
     └── Testes_Usabilidade/
         └── Resultados_TestesUsabilidade.pdf
 ```
+**Inês Cabral**
