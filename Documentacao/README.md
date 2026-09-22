@@ -1,6 +1,6 @@
 # Documentação do Projeto Final de Tecnologias de Informação
 
-Este diretório reúne a documentação produzida no âmbito do **Projeto Final de Tecnologias de Informação (PTIR)**.
+Este diretório reúne a documentação produzida no âmbito da unidade curricular de **Projeto Final de Tecnologias de Informação (PTIR)**.
 
 A documentação encontra-se organizada em duas áreas principais: **Redes** e **Tecnologias de Informação**.
 
@@ -18,19 +18,19 @@ Relatório referente à componente de **Redes e Design** do projeto, desenvolvid
 
 Esta secção contém os relatórios elaborados durante as reuniões de acompanhamento do projeto:
 
-* `Março-PTIR-2526-RELATÓRIO.pdf` — relatório da reunião de março;
-* `Abril-PTIR-2526-RELATÓRIO.pdf` — relatório da reunião de abril;
-* `Maio-PTIR-2526-RELATÓRIO.pdf` — relatório da reunião de maio;
-* `UltimaAvaliação-PTIR-2526-RELATÓRIO.DOCX.pdf` — relatório da última reunião e avaliação do projeto.
+* `Março-PTIR-2526-RELATÓRIO.pdf` - Relatório da reunião de março;
+* `Abril-PTIR-2526-RELATÓRIO.pdf` - Relatório da reunião de abril;
+* `Maio-PTIR-2526-RELATÓRIO.pdf` - Relatório da reunião de maio;
+* `UltimaAvaliação-PTIR-2526-RELATÓRIO.DOCX.pdf` - Relatório da última reunião e avaliação do projeto.
 
 ### Avaliação do Projeto
 
-* `formularioAvaliador.pdf` — formulário utilizado pelo avaliador para registar a avaliação do projeto;
-* `Avaliador.pdf` — documento com as instruções destinadas ao avaliador.
+* `formularioAvaliador.pdf` - Formulário utilizado pelo avaliador para registar a avaliação do projeto;
+* `Avaliador.pdf` - Documento com as instruções destinadas ao avaliador.
 
 ### Testes de Usabilidade
 
-* `Resultados_TestesUsabilidade.pdf` — documento com os resultados obtidos nos testes de usabilidade realizados ao projeto.
+* `Resultados_TestesUsabilidade.pdf` - Documento com os resultados obtidos nos testes de usabilidade realizados ao projeto.
 
 ## Organização da Documentação
 
